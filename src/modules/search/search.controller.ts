@@ -3,7 +3,9 @@ import { Controller, Get, Query, Req, Res } from '@nestjs/common'
 import type { Request, Response } from 'express'
 import { SearchService } from './search.service'
 import { toCriteria } from './search.query'
+import { buildFacets } from './facets'
 import type { SearchQueryDto } from './search.query'
+import type { Offer } from './models/Offer'
 
 /**
  * `GET /search` — one search, streamed.
@@ -34,15 +36,25 @@ export class SearchController {
   @Get('offers')
   async collect(@Query() query: SearchQueryDto): Promise<unknown> {
     const criteria = toCriteria(query)
+    const collected: Offer[] = []
     const offers: unknown[] = []
     let statuses: unknown[] = []
 
     for await (const update of this.search.search(criteria)) {
+      collected.push(...update.offers)
       offers.push(...update.offers.map(o => o.toObject()))
       statuses = update.statuses
     }
 
-    return { criteria, statuses, total: offers.length, items: offers }
+    return {
+      criteria,
+      statuses,
+      total: offers.length,
+      items: offers,
+      // Derived from what came back, and flagged as partial when the page was
+      // full — the client must not present these as market-wide totals.
+      facets: buildFacets(collected, 100),
+    }
   }
 
   @Get()

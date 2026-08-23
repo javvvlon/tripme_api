@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { Injectable, Logger } from '@nestjs/common'
 import { COUNTRY_LABELS, DEPARTURE_LABELS } from './dictionary.seed'
+import type { ReferenceItem, RouteAnswer } from './dictionary.contracts'
 import type { RouteConstraints } from '~/modules/suppliers/base/contracts'
 
 interface RefOption { value: string, label: string }
@@ -56,6 +57,64 @@ export class DictionaryService {
     return null
   }
 
+  /**
+   * The departure this reference dump was harvested with.
+   *
+   * It matters because the form is cascading: with Tashkent selected it offers
+   * 28 destinations, with Vienna only 3. So a country list is only truthful
+   * for the departure it was captured under, and everything else is a guess we
+   * must label as one.
+   */
+  private readonly harvestedFor = 'tashkent'
+
+  /** Slug for a supplier label, or null when we have never seen it. */
+  private slugFor(map: Record<string, string[]>, label: string): string | null {
+    const needle = label.trim().toLowerCase()
+
+    for (const [slug, aliases] of Object.entries(map)) {
+      if (aliases.some(alias => alias.trim().toLowerCase() === needle)) return slug
+    }
+
+    return null
+  }
+
+  /** Every departure city we can translate — the search box's «Откуда». */
+  departures(): ReferenceItem[] {
+    return (this.options.get('TOWNFROMINC') ?? [])
+      .map(option => ({
+        slug: this.slugFor(DEPARTURE_LABELS, option.label),
+        label: option.label,
+        code: option.value,
+      }))
+      // A city with no slug cannot be put in a URL or matched across
+      // suppliers, so offering it would produce an unrunnable search.
+      .filter((item): item is ReferenceItem => item.slug !== null)
+  }
+
+  /**
+   * Destinations reachable from a departure.
+   *
+   * `verified` is the honest part: true only for the departure this dump was
+   * harvested under. For any other city we return what we know and admit we
+   * have not checked — better than silently implying Bukhara flies everywhere
+   * Tashkent does.
+   */
+  countries(from?: string): RouteAnswer {
+    const items = (this.options.get('STATEINC') ?? [])
+      .map(option => ({
+        slug: this.slugFor(COUNTRY_LABELS, option.label),
+        label: option.label,
+        code: option.value,
+      }))
+      .filter((item): item is ReferenceItem => item.slug !== null)
+
+    return {
+      items,
+      verified: !from || from === this.harvestedFor,
+      harvestedFor: this.harvestedFor,
+    }
+  }
+
   departureCode(slug: string): string | null {
     return this.resolve('TOWNFROMINC', DEPARTURE_LABELS[slug])
   }
@@ -72,7 +131,7 @@ export class DictionaryService {
    * three adults out of Vienna. Serving one global list would let an agent
    * pick a value that can never return anything.
    */
-  routeConstraints(): RouteConstraints {
+  routeConstraints(_from?: string, _to?: string): RouteConstraints {
     const numbers = (field: string) =>
       (this.options.get(field) ?? [])
         .map(o => Number(o.value))
