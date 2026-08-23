@@ -22,13 +22,33 @@ interface CachedRoutes {
   fetchedAt: number
 }
 
+/** Everything the search form needs about one route, read off one page. */
+export interface RouteFacts {
+  calendar: { start: string, valid: string } | null
+  /** discrete, not a range — 9 nights can be genuinely absent */
+  nights: number[]
+  maxAdults: number
+  maxChildren: number
+}
+
 const TTL_MS = 8 * 60 * 60 * 1000
 
 @Injectable()
 export class RoutesService {
   private readonly logger = new Logger(RoutesService.name)
   private readonly cache = new Map<string, CachedRoutes>()
-  private readonly calendars = new Map<string, { mask: { start: string, valid: string } | null, fetchedAt: number }>()
+  private readonly calendars = new Map<string, { mask: RouteFacts | null, fetchedAt: number }>()
+
+  /** Numeric <option> values of a named select, in ascending order. */
+  private numbers(html: string, name: string): number[] {
+    const select = new RegExp(`<select[^>]*name="${name}"[^>]*>([\\s\\S]*?)</select>`).exec(html)
+    if (!select) return []
+
+    return [...select[1].matchAll(/<option[^>]*value="(\d+)"/g)]
+      .map(match => Number(match[1]))
+      .filter(Number.isFinite)
+      .sort((a, b) => a - b)
+  }
   private readonly inFlight = new Map<string, Promise<ReferenceItem[]>>()
 
   /**
@@ -75,7 +95,7 @@ export class RoutesService {
     countryCode: string,
     baseUrl: string,
     fetchPage: (url: string) => Promise<string>,
-  ): Promise<{ start: string, valid: string } | null> {
+  ): Promise<RouteFacts | null> {
     const key = `cal:${departureCode}:${countryCode}`
     const cached = this.calendars.get(key)
     if (cached && Date.now() - cached.fetchedAt < TTL_MS) return cached.mask
@@ -94,16 +114,27 @@ export class RoutesService {
         return null
       }
 
+
       const decoded = attr[2].replace(/&quot;/g, '"').replace(/&amp;/g, '&')
       const parsed = JSON.parse(decoded) as { valid?: string, start?: string }
 
-      const mask = parsed.valid && parsed.start
-        ? { valid: parsed.valid, start: parsed.start }
-        : null
+      // Nights and party limits come off the same page, so they cost nothing
+      // extra — and they are per-route too: 2–14 nights out of Tashkent,
+      // 4–15 with 9 missing out of Vienna.
+      const mask: RouteFacts = {
+        calendar: parsed.valid && parsed.start
+          ? { valid: parsed.valid, start: parsed.start }
+          : null,
+        nights: this.numbers(html, 'NIGHTS_FROM'),
+        maxAdults: Math.max(...this.numbers(html, 'ADULT'), 1),
+        maxChildren: Math.max(...this.numbers(html, 'CHILD'), 0),
+      }
 
       this.calendars.set(key, { mask, fetchedAt: Date.now() })
       this.logger.log(
-        `calendar ${departureCode}→${countryCode}: ${mask ? `${mask.valid.length} days from ${mask.start}` : 'none published'}`)
+        `route ${departureCode}→${countryCode}: `
+        + `${mask.calendar ? `${mask.calendar.valid.length} days from ${mask.calendar.start}` : 'no calendar'}, `
+        + `nights ${mask.nights.join('/')}, up to ${mask.maxAdults} adults`)
 
       return mask
     }

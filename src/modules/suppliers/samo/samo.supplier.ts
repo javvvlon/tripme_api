@@ -116,8 +116,8 @@ export abstract class SamoSupplier extends BaseSupplier<SamoQuery, SamoRow> {
    * Reusing the search headers here returned a body with no <select> in it and
    * parsed to zero destinations — a silent empty list, not an error.
    */
-  /** The published check-in days for a route — see RoutesService.calendarFor. */
-  async calendarFor(departureCode: string, countryCode: string) {
+  /** What this supplier publishes about a route — see RoutesService. */
+  async routeFacts(departureCode: string, countryCode: string) {
     return this.routes.calendarFor(
       departureCode,
       countryCode,

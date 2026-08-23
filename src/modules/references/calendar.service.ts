@@ -2,6 +2,7 @@ import { Inject, Injectable } from '@nestjs/common'
 import { SUPPLIERS } from '~/modules/suppliers/base/tokens'
 import { DictionaryService } from '~/modules/suppliers/dictionary/dictionary.service'
 import type { ISupplier } from '~/modules/suppliers/base/contracts'
+import type { RouteFacts } from '~/modules/suppliers/dictionary/routes.service'
 
 /**
  * Which dates a route can actually be booked for.
@@ -37,6 +38,29 @@ export class CalendarService {
     private readonly dictionary: DictionaryService,
   ) {}
 
+  /** Nights, party limits and calendar for a route — all from the supplier. */
+  async factsFor(from?: string, to?: string): Promise<RouteFacts | null> {
+    if (!from || !to) return null
+
+    const departureCode = this.dictionary.departureCode(from)
+    const countryCode = this.dictionary.countryCode(to)
+    if (!departureCode || !countryCode) return null
+
+    const facts = (await Promise.all(
+      this.suppliers.map(s => s.routeFacts(departureCode, countryCode).catch(() => null)),
+    )).filter(Boolean) as RouteFacts[]
+
+    if (!facts.length) return null
+
+    // Union across suppliers: a night count one of them sells is sellable.
+    return {
+      calendar: facts.find(f => f.calendar)?.calendar ?? null,
+      nights: [...new Set(facts.flatMap(f => f.nights))].sort((a, b) => a - b),
+      maxAdults: Math.max(...facts.map(f => f.maxAdults)),
+      maxChildren: Math.max(...facts.map(f => f.maxChildren)),
+    }
+  }
+
   async forRoute(from?: string, to?: string): Promise<CalendarMask | null> {
     if (!from || !to) return null
 
@@ -44,9 +68,11 @@ export class CalendarService {
     const countryCode = this.dictionary.countryCode(to)
     if (!departureCode || !countryCode) return null
 
-    const masks = (await Promise.all(
-      this.suppliers.map(s => s.calendarFor(departureCode, countryCode).catch(() => null)),
-    )).filter(Boolean) as Array<{ start: string, valid: string }>
+    const facts = (await Promise.all(
+      this.suppliers.map(s => s.routeFacts(departureCode, countryCode).catch(() => null)),
+    )).filter(Boolean) as RouteFacts[]
+
+    const masks = facts.map(f => f.calendar).filter(Boolean) as Array<{ start: string, valid: string }>
 
     if (!masks.length) return null
 

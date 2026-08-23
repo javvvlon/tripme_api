@@ -1,4 +1,5 @@
 import type { Offer } from '~/modules/search/models/Offer'
+import type { RouteFacts } from '~/modules/suppliers/dictionary/routes.service'
 import type { SearchCriteria, SupplierRef } from '~/modules/search/contracts/search'
 
 /**
@@ -81,8 +82,12 @@ export interface ISupplier {
    */
   destinationsFrom: (departureCode: string) => Promise<Array<{ slug: string, label: string, code: string }>>
 
-  /** Which check-in days this supplier publishes for a route, if any. */
-  calendarFor: (departureCode: string, countryCode: string) => Promise<{ start: string, valid: string } | null>
+  /**
+   * What this supplier publishes about a route: sellable check-in days, the
+   * nights it actually sells, and how many travellers it accepts. All three
+   * are per-route, and all three come off one page.
+   */
+  routeFacts: (departureCode: string, countryCode: string) => Promise<RouteFacts | null>
 }
 
 /**

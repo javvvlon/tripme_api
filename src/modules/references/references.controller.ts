@@ -47,12 +47,24 @@ export class ReferencesController {
    * which nights are sellable, how many travellers fit, and which dates the
    * supplier will even accept.
    */
+  /**
+   * Everything that constrains the form once the route is known — read from
+   * the supplier, not assumed. Nights are a discrete list and differ by route
+   * (2–14 out of Tashkent, 4–15 without 9 out of Vienna), as do the party
+   * limits and the sellable dates.
+   *
+   * Falls back to the harvested dump when nobody publishes facts for a route,
+   * so the form is never left without options.
+   */
   @Get('constraints')
   async constraints(@Query('from') from?: string, @Query('to') to?: string) {
-    const base = this.dictionary.routeConstraints(from, to)
+    const fallback = this.dictionary.routeConstraints(from, to)
+    const facts = await this.calendar.factsFor(from, to)
 
     return {
-      ...base,
+      nights: facts?.nights.length ? facts.nights : fallback.nights,
+      maxAdults: facts?.maxAdults ?? fallback.maxAdults,
+      maxChildren: facts?.maxChildren ?? fallback.maxChildren,
       currencies: ['USD', 'EUR', 'UZS'],
       calendar: await this.calendar.forRoute(from, to),
     }

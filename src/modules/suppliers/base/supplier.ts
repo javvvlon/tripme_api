@@ -1,5 +1,6 @@
 import { Logger } from '@nestjs/common'
 import type { Offer } from '~/modules/search/models/Offer'
+import type { RouteFacts } from '~/modules/suppliers/dictionary/routes.service'
 import type { SearchCriteria, SupplierRef } from '~/modules/search/contracts/search'
 import { Unsupported, isUnsupported } from './contracts'
 import type {
@@ -51,11 +52,8 @@ export abstract class BaseSupplier<TQuery, TRow> implements ISupplier {
     departureCode: string,
   ): Promise<Array<{ slug: string, label: string, code: string }>>
 
-  /** Published check-in days for a route — see ISupplier. */
-  abstract calendarFor(
-    departureCode: string,
-    countryCode: string,
-  ): Promise<{ start: string, valid: string } | null>
+  /** What this supplier publishes about a route — see ISupplier. */
+  abstract routeFacts(departureCode: string, countryCode: string): Promise<RouteFacts | null>
 
   /**
    * Headers the supplier's endpoint expects. Overridden per protocol, because
