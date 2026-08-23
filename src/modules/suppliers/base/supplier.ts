@@ -46,10 +46,30 @@ export abstract class BaseSupplier<TQuery, TRow> implements ISupplier {
   /** their row → our Offer. */
   protected abstract map(row: TRow, criteria: SearchCriteria): Offer | null
 
-  async* search(criteria: SearchCriteria, signal?: AbortSignal): AsyncIterable<SupplierPage> {
-    const seen = new Set<string>()
+  /**
+   * Headers the supplier's endpoint expects. Overridden per protocol, because
+   * "what does this host want to see" is a property of the host, not of the
+   * transport.
+   */
+  protected get requestHeaders(): Record<string, string> {
+    return {}
+  }
 
-    for (let page = 1; page <= this.capabilities.maxPages; page++) {
+  async* search(
+    criteria: SearchCriteria,
+    signal?: AbortSignal,
+    /**
+     * Stop after this many pages. The point is not politeness but latency:
+     * paging to exhaustion takes ~27s at a 2.5s interval, which is fine for a
+     * stream that shows results as they land and useless for a single
+     * response somebody is waiting on.
+     */
+    maxPages = this.capabilities.maxPages,
+  ): AsyncIterable<SupplierPage> {
+    const seen = new Set<string>()
+    const limit = Math.min(maxPages, this.capabilities.maxPages)
+
+    for (let page = 1; page <= limit; page++) {
       if (signal?.aborted) return
 
       const query = this.buildQuery(criteria, page)
@@ -65,7 +85,10 @@ export abstract class BaseSupplier<TQuery, TRow> implements ISupplier {
 
       await this.throttle()
 
-      const payload = await this.transport.fetch(this.buildUrl(query), { signal })
+      const payload = await this.transport.fetch(this.buildUrl(query), {
+        signal,
+        headers: this.requestHeaders,
+      })
       const rows = this.parse(payload)
 
       const offers: Offer[] = []
@@ -89,9 +112,7 @@ export abstract class BaseSupplier<TQuery, TRow> implements ISupplier {
       if (!hasMore) return
     }
 
-    this.logger.warn(
-      `${this.ref.id}: hit maxPages=${this.capabilities.maxPages}; results are truncated`,
-    )
+    this.logger.warn(`${this.ref.id}: stopped at ${limit} pages; results are truncated`)
   }
 
   private async throttle(): Promise<void> {

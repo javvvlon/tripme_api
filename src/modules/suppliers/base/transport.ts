@@ -6,17 +6,36 @@ import type { ISupplierTransport } from './contracts'
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
  */
 export class HttpTransport implements ISupplierTransport {
+  /**
+   * Timeout, not patience. A supplier that has not answered in 30s is not
+   * about to, and an agent watching a spinner has already moved on — §4 wants
+   * first results in seconds, and the status row exists to say who is late.
+   */
+  constructor(private readonly timeoutMs = 30_000) {}
+
   async fetch(url: string, init?: { signal?: AbortSignal, headers?: Record<string, string> }): Promise<string> {
+    const timeout = AbortSignal.timeout(this.timeoutMs)
+    const signal = init?.signal ? AbortSignal.any([init.signal, timeout]) : timeout
+
     const response = await globalThis.fetch(url, {
-      signal: init?.signal,
+      signal,
       headers: init?.headers,
+      redirect: 'follow',
     })
 
     if (!response.ok) {
       throw new Error(`supplier responded ${response.status} for ${new URL(url).pathname}`)
     }
 
-    return response.text()
+    const body = await response.text()
+
+    // A 200 that is actually a login page or an error is worse than a 500,
+    // because it parses to zero rows and looks like "no availability".
+    if (!body.trim()) {
+      throw new Error('supplier returned an empty body')
+    }
+
+    return body
   }
 }
 

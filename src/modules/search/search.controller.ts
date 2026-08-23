@@ -34,13 +34,19 @@ export class SearchController {
    * last supplier.
    */
   @Get('offers')
-  async collect(@Query() query: SearchQueryDto): Promise<unknown> {
+  async collect(@Query() query: SearchQueryDto, @Query('pages') pages?: string): Promise<unknown> {
     const criteria = toCriteria(query)
+
+    // One page by default. A supplier's first page is its cheapest hundred
+    // rows and arrives in ~2s; exhausting the listing takes ~27s because of
+    // the deliberate interval between requests. Anything that needs the whole
+    // set should be reading the stream, not blocking on this.
+    const maxPages = Math.max(1, Math.min(Number(pages) || 1, 20))
     const collected: Offer[] = []
     const offers: unknown[] = []
     let statuses: unknown[] = []
 
-    for await (const update of this.search.search(criteria)) {
+    for await (const update of this.search.search(criteria, undefined, maxPages)) {
       collected.push(...update.offers)
       offers.push(...update.offers.map(o => o.toObject()))
       statuses = update.statuses

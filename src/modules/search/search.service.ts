@@ -29,7 +29,11 @@ export class SearchService {
 
   constructor(@Inject(SUPPLIERS) private readonly suppliers: ISupplier[]) {}
 
-  async* search(criteria: SearchCriteria, signal?: AbortSignal): AsyncIterable<SearchUpdate> {
+  async* search(
+    criteria: SearchCriteria,
+    signal?: AbortSignal,
+    maxPages?: number,
+  ): AsyncIterable<SearchUpdate> {
     const statuses = new Map<string, SupplierStatus>(
       this.suppliers.map(s => [
         s.ref.id,
@@ -56,7 +60,7 @@ export class SearchService {
       status.state = SupplierState.Searching
 
       try {
-        for await (const page of supplier.search(criteria, signal)) {
+        for await (const page of supplier.search(criteria, signal, maxPages)) {
           status.offers += page.offers.length
           push({ statuses: snapshot(), offers: page.offers, done: false })
         }
