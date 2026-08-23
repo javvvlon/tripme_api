@@ -22,6 +22,14 @@ export interface IOffer {
   hotelSupplierCode: string
   /** their canonical url path, a better cross-supplier hint than the name */
   hotelSlug: string | null
+  /**
+   * The operator's own page for this hotel.
+   *
+   * Kept because it is the only place an agent can see photos, a description
+   * and the room detail we do not receive — "Подробнее" has to go somewhere
+   * real, and until we have hotel content of our own, theirs is it.
+   */
+  hotelUrl: string | null
   district: string | null
 
   checkIn: string

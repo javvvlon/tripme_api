@@ -33,6 +33,7 @@ export class SearchController {
       criteria,
       page: result.page,
       hasMore: result.hasMore,
+      appliedLocally: result.appliedLocally,
       statuses: result.statuses,
       total: result.offers.length,
       items: result.offers.map(o => o.toObject()),

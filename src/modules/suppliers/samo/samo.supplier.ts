@@ -26,7 +26,22 @@ export abstract class SamoSupplier extends BaseSupplier<SamoQuery, SamoRow> {
   protected abstract readonly constants: Record<string, string>
 
   readonly capabilities: SupplierCapabilities = {
-    nativeFilters: ['stars', 'meals', 'resorts', 'hotels', 'priceMin', 'priceMax'],
+    /**
+     * Only what we can express in SAMO's own vocabulary.
+     *
+     * `meals` and `hotels` qualify because their values ARE supplier codes —
+     * we read them straight out of the response (data-meal, data-hotel).
+     * `stars` and `resorts` do not: our star value is a number parsed from the
+     * hotel name and our resort is a display string, while SAMO wants its own
+     * category ids and TOWNS codes. Sending STARS=5 matches nothing and
+     * returns an empty page, which reads as "no availability" — strictly worse
+     * than not filtering.
+     *
+     * Anything absent here is applied to the fetched page instead, and the
+     * response reports it, because narrowing the cheapest hundred rows is not
+     * the same as searching the market.
+     */
+    nativeFilters: ['meals', 'hotels', 'priceMin', 'priceMax'],
     pageSize: 100,
     maxPages: 20,
     priceCursor: false,

@@ -26,6 +26,13 @@ export interface SearchPage {
   page: number
   /** true when at least one supplier still has pages left */
   hasMore: boolean
+  /**
+   * Filters no supplier could express natively, applied to the page we
+   * received. Surfaced because narrowing a page of the cheapest hundred rows
+   * is not the same as searching the whole market, and the UI has to say which
+   * one it did.
+   */
+  appliedLocally: string[]
 }
 
 @Injectable()
@@ -88,15 +95,47 @@ export class SearchService {
      * cheaper than things on supplier A's page 1. Exact global ordering needs
      * a price cursor, which SAMO does not offer.
      */
-    const offers = results
+    const merged = results
       .flatMap(r => r.offers)
       .sort((a, b) => a.sortPrice() - b.sortPrice())
+
+    const { offers, appliedLocally } = this.applyLocalFilters(merged, criteria)
 
     return {
       offers,
       statuses: results.map(r => r.status),
       page,
       hasMore: results.some(r => r.hasMore),
+      appliedLocally,
     }
+  }
+
+  /**
+   * Filters the suppliers could not express, applied here.
+   *
+   * Only the ones absent from every supplier's `nativeFilters` — anything a
+   * supplier handled server-side is already reflected in what it returned.
+   */
+  private applyLocalFilters(
+    offers: Offer[],
+    criteria: SearchCriteria,
+  ): { offers: Offer[], appliedLocally: string[] } {
+    const native = new Set(this.suppliers.flatMap(s => s.capabilities.nativeFilters as string[]))
+    const applied: string[] = []
+    let result = offers
+
+    const { stars, resorts } = criteria.filters
+
+    if (stars?.length && !native.has('stars')) {
+      applied.push('stars')
+      result = result.filter(o => stars.includes(o.get('hotelStars') ?? 0))
+    }
+
+    if (resorts?.length && !native.has('resorts')) {
+      applied.push('resorts')
+      result = result.filter(o => resorts.includes(o.get('district') ?? ''))
+    }
+
+    return { offers: result, appliedLocally: applied }
   }
 }

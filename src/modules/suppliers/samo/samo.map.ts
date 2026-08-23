@@ -41,6 +41,7 @@ export function mapSamoRow(row: SamoRow, criteria: SearchCriteria, supplier: Sup
     hotelStars: row.stars ? Number(row.stars) : null,
     hotelSupplierCode: row.hotel,
     hotelSlug: row.hotelSlug || null,
+    hotelUrl: row.hotelUrl || null,
     district: row.district || null,
 
     checkIn,

@@ -58,11 +58,15 @@ export class SamoSearchIntention extends Intention<SearchCriteria, Record<string
       ...Object.fromEntries(criteria.childrenAges.map((age, i) => [`AGE${i + 1}`, String(age)])),
       CURRENCY: currency,
 
-      TOWNS_ANY: anyFlag(filters.resorts),
-      TOWNS: list(filters.resorts),
+      // Resorts and stars are deliberately "any": our values are display
+      // names and parsed numbers, not SAMO's TOWNS ids and category codes.
+      // Sending them untranslated returns an empty page. They are applied
+      // after the fetch instead — see SupplierCapabilities.nativeFilters.
+      TOWNS_ANY: '1',
+      TOWNS: '',
       townssearch: '0',
-      STARS_ANY: anyFlag(filters.stars),
-      STARS: list(filters.stars),
+      STARS_ANY: '1',
+      STARS: '',
       HOTELS_ANY: anyFlag(filters.hotels),
       hotelsearch: '0',
       HOTELS: list(filters.hotels),
