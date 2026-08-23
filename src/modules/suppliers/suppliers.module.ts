@@ -1,6 +1,7 @@
 import { join } from 'node:path'
 import { Module } from '@nestjs/common'
 import { DictionaryService } from './dictionary/dictionary.service'
+import { RoutesService } from './dictionary/routes.service'
 import { KompastourSupplier } from './kompastour/kompastour.supplier'
 import { FixtureTransport, HttpTransport } from './base/transport'
 import { SUPPLIER_TRANSPORT, SUPPLIERS } from './base/tokens'
@@ -19,6 +20,7 @@ import type { ISupplier } from './base/contracts'
 @Module({
   providers: [
     DictionaryService,
+    RoutesService,
     {
       provide: SUPPLIER_TRANSPORT,
       useFactory: () =>
@@ -35,6 +37,6 @@ import type { ISupplier } from './base/contracts'
       inject: [KompastourSupplier],
     },
   ],
-  exports: [SUPPLIERS, DictionaryService],
+  exports: [SUPPLIERS, DictionaryService, RoutesService],
 })
 export class SuppliersModule {}

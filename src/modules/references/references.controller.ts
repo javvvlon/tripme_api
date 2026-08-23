@@ -1,6 +1,7 @@
 import { Controller, Get, Query } from '@nestjs/common'
 import { DictionaryService } from '~/modules/suppliers/dictionary/dictionary.service'
 import { CalendarService } from './calendar.service'
+import { RouteLookupService } from './route-lookup.service'
 
 /**
  * Everything the search form needs before a search exists.
@@ -22,6 +23,7 @@ export class ReferencesController {
   constructor(
     private readonly dictionary: DictionaryService,
     private readonly calendar: CalendarService,
+    private readonly routes: RouteLookupService,
   ) {}
 
   @Get('departures')
@@ -29,9 +31,15 @@ export class ReferencesController {
     return { items: this.dictionary.departures() }
   }
 
+  /**
+   * Destinations reachable from a departure — read from the operator itself,
+   * because the cascade is severe: 27 out of Tashkent, 4 out of Samarkand,
+   * exactly 1 out of Bukhara. Offering the union would mean offering searches
+   * that cannot return anything.
+   */
   @Get('countries')
-  countries(@Query('from') from?: string) {
-    return this.dictionary.countries(from)
+  async countries(@Query('from') from?: string) {
+    return this.routes.countriesFrom(from)
   }
 
   /**
@@ -40,13 +48,13 @@ export class ReferencesController {
    * supplier will even accept.
    */
   @Get('constraints')
-  constraints(@Query('from') from?: string, @Query('to') to?: string) {
+  async constraints(@Query('from') from?: string, @Query('to') to?: string) {
     const base = this.dictionary.routeConstraints(from, to)
 
     return {
       ...base,
       currencies: ['USD', 'EUR', 'UZS'],
-      calendar: this.calendar.forRoute(from, to),
+      calendar: await this.calendar.forRoute(from, to),
     }
   }
 }

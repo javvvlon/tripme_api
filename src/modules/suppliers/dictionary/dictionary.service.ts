@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { Injectable, Logger } from '@nestjs/common'
 import { COUNTRY_LABELS, DEPARTURE_LABELS } from './dictionary.seed'
-import type { ReferenceItem, RouteAnswer } from './dictionary.contracts'
+import type { ReferenceItem } from './dictionary.contracts'
 import type { RouteConstraints } from '~/modules/suppliers/base/contracts'
 
 interface RefOption { value: string, label: string }
@@ -57,16 +57,6 @@ export class DictionaryService {
     return null
   }
 
-  /**
-   * The departure this reference dump was harvested with.
-   *
-   * It matters because the form is cascading: with Tashkent selected it offers
-   * 28 destinations, with Vienna only 3. So a country list is only truthful
-   * for the departure it was captured under, and everything else is a guess we
-   * must label as one.
-   */
-  private readonly harvestedFor = 'tashkent'
-
   /** Slug for a supplier label, or null when we have never seen it. */
   private slugFor(map: Record<string, string[]>, label: string): string | null {
     const needle = label.trim().toLowerCase()
@@ -92,27 +82,27 @@ export class DictionaryService {
   }
 
   /**
-   * Destinations reachable from a departure.
+   * Destinations, from the harvested dump.
    *
-   * `verified` is the honest part: true only for the departure this dump was
-   * harvested under. For any other city we return what we know and admit we
-   * have not checked — better than silently implying Bukhara flies everywhere
-   * Tashkent does.
+   * Only a fallback now: the real list is per-departure and comes from
+   * RoutesService, because the cascade is severe — 27 destinations out of
+   * Tashkent, 4 out of Samarkand, 1 out of Bukhara.
    */
-  countries(from?: string): RouteAnswer {
-    const items = (this.options.get('STATEINC') ?? [])
+  countries(): ReferenceItem[] {
+    return (this.options.get('STATEINC') ?? [])
       .map(option => ({
         slug: this.slugFor(COUNTRY_LABELS, option.label),
         label: option.label,
         code: option.value,
       }))
       .filter((item): item is ReferenceItem => item.slug !== null)
+  }
 
-    return {
-      items,
-      verified: !from || from === this.harvestedFor,
-      harvestedFor: this.harvestedFor,
-    }
+  /** Remembers slug → code pairs learned from a live route lookup. */
+  private readonly learned = new Map<string, string>()
+
+  rememberCountries(items: ReferenceItem[]): void {
+    for (const item of items) this.learned.set(item.slug, item.code)
   }
 
   departureCode(slug: string): string | null {
@@ -120,7 +110,9 @@ export class DictionaryService {
   }
 
   countryCode(slug: string): string | null {
-    return this.resolve('STATEINC', COUNTRY_LABELS[slug])
+    // A slug learned from a live route lookup wins: it covers the two thirds
+    // of the catalogue the curated seed never named.
+    return this.learned.get(slug) ?? this.resolve('STATEINC', COUNTRY_LABELS[slug])
   }
 
   /**

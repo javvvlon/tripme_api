@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { SamoSupplier } from '~/modules/suppliers/samo/samo.supplier'
 import { DictionaryService } from '~/modules/suppliers/dictionary/dictionary.service'
+import { RoutesService } from '~/modules/suppliers/dictionary/routes.service'
 import { SUPPLIER_TRANSPORT } from '~/modules/suppliers/base/tokens'
 import { Inject } from '@nestjs/common'
 import type { ISupplierTransport, SupplierAccess } from '~/modules/suppliers/base/contracts'
@@ -45,7 +46,8 @@ export class KompastourSupplier extends SamoSupplier {
   constructor(
     @Inject(SUPPLIER_TRANSPORT) transport: ISupplierTransport,
     dictionary: DictionaryService,
+    routes: RoutesService,
   ) {
-    super(transport, dictionary)
+    super(transport, dictionary, routes)
   }
 }

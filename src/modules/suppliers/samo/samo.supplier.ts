@@ -1,9 +1,10 @@
 import { BaseSupplier } from '~/modules/suppliers/base/supplier'
+import { RoutesService } from '~/modules/suppliers/dictionary/routes.service'
 import { Unsupported, isUnsupported } from '~/modules/suppliers/base/contracts'
 import { SamoSearchIntention } from './samo.intention'
 import { parseSamoRows } from './samo.parser'
 import { mapSamoRow } from './samo.map'
-import type { DictionaryService } from '~/modules/suppliers/dictionary/dictionary.service'
+import { DictionaryService } from '~/modules/suppliers/dictionary/dictionary.service'
 import type { ISupplierTransport, SupplierCapabilities } from '~/modules/suppliers/base/contracts'
 import type { SearchCriteria } from '~/modules/search/contracts/search'
 import type { Offer } from '~/modules/search/models/Offer'
@@ -55,8 +56,25 @@ export abstract class SamoSupplier extends BaseSupplier<SamoQuery, SamoRow> {
     currencies: ['USD', 'EUR', 'UZS'],
   }
 
-  constructor(transport: ISupplierTransport, protected readonly dictionary: DictionaryService) {
+  constructor(
+    transport: ISupplierTransport,
+    protected readonly dictionary: DictionaryService,
+    protected readonly routes: RoutesService,
+  ) {
     super(transport)
+  }
+
+  /**
+   * Their search page renders the destination list for whichever departure is
+   * in the query string, so one page load answers this exactly — no guessing,
+   * and no serving one city's list for another's.
+   */
+  async destinationsFrom(departureCode: string) {
+    return this.routes.forDeparture(
+      departureCode,
+      this.baseUrl,
+      (url: string) => this.transport.fetch(url, { headers: this.pageHeaders }),
+    )
   }
 
   protected buildQuery(criteria: SearchCriteria, page: number): SamoQuery | Unsupported {
@@ -86,6 +104,33 @@ export abstract class SamoSupplier extends BaseSupplier<SamoQuery, SamoRow> {
       'Accept-Language': 'ru-RU,ru;q=0.9',
       'X-Requested-With': 'XMLHttpRequest',
       'Referer': this.baseUrl,
+    }
+  }
+
+  /**
+   * Headers for loading their search *page*, as opposed to calling the search
+   * endpoint.
+   *
+   * Same URL, two behaviours: with `X-Requested-With: XMLHttpRequest` the
+   * server answers with the AJAX payload, without it with the full HTML page.
+   * Reusing the search headers here returned a body with no <select> in it and
+   * parsed to zero destinations — a silent empty list, not an error.
+   */
+  /** The published check-in days for a route — see RoutesService.calendarFor. */
+  async calendarFor(departureCode: string, countryCode: string) {
+    return this.routes.calendarFor(
+      departureCode,
+      countryCode,
+      this.baseUrl,
+      (url: string) => this.transport.fetch(url, { headers: this.pageHeaders }),
+    )
+  }
+
+  protected get pageHeaders(): Record<string, string> {
+    return {
+      'User-Agent': SAMO_USER_AGENT,
+      'Accept': 'text/html,application/xhtml+xml',
+      'Accept-Language': 'ru-RU,ru;q=0.9',
     }
   }
 

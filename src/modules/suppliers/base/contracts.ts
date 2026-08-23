@@ -70,6 +70,19 @@ export interface ISupplier {
 
   /** One page, fetched when someone asks for it. */
   fetchPage: (criteria: SearchCriteria, page: number, signal?: AbortSignal) => Promise<SupplierPage>
+
+  /**
+   * Destinations this supplier will sell from a given departure.
+   *
+   * Asked of the supplier rather than assumed, because the answer is severely
+   * cascaded — 27 countries out of Tashkent, 4 out of Samarkand, 1 out of
+   * Bukhara — and serving the union means offering searches that cannot return
+   * anything.
+   */
+  destinationsFrom: (departureCode: string) => Promise<Array<{ slug: string, label: string, code: string }>>
+
+  /** Which check-in days this supplier publishes for a route, if any. */
+  calendarFor: (departureCode: string, countryCode: string) => Promise<{ start: string, valid: string } | null>
 }
 
 /**

@@ -46,6 +46,17 @@ export abstract class BaseSupplier<TQuery, TRow> implements ISupplier {
   /** their row → our Offer. */
   protected abstract map(row: TRow, criteria: SearchCriteria): Offer | null
 
+  /** Where this supplier flies from a given departure — see ISupplier. */
+  abstract destinationsFrom(
+    departureCode: string,
+  ): Promise<Array<{ slug: string, label: string, code: string }>>
+
+  /** Published check-in days for a route — see ISupplier. */
+  abstract calendarFor(
+    departureCode: string,
+    countryCode: string,
+  ): Promise<{ start: string, valid: string } | null>
+
   /**
    * Headers the supplier's endpoint expects. Overridden per protocol, because
    * "what does this host want to see" is a property of the host, not of the
