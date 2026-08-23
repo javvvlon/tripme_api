@@ -70,8 +70,10 @@ export class SamoSearchIntention extends Intention<SearchCriteria, Record<string
       HOTELS_ANY: anyFlag(filters.hotels),
       hotelsearch: '0',
       HOTELS: list(filters.hotels),
-      MEALS_ANY: anyFlag(filters.meals),
-      MEALS: list(filters.meals),
+      // Ignored by the endpoint when set from our meal codes — see
+      // SupplierCapabilities.nativeFilters. Applied after the fetch instead.
+      MEALS_ANY: '1',
+      MEALS: '',
       ROOMS_ANY: '1',
       ROOMS: '',
 

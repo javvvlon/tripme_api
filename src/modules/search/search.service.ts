@@ -124,7 +124,7 @@ export class SearchService {
     const applied: string[] = []
     let result = offers
 
-    const { stars, resorts } = criteria.filters
+    const { stars, resorts, meals } = criteria.filters
 
     if (stars?.length && !native.has('stars')) {
       applied.push('stars')
@@ -134,6 +134,11 @@ export class SearchService {
     if (resorts?.length && !native.has('resorts')) {
       applied.push('resorts')
       result = result.filter(o => resorts.includes(o.get('district') ?? ''))
+    }
+
+    if (meals?.length && !native.has('meals')) {
+      applied.push('meals')
+      result = result.filter(o => meals.includes(o.get('mealCode') ?? ''))
     }
 
     return { offers: result, appliedLocally: applied }

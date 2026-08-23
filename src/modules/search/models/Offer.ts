@@ -23,13 +23,21 @@ export interface IOffer {
   /** their canonical url path, a better cross-supplier hint than the name */
   hotelSlug: string | null
   /**
-   * The operator's own page for this hotel.
-   *
-   * Kept because it is the only place an agent can see photos, a description
-   * and the room detail we do not receive — "Подробнее" has to go somewhere
-   * real, and until we have hotel content of our own, theirs is it.
+   * The operator's own page for this hotel — photos and description. Present
+   * on roughly a quarter of rows; null otherwise.
    */
   hotelUrl: string | null
+
+  /**
+   * Deep link into the operator's own search, pre-filled with this offer's
+   * route, dates, nights and party.
+   *
+   * This is the hand-off. We do not book (§4: booking stays with the
+   * operator), so the agent's last step is always "open it there" — and
+   * dropping them on a blank search form means retyping everything we already
+   * know, which is the manual work the product exists to remove.
+   */
+  bookingUrl: string | null
   district: string | null
 
   checkIn: string
