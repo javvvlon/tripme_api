@@ -7,20 +7,25 @@ import type { Offer } from './models/Offer'
 import type { SearchCriteria, SupplierStatus } from './contracts/search'
 
 /**
- * Fans a search out to every supplier and streams what comes back.
+ * Asks every supplier for the same page, at the same time.
  *
- * Waves, not a barrier. §4: «Результаты приходят волнами, а не все сразу…
- * ждать всех — значит работать со скоростью самого медленного». So this is an
- * async generator: each supplier's pages are emitted as they arrive, together
- * with a status row saying who has answered and who has not.
+ * Parallel across suppliers, one page deep. That combination is the whole
+ * design: §4 wants results in a few seconds and an honest row of who has
+ * answered, and the slowness that made that hard was never the suppliers — it
+ * was walking ten pages sequentially. Three suppliers × one page in parallel
+ * costs about as long as the slowest single request.
+ *
+ * Depth is the agent's decision, made by scrolling, so a supplier only sees
+ * requests a person actually caused.
  *
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
  */
-export interface SearchUpdate {
-  statuses: SupplierStatus[]
-  /** offers new in this wave, already deduped within their supplier */
+export interface SearchPage {
   offers: Offer[]
-  done: boolean
+  statuses: SupplierStatus[]
+  page: number
+  /** true when at least one supplier still has pages left */
+  hasMore: boolean
 }
 
 @Injectable()
@@ -29,77 +34,69 @@ export class SearchService {
 
   constructor(@Inject(SUPPLIERS) private readonly suppliers: ISupplier[]) {}
 
-  async* search(
-    criteria: SearchCriteria,
-    signal?: AbortSignal,
-    maxPages?: number,
-  ): AsyncIterable<SearchUpdate> {
-    const statuses = new Map<string, SupplierStatus>(
-      this.suppliers.map(s => [
-        s.ref.id,
-        { supplier: s.ref, state: SupplierState.Pending, offers: 0 },
-      ]),
+  async fetchPage(criteria: SearchCriteria, page: number, signal?: AbortSignal): Promise<SearchPage> {
+    const results = await Promise.all(
+      this.suppliers.map(async (supplier): Promise<{ status: SupplierStatus, offers: Offer[], hasMore: boolean }> => {
+        const started = Date.now()
+
+        try {
+          const result = await supplier.fetchPage(criteria, page, signal)
+
+          return {
+            offers: result.offers,
+            hasMore: result.hasMore,
+            status: {
+              supplier: supplier.ref,
+              state: SupplierState.Done,
+              offers: result.offers.length,
+              tookMs: Date.now() - started,
+            },
+          }
+        }
+        catch (error) {
+          // A supplier that cannot serve this route is not a failure — it is a
+          // fact the agent should see, phrased differently from a crash.
+          const unsupported = isUnsupported(error)
+
+          if (!unsupported) {
+            this.logger.error(`${supplier.ref.id} failed: ${String(error)}`)
+          }
+
+          return {
+            offers: [],
+            hasMore: false,
+            status: {
+              supplier: supplier.ref,
+              state: unsupported ? SupplierState.Unsupported : SupplierState.Failed,
+              offers: 0,
+              reason: unsupported
+                ? error.reason
+                : error instanceof Error ? error.message : 'unknown error',
+              tookMs: Date.now() - started,
+            },
+          }
+        }
+      }),
     )
 
-    const snapshot = () => [...statuses.values()].map(s => ({ ...s }))
+    /**
+     * Merged by price, because that is how every supplier sorts its own page
+     * and how an agent reads the list.
+     *
+     * Honest caveat for when there is more than one supplier: this orders each
+     * page correctly, but a cheap offer sitting on supplier B's page 2 can be
+     * cheaper than things on supplier A's page 1. Exact global ordering needs
+     * a price cursor, which SAMO does not offer.
+     */
+    const offers = results
+      .flatMap(r => r.offers)
+      .sort((a, b) => a.sortPrice() - b.sortPrice())
 
-    // Tell the client who we are waiting for before any of them answer, so the
-    // status row is populated from the first frame.
-    yield { statuses: snapshot(), offers: [], done: false }
-
-    const queue: SearchUpdate[] = []
-    let wake: (() => void) | null = null
-    const push = (update: SearchUpdate) => {
-      queue.push(update)
-      wake?.()
+    return {
+      offers,
+      statuses: results.map(r => r.status),
+      page,
+      hasMore: results.some(r => r.hasMore),
     }
-
-    const runners = this.suppliers.map(async (supplier) => {
-      const started = Date.now()
-      const status = statuses.get(supplier.ref.id)!
-      status.state = SupplierState.Searching
-
-      try {
-        for await (const page of supplier.search(criteria, signal, maxPages)) {
-          status.offers += page.offers.length
-          push({ statuses: snapshot(), offers: page.offers, done: false })
-        }
-
-        status.state = SupplierState.Done
-      }
-      catch (error) {
-        // A supplier that cannot serve this route is not a failure — it is a
-        // fact the agent should see, phrased differently from a crash.
-        if (isUnsupported(error)) {
-          status.state = SupplierState.Unsupported
-          status.reason = error.reason
-        }
-        else {
-          status.state = SupplierState.Failed
-          status.reason = error instanceof Error ? error.message : 'unknown error'
-          this.logger.error(`${supplier.ref.id} failed: ${status.reason}`)
-        }
-      }
-      finally {
-        status.tookMs = Date.now() - started
-        push({ statuses: snapshot(), offers: [], done: false })
-      }
-    })
-
-    const all = Promise.allSettled(runners).then(() => { push({ statuses: snapshot(), offers: [], done: true }) })
-
-    for (;;) {
-      if (queue.length) {
-        const update = queue.shift()!
-        yield update
-        if (update.done) break
-        continue
-      }
-
-      await new Promise<void>((resolve) => { wake = resolve })
-      wake = null
-    }
-
-    await all
   }
 }

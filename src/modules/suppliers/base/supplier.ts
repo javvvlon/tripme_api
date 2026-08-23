@@ -55,64 +55,58 @@ export abstract class BaseSupplier<TQuery, TRow> implements ISupplier {
     return {}
   }
 
-  async* search(
+  /**
+   * Fetch exactly one page.
+   *
+   * Demand-driven on purpose. Walking the whole listing costs ten requests and
+   * ~27s at the polite interval, and almost nobody reads past the first page —
+   * it is already the cheapest hundred, sorted by price. So the agent's scroll
+   * decides how deep we go, and a supplier only sees the requests a human
+   * actually caused.
+   */
+  async fetchPage(
     criteria: SearchCriteria,
+    page: number,
     signal?: AbortSignal,
-    /**
-     * Stop after this many pages. The point is not politeness but latency:
-     * paging to exhaustion takes ~27s at a 2.5s interval, which is fine for a
-     * stream that shows results as they land and useless for a single
-     * response somebody is waiting on.
-     */
-    maxPages = this.capabilities.maxPages,
-  ): AsyncIterable<SupplierPage> {
-    const seen = new Set<string>()
-    const limit = Math.min(maxPages, this.capabilities.maxPages)
-
-    for (let page = 1; page <= limit; page++) {
-      if (signal?.aborted) return
-
-      const query = this.buildQuery(criteria, page)
-
-      if (isUnsupported(query)) {
-        // Thrown rather than yielded: an unservable search is not an empty
-        // page, and the caller must be able to tell them apart. A supplier
-        // that was never properly asked looks identical to one with no
-        // availability, and that difference is the whole point of §4's
-        // "who answered" row.
-        throw query
-      }
-
-      await this.throttle()
-
-      const payload = await this.transport.fetch(this.buildUrl(query), {
-        signal,
-        headers: this.requestHeaders,
-      })
-      const rows = this.parse(payload)
-
-      const offers: Offer[] = []
-      for (const row of rows) {
-        const offer = this.map(row, criteria)
-        if (!offer) continue
-
-        const key = offer.dedupeKey()
-        if (seen.has(key)) continue // identical offers repeat across page edges
-        seen.add(key)
-        offers.push(offer)
-      }
-
-      // The only end-of-listing signal SAMO gives is a short page: there is no
-      // total, no next link, and a full page is indistinguishable from the
-      // last one except by count.
-      const hasMore = rows.length >= this.capabilities.pageSize
-
-      yield { supplier: this.ref, page, offers, hasMore }
-
-      if (!hasMore) return
+  ): Promise<SupplierPage> {
+    if (page > this.capabilities.maxPages) {
+      return { supplier: this.ref, page, offers: [], hasMore: false }
     }
 
-    this.logger.warn(`${this.ref.id}: stopped at ${limit} pages; results are truncated`)
+    const query = this.buildQuery(criteria, page)
+
+    if (isUnsupported(query)) {
+      // Thrown rather than returned empty: an unservable search is not an
+      // empty page, and the caller must tell them apart. A supplier that was
+      // never properly asked looks identical to one with no availability, and
+      // that difference is the point of §4's "who answered" row.
+      throw query
+    }
+
+    await this.throttle()
+
+    const payload = await this.transport.fetch(this.buildUrl(query), {
+      signal,
+      headers: this.requestHeaders,
+    })
+
+    const rows = this.parse(payload)
+
+    const offers: Offer[] = []
+    for (const row of rows) {
+      const offer = this.map(row, criteria)
+      if (offer) offers.push(offer)
+    }
+
+    // The only end-of-listing signal SAMO gives is a short page: no total, no
+    // next link, and a full page is indistinguishable from the last one except
+    // by its length.
+    return {
+      supplier: this.ref,
+      page,
+      offers,
+      hasMore: rows.length >= this.capabilities.pageSize,
+    }
   }
 
   private async throttle(): Promise<void> {

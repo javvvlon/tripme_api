@@ -68,8 +68,8 @@ export interface ISupplier {
   readonly access: SupplierAccess
   readonly capabilities: SupplierCapabilities
 
-  /** Pages arrive as they are fetched; the caller streams them onward. */
-  search: (criteria: SearchCriteria, signal?: AbortSignal, maxPages?: number) => AsyncIterable<SupplierPage>
+  /** One page, fetched when someone asks for it. */
+  fetchPage: (criteria: SearchCriteria, page: number, signal?: AbortSignal) => Promise<SupplierPage>
 }
 
 /**
