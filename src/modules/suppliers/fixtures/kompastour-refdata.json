@@ -1,0 +1,4957 @@
+{
+  "harvested_from": "https://online.uz.kompastour.com/search_tour",
+  "selects": {
+    "TOWNFROMINC": [
+      {
+        "value": "913",
+        "label": "Бухара"
+      },
+      {
+        "value": "917",
+        "label": "Самарканд"
+      },
+      {
+        "value": "26",
+        "label": "Ташкент"
+      },
+      {
+        "value": "2071",
+        "label": "Ургенч"
+      },
+      {
+        "value": "1819",
+        "label": "Фергана"
+      },
+      {
+        "value": "538",
+        "label": "Вена"
+      },
+      {
+        "value": "1411",
+        "label": "Баку"
+      },
+      {
+        "value": "1512",
+        "label": "Гянджа"
+      },
+      {
+        "value": "880",
+        "label": "Брест"
+      },
+      {
+        "value": "873",
+        "label": "Минск"
+      },
+      {
+        "value": "919",
+        "label": "Будапешт"
+      },
+      {
+        "value": "941",
+        "label": "Батуми"
+      },
+      {
+        "value": "180",
+        "label": "Тбилиси"
+      },
+      {
+        "value": "109",
+        "label": "Актау"
+      },
+      {
+        "value": "105",
+        "label": "Актобе"
+      },
+      {
+        "value": "9",
+        "label": "Алматы"
+      },
+      {
+        "value": "12",
+        "label": "Астана"
+      },
+      {
+        "value": "115",
+        "label": "Атырау"
+      },
+      {
+        "value": "103",
+        "label": "Караганда"
+      },
+      {
+        "value": "102",
+        "label": "Кокшетау"
+      },
+      {
+        "value": "15",
+        "label": "Костанай"
+      },
+      {
+        "value": "16",
+        "label": "Кызылорда"
+      },
+      {
+        "value": "113",
+        "label": "Петропавловск"
+      },
+      {
+        "value": "107",
+        "label": "Семей"
+      },
+      {
+        "value": "112",
+        "label": "Туркестан"
+      },
+      {
+        "value": "106",
+        "label": "Уральск"
+      },
+      {
+        "value": "178",
+        "label": "Усть-Каменогорск"
+      },
+      {
+        "value": "17",
+        "label": "Шымкент"
+      },
+      {
+        "value": "912",
+        "label": "Бишкек"
+      },
+      {
+        "value": "2116",
+        "label": "Ош"
+      },
+      {
+        "value": "1459",
+        "label": "Кишинев"
+      },
+      {
+        "value": "1447",
+        "label": "Варшава"
+      },
+      {
+        "value": "2743",
+        "label": "Катовице"
+      },
+      {
+        "value": "2262",
+        "label": "Краков"
+      },
+      {
+        "value": "2747",
+        "label": "Люблин"
+      },
+      {
+        "value": "2598",
+        "label": "Познань"
+      },
+      {
+        "value": "2261",
+        "label": "Бухарест"
+      },
+      {
+        "value": "3186",
+        "label": "Братислава"
+      },
+      {
+        "value": "136",
+        "label": "Душанбе"
+      },
+      {
+        "value": "1285",
+        "label": "Запорожье"
+      },
+      {
+        "value": "911",
+        "label": "Киев"
+      },
+      {
+        "value": "1640",
+        "label": "Луцк"
+      },
+      {
+        "value": "888",
+        "label": "Львов"
+      },
+      {
+        "value": "897",
+        "label": "Ужгород"
+      },
+      {
+        "value": "1213",
+        "label": "Харьков"
+      },
+      {
+        "value": "521",
+        "label": "Прага"
+      }
+    ],
+    "STATEINC": [
+      {
+        "value": "61",
+        "label": "Азербайджан"
+      },
+      {
+        "value": "54",
+        "label": "Великобритания"
+      },
+      {
+        "value": "65",
+        "label": "Венгрия"
+      },
+      {
+        "value": "32",
+        "label": "Вьетнам"
+      },
+      {
+        "value": "21",
+        "label": "Германия"
+      },
+      {
+        "value": "30",
+        "label": "Грузия"
+      },
+      {
+        "value": "37",
+        "label": "Египет"
+      },
+      {
+        "value": "109",
+        "label": "Занзибар (Танзания)"
+      },
+      {
+        "value": "6",
+        "label": "Индия"
+      },
+      {
+        "value": "11",
+        "label": "Индонезия"
+      },
+      {
+        "value": "7",
+        "label": "Казахстан"
+      },
+      {
+        "value": "111",
+        "label": "Катар"
+      },
+      {
+        "value": "139",
+        "label": "Кения"
+      },
+      {
+        "value": "31",
+        "label": "Китай"
+      },
+      {
+        "value": "8",
+        "label": "Кыргызстан"
+      },
+      {
+        "value": "86",
+        "label": "Маврикий"
+      },
+      {
+        "value": "12",
+        "label": "Малайзия"
+      },
+      {
+        "value": "40",
+        "label": "Мальдивы"
+      },
+      {
+        "value": "23",
+        "label": "ОАЭ"
+      },
+      {
+        "value": "78",
+        "label": "Оман"
+      },
+      {
+        "value": "77",
+        "label": "Сейшельские Острова"
+      },
+      {
+        "value": "22",
+        "label": "США"
+      },
+      {
+        "value": "28",
+        "label": "Таиланд"
+      },
+      {
+        "value": "17",
+        "label": "Турция"
+      },
+      {
+        "value": "59",
+        "label": "Швейцария"
+      },
+      {
+        "value": "27",
+        "label": "Шри-Ланка"
+      },
+      {
+        "value": "57",
+        "label": "Южная Корея"
+      },
+      {
+        "value": "94",
+        "label": "Япония"
+      }
+    ],
+    "FREIGHTTYPE": [
+      {
+        "value": "1",
+        "label": "Блочные туры"
+      },
+      {
+        "value": "0",
+        "label": "Любой"
+      },
+      {
+        "value": "2",
+        "label": "GDS туры"
+      }
+    ],
+    "TOURINC": [
+      {
+        "value": "0",
+        "label": "----"
+      },
+      {
+        "value": "9249",
+        "label": "TR: Анталия из Ташкента (BLOCK: Qanot Sharq Airlines)"
+      },
+      {
+        "value": "3503",
+        "label": "TR: Анталия из Ташкента через Стамбул (GDS)"
+      },
+      {
+        "value": "2768",
+        "label": "TR: Стамбул из Ташкента (GDS)"
+      },
+      {
+        "value": "3366",
+        "label": "TR: Стамбул из Ташкента - Экскурсионные программы (GDS)"
+      }
+    ],
+    "PROGRAMGROUPINC": [
+      {
+        "value": "0",
+        "label": "----"
+      },
+      {
+        "value": "253",
+        "label": "Standard"
+      }
+    ],
+    "NIGHTS_FROM": [
+      {
+        "value": "2",
+        "label": "2"
+      },
+      {
+        "value": "3",
+        "label": "3"
+      },
+      {
+        "value": "4",
+        "label": "4"
+      },
+      {
+        "value": "5",
+        "label": "5"
+      },
+      {
+        "value": "6",
+        "label": "6"
+      },
+      {
+        "value": "7",
+        "label": "7"
+      },
+      {
+        "value": "8",
+        "label": "8"
+      },
+      {
+        "value": "9",
+        "label": "9"
+      },
+      {
+        "value": "10",
+        "label": "10"
+      },
+      {
+        "value": "11",
+        "label": "11"
+      },
+      {
+        "value": "12",
+        "label": "12"
+      },
+      {
+        "value": "13",
+        "label": "13"
+      },
+      {
+        "value": "14",
+        "label": "14"
+      }
+    ],
+    "NIGHTS_TILL": [
+      {
+        "value": "2",
+        "label": "2"
+      },
+      {
+        "value": "3",
+        "label": "3"
+      },
+      {
+        "value": "4",
+        "label": "4"
+      },
+      {
+        "value": "5",
+        "label": "5"
+      },
+      {
+        "value": "6",
+        "label": "6"
+      },
+      {
+        "value": "7",
+        "label": "7"
+      },
+      {
+        "value": "8",
+        "label": "8"
+      },
+      {
+        "value": "9",
+        "label": "9"
+      },
+      {
+        "value": "10",
+        "label": "10"
+      },
+      {
+        "value": "11",
+        "label": "11"
+      },
+      {
+        "value": "12",
+        "label": "12"
+      },
+      {
+        "value": "13",
+        "label": "13"
+      },
+      {
+        "value": "14",
+        "label": "14"
+      }
+    ],
+    "ADULT": [
+      {
+        "value": "1",
+        "label": "1"
+      },
+      {
+        "value": "2",
+        "label": "2"
+      },
+      {
+        "value": "3",
+        "label": "3"
+      },
+      {
+        "value": "4",
+        "label": "4"
+      }
+    ],
+    "CURRENCY": [
+      {
+        "value": "3",
+        "label": "EUR"
+      },
+      {
+        "value": "2",
+        "label": "USD"
+      },
+      {
+        "value": "10",
+        "label": "UZS"
+      }
+    ],
+    "CHILD": [
+      {
+        "value": "0",
+        "label": "0"
+      },
+      {
+        "value": "1",
+        "label": "1"
+      },
+      {
+        "value": "2",
+        "label": "2"
+      },
+      {
+        "value": "3",
+        "label": "3"
+      }
+    ],
+    "AGE1": [
+      {
+        "value": "0",
+        "label": "0"
+      },
+      {
+        "value": "1",
+        "label": "1"
+      },
+      {
+        "value": "2",
+        "label": "2"
+      },
+      {
+        "value": "3",
+        "label": "3"
+      },
+      {
+        "value": "4",
+        "label": "4"
+      },
+      {
+        "value": "5",
+        "label": "5"
+      },
+      {
+        "value": "6",
+        "label": "6"
+      },
+      {
+        "value": "7",
+        "label": "7"
+      },
+      {
+        "value": "8",
+        "label": "8"
+      },
+      {
+        "value": "9",
+        "label": "9"
+      },
+      {
+        "value": "10",
+        "label": "10"
+      },
+      {
+        "value": "11",
+        "label": "11"
+      },
+      {
+        "value": "12",
+        "label": "12"
+      },
+      {
+        "value": "13",
+        "label": "13"
+      },
+      {
+        "value": "14",
+        "label": "14"
+      },
+      {
+        "value": "15",
+        "label": "15"
+      },
+      {
+        "value": "16",
+        "label": "16"
+      },
+      {
+        "value": "17",
+        "label": "17"
+      },
+      {
+        "value": "18",
+        "label": "18"
+      }
+    ],
+    "AGE2": [
+      {
+        "value": "0",
+        "label": "0"
+      },
+      {
+        "value": "1",
+        "label": "1"
+      },
+      {
+        "value": "2",
+        "label": "2"
+      },
+      {
+        "value": "3",
+        "label": "3"
+      },
+      {
+        "value": "4",
+        "label": "4"
+      },
+      {
+        "value": "5",
+        "label": "5"
+      },
+      {
+        "value": "6",
+        "label": "6"
+      },
+      {
+        "value": "7",
+        "label": "7"
+      },
+      {
+        "value": "8",
+        "label": "8"
+      },
+      {
+        "value": "9",
+        "label": "9"
+      },
+      {
+        "value": "10",
+        "label": "10"
+      },
+      {
+        "value": "11",
+        "label": "11"
+      },
+      {
+        "value": "12",
+        "label": "12"
+      },
+      {
+        "value": "13",
+        "label": "13"
+      },
+      {
+        "value": "14",
+        "label": "14"
+      },
+      {
+        "value": "15",
+        "label": "15"
+      },
+      {
+        "value": "16",
+        "label": "16"
+      },
+      {
+        "value": "17",
+        "label": "17"
+      },
+      {
+        "value": "18",
+        "label": "18"
+      }
+    ],
+    "AGE3": [
+      {
+        "value": "0",
+        "label": "0"
+      },
+      {
+        "value": "1",
+        "label": "1"
+      },
+      {
+        "value": "2",
+        "label": "2"
+      },
+      {
+        "value": "3",
+        "label": "3"
+      },
+      {
+        "value": "4",
+        "label": "4"
+      },
+      {
+        "value": "5",
+        "label": "5"
+      },
+      {
+        "value": "6",
+        "label": "6"
+      },
+      {
+        "value": "7",
+        "label": "7"
+      },
+      {
+        "value": "8",
+        "label": "8"
+      },
+      {
+        "value": "9",
+        "label": "9"
+      },
+      {
+        "value": "10",
+        "label": "10"
+      },
+      {
+        "value": "11",
+        "label": "11"
+      },
+      {
+        "value": "12",
+        "label": "12"
+      },
+      {
+        "value": "13",
+        "label": "13"
+      },
+      {
+        "value": "14",
+        "label": "14"
+      },
+      {
+        "value": "15",
+        "label": "15"
+      },
+      {
+        "value": "16",
+        "label": "16"
+      },
+      {
+        "value": "17",
+        "label": "17"
+      },
+      {
+        "value": "18",
+        "label": "18"
+      }
+    ]
+  },
+  "checkbox_lists": {
+    "(без имени)": [
+      {
+        "value": "95",
+        "label": "Алания"
+      },
+      {
+        "value": "29",
+        "label": "Анталия"
+      },
+      {
+        "value": "1927",
+        "label": "Демре"
+      },
+      {
+        "value": "1983",
+        "label": "Кунду"
+      },
+      {
+        "value": "96",
+        "label": "Белек"
+      },
+      {
+        "value": "1980",
+        "label": "Богазкент"
+      },
+      {
+        "value": "1972",
+        "label": "Бельдиби"
+      },
+      {
+        "value": "97",
+        "label": "Кемер"
+      },
+      {
+        "value": "1973",
+        "label": "Кемер центр"
+      },
+      {
+        "value": "1976",
+        "label": "Кириш"
+      },
+      {
+        "value": "1978",
+        "label": "Чиралы"
+      },
+      {
+        "value": "98",
+        "label": "Сиде"
+      },
+      {
+        "value": "1968",
+        "label": "Чолаклы"
+      },
+      {
+        "value": "2119",
+        "label": "Аксарай"
+      },
+      {
+        "value": "641",
+        "label": "Бакыркёй"
+      },
+      {
+        "value": "1242",
+        "label": "Бейоглу"
+      },
+      {
+        "value": "643",
+        "label": "Бешикташ"
+      },
+      {
+        "value": "673",
+        "label": "Беязыт"
+      },
+      {
+        "value": "2181",
+        "label": "Бомонти"
+      },
+      {
+        "value": "672",
+        "label": "Каракёй"
+      },
+      {
+        "value": "1456",
+        "label": "Кумкапы"
+      },
+      {
+        "value": "653",
+        "label": "Лалели"
+      },
+      {
+        "value": "2187",
+        "label": "Пера"
+      },
+      {
+        "value": "3045",
+        "label": "Сарыер"
+      },
+      {
+        "value": "663",
+        "label": "Сиркеджи"
+      },
+      {
+        "value": "169",
+        "label": "Стамбул"
+      },
+      {
+        "value": "665",
+        "label": "Султанахмет"
+      },
+      {
+        "value": "667",
+        "label": "Таксим"
+      },
+      {
+        "value": "669",
+        "label": "Топкапы"
+      },
+      {
+        "value": "648",
+        "label": "Фатих"
+      },
+      {
+        "value": "664",
+        "label": "Шишли"
+      },
+      {
+        "value": "10005",
+        "label": "2*"
+      },
+      {
+        "value": "10006",
+        "label": "3*"
+      },
+      {
+        "value": "10002",
+        "label": "4*"
+      },
+      {
+        "value": "10001",
+        "label": "5*"
+      },
+      {
+        "value": "10023",
+        "label": "APARTMENT"
+      },
+      {
+        "value": "10028",
+        "label": "Boutique"
+      },
+      {
+        "value": "2",
+        "label": "Exc. tour"
+      },
+      {
+        "value": "10019",
+        "label": "SPECIAL"
+      },
+      {
+        "value": "1000202",
+        "label": "> DELUXE <"
+      },
+      {
+        "value": "1000151",
+        "label": "1-я береговая линия"
+      },
+      {
+        "value": "1000152",
+        "label": "2-я береговая линия"
+      },
+      {
+        "value": "1000179",
+        "label": "Adults only"
+      },
+      {
+        "value": "59",
+        "label": "Family"
+      },
+      {
+        "value": "1000220",
+        "label": "Gala Dinner"
+      },
+      {
+        "value": "1000210",
+        "label": "Handicap"
+      },
+      {
+        "value": "1000154",
+        "label": "Honeymooners"
+      },
+      {
+        "value": "1000209",
+        "label": "Pets friendly"
+      },
+      {
+        "value": "57",
+        "label": "Recommend"
+      },
+      {
+        "value": "6",
+        "label": "Villa"
+      },
+      {
+        "value": "1000221",
+        "label": "VIP"
+      },
+      {
+        "value": "61",
+        "label": "Активный"
+      },
+      {
+        "value": "30",
+        "label": "Бассейн с подогревом"
+      },
+      {
+        "value": "1000184",
+        "label": "Водные горки/аквапарк"
+      },
+      {
+        "value": "60",
+        "label": "Молодежный"
+      },
+      {
+        "value": "52361",
+        "label": "A HOTEL SIDE 3*"
+      },
+      {
+        "value": "52363",
+        "label": "A SUITE SIDE APARTMENT"
+      },
+      {
+        "value": "45273",
+        "label": "A11 HOTEL OBAKOY 4*"
+      },
+      {
+        "value": "31194",
+        "label": "ACAR HOTEL 4*"
+      },
+      {
+        "value": "25086",
+        "label": "ACRA HOTEL 4*"
+      },
+      {
+        "value": "9336",
+        "label": "ACRA HOTEL 4*"
+      },
+      {
+        "value": "45314",
+        "label": "ACROPOL BEACH HOTEL 3*"
+      },
+      {
+        "value": "31196",
+        "label": "ADALYA ARTSIDE HOTEL 5*"
+      },
+      {
+        "value": "31199",
+        "label": "ADALYA BLISS +16 ADULT ONLY (EX.ADALYA RESORT&SPA ADULTS ONLY) 5*"
+      },
+      {
+        "value": "31197",
+        "label": "ADALYA ELITE HOTEL 5*"
+      },
+      {
+        "value": "31198",
+        "label": "ADALYA OCEAN DELUXE 5*"
+      },
+      {
+        "value": "31200",
+        "label": "ADAM & EVE HOTEL ONLY ADULT+16 SPECIAL"
+      },
+      {
+        "value": "33999",
+        "label": "ADORA HOTEL 3*"
+      },
+      {
+        "value": "31202",
+        "label": "AGON HOTEL// 3*"
+      },
+      {
+        "value": "38447",
+        "label": "AHC HOTEL GRAND BAZAAR (Ex.Grand Beyazit) 4*"
+      },
+      {
+        "value": "9675",
+        "label": "AHC HOTEL OLD CITY (Ex.Zurich Hotel) 4*"
+      },
+      {
+        "value": "32143",
+        "label": "AHC HOTEL OLD CITY (Ex.Zurich Hotel) 4*"
+      },
+      {
+        "value": "25073",
+        "label": "AHC HOTEL TAKSIM (Ex.Villa Zurich ) 4*"
+      },
+      {
+        "value": "20098",
+        "label": "AKGUN ISTANBUL HOTEL 5*"
+      },
+      {
+        "value": "53200",
+        "label": "AKKA CLAROS 4*"
+      },
+      {
+        "value": "31204",
+        "label": "AKKA HOTELS ALINDA 5*"
+      },
+      {
+        "value": "31205",
+        "label": "AKKA HOTELS ANTEDON 5*"
+      },
+      {
+        "value": "31696",
+        "label": "AKKA HOTELS CLAROS. 4*"
+      },
+      {
+        "value": "33856",
+        "label": "AKKA HOTELS LUSH 4*"
+      },
+      {
+        "value": "51907",
+        "label": "AKKA HOTELS LUSH 4*"
+      },
+      {
+        "value": "31827",
+        "label": "AKKA HOTELS RESIDENCE VILLAS 5*"
+      },
+      {
+        "value": "35371",
+        "label": "AKKA HOTELS SUITES 4*"
+      },
+      {
+        "value": "51910",
+        "label": "AKKA HOTELS SUITES 3*"
+      },
+      {
+        "value": "33452",
+        "label": "AKRA ANTALYA 5*"
+      },
+      {
+        "value": "31409",
+        "label": "AKRA KEMER 5*"
+      },
+      {
+        "value": "31653",
+        "label": "AKRA SORGUN TUI BLUE SENSATORI 5*"
+      },
+      {
+        "value": "33453",
+        "label": "AKRA-V HOTEL 4*"
+      },
+      {
+        "value": "48167",
+        "label": "ALAIYE KLEOPATRA HOTEL 4*"
+      },
+      {
+        "value": "53187",
+        "label": "ALAIYE KLEOPATRA HOTEL 4*"
+      },
+      {
+        "value": "53188",
+        "label": "ALAIYE RESORT & SPA HOTEL 5*"
+      },
+      {
+        "value": "45276",
+        "label": "ALAIYE RESORT & SPA HOTEL 5*"
+      },
+      {
+        "value": "32202",
+        "label": "ALANYA RISUS PARK HOTEL. 3*"
+      },
+      {
+        "value": "38716",
+        "label": "ALARCHA HOTELS & RESORTS 5*"
+      },
+      {
+        "value": "31207",
+        "label": "ALBA QUEEN HOTEL 5*"
+      },
+      {
+        "value": "31208",
+        "label": "ALBA RESORT HOTEL 5*"
+      },
+      {
+        "value": "31209",
+        "label": "ALBA ROYAL HOTEL--ONLY ADULT 5*"
+      },
+      {
+        "value": "51912",
+        "label": "ALBATROS HAGIA SOPHIA HOTEL 4*"
+      },
+      {
+        "value": "29610",
+        "label": "ALBATROS PREMIER HOTEL 4*"
+      },
+      {
+        "value": "33514",
+        "label": "ALDER GARDEN HOTEL (EX. ELDAR GARDEN RESORT HOTEL) 4*"
+      },
+      {
+        "value": "31338",
+        "label": "ALDER RESORT HOTEL (EX. ELDAR RESORT HOTEL) 4*"
+      },
+      {
+        "value": "32221",
+        "label": "ALERIA BELPORT BEACH HOTEL 4*"
+      },
+      {
+        "value": "54459",
+        "label": "ALESSIA HOTEL 3*"
+      },
+      {
+        "value": "42194",
+        "label": "ALETRIS DELUXE HOTEL&SPA 5*"
+      },
+      {
+        "value": "45625",
+        "label": "ALEXIUS BEACH HOTEL 4*"
+      },
+      {
+        "value": "32115",
+        "label": "ALFA HOTEL 4*"
+      },
+      {
+        "value": "52034",
+        "label": "ALIEE HOTEL ISTANBUL 5*"
+      },
+      {
+        "value": "25199",
+        "label": "ALL SEASONS HOTEL 4*"
+      },
+      {
+        "value": "53162",
+        "label": "ALMARIS RESORT HOTEL 5*"
+      },
+      {
+        "value": "46622",
+        "label": "ALMARIS RESORT HOTEL 4*"
+      },
+      {
+        "value": "20068",
+        "label": "ALMINA HOTEL & SPA 4*"
+      },
+      {
+        "value": "9337",
+        "label": "ALMINA HOTEL & SPA 4*"
+      },
+      {
+        "value": "31152",
+        "label": "ALMINA INN HOTEL 3*"
+      },
+      {
+        "value": "51913",
+        "label": "ALMINA INN HOTEL 2*"
+      },
+      {
+        "value": "31695",
+        "label": "ALP PASA BOUTIQUE HOTEL SPECIAL"
+      },
+      {
+        "value": "45626",
+        "label": "AMARA COMFORT KEMER (EX. LOXIA COMFORT RESORT KEMER) 5*"
+      },
+      {
+        "value": "45627",
+        "label": "AMBASSADOR PLAZA 4*"
+      },
+      {
+        "value": "32269",
+        "label": "AMBER HOTEL 4*"
+      },
+      {
+        "value": "29947",
+        "label": "AMBER HOTEL 4*"
+      },
+      {
+        "value": "9345",
+        "label": "AMIRAL PALACE 4*"
+      },
+      {
+        "value": "39262",
+        "label": "AMON HOTELS BELEK 4*"
+      },
+      {
+        "value": "31728",
+        "label": "AMORE BOUTIQUE HOTEL Boutique"
+      },
+      {
+        "value": "31215",
+        "label": "ANAHTAR APART HOTEL APARTMENT"
+      },
+      {
+        "value": "52978",
+        "label": "ANANAS HOTEL 4*"
+      },
+      {
+        "value": "31750",
+        "label": "ANANEA KLEOPATRA BEACH (EX. COOKS CLUB ALANYA) +12 4*"
+      },
+      {
+        "value": "33141",
+        "label": "ANDRIAKE BEACH CLUB HOTEL 5*"
+      },
+      {
+        "value": "33454",
+        "label": "ANITA KEMER NOCH HOTEL. 4*"
+      },
+      {
+        "value": "49486",
+        "label": "ANITAS BEACH HOTEL 4*"
+      },
+      {
+        "value": "31219",
+        "label": "ANJELIQ DOWNTOWN HOTEL 3*"
+      },
+      {
+        "value": "31220",
+        "label": "ANJELIQUE HOUSE Boutique"
+      },
+      {
+        "value": "52646",
+        "label": "ANNA QUEEN HOTEL ADULT ONLY +14 2*"
+      },
+      {
+        "value": "9343",
+        "label": "ANTEA HOTEL 4*"
+      },
+      {
+        "value": "31186",
+        "label": "ANTIK HOTEL 4*"
+      },
+      {
+        "value": "49239",
+        "label": "ANTIK HOTEL & GARDEN 4*"
+      },
+      {
+        "value": "31764",
+        "label": "ANTIQUE ROMAN PALACE ONLY ADULT +16 5*"
+      },
+      {
+        "value": "34008",
+        "label": "ANTUSA DESIGN HOTEL & SPA 4*"
+      },
+      {
+        "value": "25089",
+        "label": "ANTUSA PALACE HOTEL & SPA 4*"
+      },
+      {
+        "value": "45630",
+        "label": "APELLA HOTEL Boutique"
+      },
+      {
+        "value": "39437",
+        "label": "APRILIS DELUXE 4*"
+      },
+      {
+        "value": "45281",
+        "label": "ARABELLA WORLD HOTEL 4*"
+      },
+      {
+        "value": "9347",
+        "label": "ARDEN CITY HOTEL 4*"
+      },
+      {
+        "value": "45632",
+        "label": "ARES BLUE HOTEL 4*"
+      },
+      {
+        "value": "45633",
+        "label": "ARES CITY HOTEL 3*"
+      },
+      {
+        "value": "45634",
+        "label": "ARES DREAM HOTEL 4*"
+      },
+      {
+        "value": "51915",
+        "label": "ARISE HOTEL GOLDEN HORN (ex. CLARION HOTEL GOLDEN HORN) 4*"
+      },
+      {
+        "value": "25190",
+        "label": "ARMAGRANDI SPINA HOTEL 4*"
+      },
+      {
+        "value": "33572",
+        "label": "ARNOR DELUXE HOTEL & SPA 5*"
+      },
+      {
+        "value": "31231",
+        "label": "AROMA BOUTIQUE HOTEL 3*"
+      },
+      {
+        "value": "31232",
+        "label": "ARSI BLUE BEACH HOTEL 4*"
+      },
+      {
+        "value": "31233",
+        "label": "ARSI ENFI CITY BEACH HOTEL 4*"
+      },
+      {
+        "value": "31234",
+        "label": "ARSI HOTEL 4*"
+      },
+      {
+        "value": "31235",
+        "label": "ARSI PARADISE BEACH HOTEL 4*"
+      },
+      {
+        "value": "31236",
+        "label": "ARSI SWEET SUITE HOTEL 3*"
+      },
+      {
+        "value": "30961",
+        "label": "ART CITY HOTEL 3*"
+      },
+      {
+        "value": "51930",
+        "label": "ART CITY HOTEL 3*"
+      },
+      {
+        "value": "45456",
+        "label": "ART POSEIDON SIDE HOTEL 4*"
+      },
+      {
+        "value": "53161",
+        "label": "ART POSEIDON SIDE HOTEL 4*"
+      },
+      {
+        "value": "20047",
+        "label": "ARTEFES HOTEL 4*"
+      },
+      {
+        "value": "31238",
+        "label": "ARUM BARUT COLLECTION 5*"
+      },
+      {
+        "value": "35675",
+        "label": "ARUNA HOTEL SULTANAHMET 4*"
+      },
+      {
+        "value": "52347",
+        "label": "ARUNA HOTEL SULTANAHMET 4*"
+      },
+      {
+        "value": "31423",
+        "label": "ARYCANDA KIRMAN PREMIUM. 5*"
+      },
+      {
+        "value": "32608",
+        "label": "ASDEM PARK HOTEL. 4*"
+      },
+      {
+        "value": "33587",
+        "label": "ASKA JUST IN BEACH. 5*"
+      },
+      {
+        "value": "31240",
+        "label": "ASKA LARA RESORT & SPA 5*"
+      },
+      {
+        "value": "52979",
+        "label": "ASPENDOS SUITES APART BOUTIQUE HOTEL Boutique"
+      },
+      {
+        "value": "45286",
+        "label": "ASRIN BEACH HOTEL 4*"
+      },
+      {
+        "value": "53874",
+        "label": "ASTERIA BLOOM SIDE - UZ 5*"
+      },
+      {
+        "value": "53875",
+        "label": "ASTERIA COLLECTION SIDE- UZ 5*"
+      },
+      {
+        "value": "53873",
+        "label": "ASTERIA FAMILY RESORT SIDE - UZ 5*"
+      },
+      {
+        "value": "31246",
+        "label": "ASTORIA HOTEL KEMER 4*"
+      },
+      {
+        "value": "31247",
+        "label": "ATALLA HOTEL 3*"
+      },
+      {
+        "value": "43399",
+        "label": "ATIK PALACE HOTEL 3*"
+      },
+      {
+        "value": "33486",
+        "label": "ATLANTIS ROYAL HOTEL 3*"
+      },
+      {
+        "value": "55424",
+        "label": "AVIA RESORT & SPA 5*"
+      },
+      {
+        "value": "31169",
+        "label": "AVICENNA HOTEL 4*"
+      },
+      {
+        "value": "9352",
+        "label": "AVICENNA HOTEL 4*"
+      },
+      {
+        "value": "45288",
+        "label": "AVLION HOTEL 3*"
+      },
+      {
+        "value": "48177",
+        "label": "AYBEL INN HOTEL 3*"
+      },
+      {
+        "value": "31249",
+        "label": "AYDINBEY FAMOUS RESORT 5*"
+      },
+      {
+        "value": "31707",
+        "label": "AYDINBEY GOLD DREAMS HOTEL 5*"
+      },
+      {
+        "value": "31708",
+        "label": "AYDINBEY KING'S PALACE&SPA 5*"
+      },
+      {
+        "value": "31251",
+        "label": "AYDINBEY QUEENS PALACE & SPA 5*"
+      },
+      {
+        "value": "32580",
+        "label": "AYSU TUNC HOTEL 3*"
+      },
+      {
+        "value": "52036",
+        "label": "AZADE PREMIER HOTEL 4*"
+      },
+      {
+        "value": "31721",
+        "label": "AZURA DELUXE 5*"
+      },
+      {
+        "value": "50194",
+        "label": "AZURA WORLD HOTEL (EX. WYNDHAM ALANYA HOTEL) 5*"
+      },
+      {
+        "value": "31254",
+        "label": "BAIA LARA HOTEL 5*"
+      },
+      {
+        "value": "31253",
+        "label": "BAIA SALIMA KEMER 5*"
+      },
+      {
+        "value": "51914",
+        "label": "BARCELO ISTANBUL 5*"
+      },
+      {
+        "value": "45290",
+        "label": "BARHAN BEACH HOTEL 3*"
+      },
+      {
+        "value": "45291",
+        "label": "BARISCAN HOTEL 3*"
+      },
+      {
+        "value": "31255",
+        "label": "BARUT B SUITES 4*"
+      },
+      {
+        "value": "31256",
+        "label": "BARUT CENNET & ACANTHUS 5*"
+      },
+      {
+        "value": "34088",
+        "label": "BARUT GOIA HOTEL (EX.BARUT SUNWING BEACH) 5*"
+      },
+      {
+        "value": "31257",
+        "label": "BARUT HEMERA 5*"
+      },
+      {
+        "value": "45317",
+        "label": "BAYOU VILLAS BY LARA BARUT COLLECTION SPECIAL"
+      },
+      {
+        "value": "31259",
+        "label": "BEACH CLUB DOGANAY 5*"
+      },
+      {
+        "value": "31988",
+        "label": "BEETHOVEN HOTEL PREMIUM 4*"
+      },
+      {
+        "value": "32693",
+        "label": "BEETHOVEN HOTEL SENFONI 4*"
+      },
+      {
+        "value": "31260",
+        "label": "BEGONYA HOTEL 3*"
+      },
+      {
+        "value": "11723",
+        "label": "BEKDAS HOTEL DELUXE 4*"
+      },
+      {
+        "value": "31261",
+        "label": "BELCONTI RESORT HOTEL 5*"
+      },
+      {
+        "value": "45641",
+        "label": "BELDIBI BEACH HOTEL 4*"
+      },
+      {
+        "value": "31262",
+        "label": "BELEK BEACH RESORT HOTEL 5*"
+      },
+      {
+        "value": "45383",
+        "label": "BELENLI RESORT HOTEL 4*"
+      },
+      {
+        "value": "31264",
+        "label": "BELKON HOTEL 4*"
+      },
+      {
+        "value": "31266",
+        "label": "BELLIS DELUXE 5*"
+      },
+      {
+        "value": "42055",
+        "label": "BELPOINT BEACH HOTEL 4*"
+      },
+      {
+        "value": "31268",
+        "label": "BENNA HOTEL 2*"
+      },
+      {
+        "value": "37351",
+        "label": "BERCE HOTEL 3*"
+      },
+      {
+        "value": "20095",
+        "label": "BERGAMA HOTEL 3*"
+      },
+      {
+        "value": "45760",
+        "label": "BERGIZ HOTELS & RESORTS KEMER 5*"
+      },
+      {
+        "value": "31384",
+        "label": "BESO HOTEL BERKE RANCH & NATURE (EX. HOTEL BERKE RANCH & NATURE) Boutique"
+      },
+      {
+        "value": "49330",
+        "label": "BEST ALANYA HOTEL 3*"
+      },
+      {
+        "value": "9355",
+        "label": "BEST WESTERN EMPIRE PALACE 4*"
+      },
+      {
+        "value": "45318",
+        "label": "BEST WESTERN PLUS KHAN HOTEL 4*"
+      },
+      {
+        "value": "29948",
+        "label": "BEYAZIT PALACE HOTEL 4*"
+      },
+      {
+        "value": "45293",
+        "label": "BIENO CLUB SVS HOTEL 4*"
+      },
+      {
+        "value": "31270",
+        "label": "BIENO VENUS HOTEL 4*"
+      },
+      {
+        "value": "45712",
+        "label": "BIJAL RESORT 5*"
+      },
+      {
+        "value": "32222",
+        "label": "BILEM HIGH CLASS HOTEL. 4*"
+      },
+      {
+        "value": "54571",
+        "label": "BLUE ALANYA BEACH 4*"
+      },
+      {
+        "value": "49783",
+        "label": "BLUE DIAMOND ALYA HOTEL 4*"
+      },
+      {
+        "value": "31272",
+        "label": "BLUE FISH HOTEL 4*"
+      },
+      {
+        "value": "31156",
+        "label": "BLUE ISTANBUL HOTEL 3*"
+      },
+      {
+        "value": "34076",
+        "label": "BLUE MARLIN DELUXE SPA RESORT 5*"
+      },
+      {
+        "value": "54580",
+        "label": "BOSPHOSUR SORGUN 5*"
+      },
+      {
+        "value": "31279",
+        "label": "BRITANNIA HOTEL 3*"
+      },
+      {
+        "value": "30618",
+        "label": "BUDO HOTEL 3*"
+      },
+      {
+        "value": "45953",
+        "label": "BURDOCK HOTEL ISTANBUL 5*"
+      },
+      {
+        "value": "49324",
+        "label": "BUYUK HOTEL (EX.ALANYA BUYUK HOTEL) 4*"
+      },
+      {
+        "value": "9613",
+        "label": "BUYUK KEBAN HOTEL 4*"
+      },
+      {
+        "value": "50569",
+        "label": "BVS BOSPHORUS PERA 4*"
+      },
+      {
+        "value": "31280",
+        "label": "CALIDO MARIS HOTEL 5*"
+      },
+      {
+        "value": "31606",
+        "label": "CALIDO SOL HOTEL ( EX. STELLA BEACH HOTEL ALANYA) 5*"
+      },
+      {
+        "value": "45518",
+        "label": "CALIMERA SUNPARK ALANYA (EX.SUNPARK GARDEN HOTEL) 4*"
+      },
+      {
+        "value": "31281",
+        "label": "CALISTA LUXURY RESORT 5*"
+      },
+      {
+        "value": "31282",
+        "label": "CALISTA LUXURY RESORT SPECIAL ROOMS 5*"
+      },
+      {
+        "value": "34062",
+        "label": "CALYPTUS KIRMAN PREMIUM 5*"
+      },
+      {
+        "value": "45297",
+        "label": "CAMPUS HILL HOTEL 5*"
+      },
+      {
+        "value": "31283",
+        "label": "CAMYUVA BEACH 4*"
+      },
+      {
+        "value": "45298",
+        "label": "CARETTA BEACH HOTEL 4*"
+      },
+      {
+        "value": "42195",
+        "label": "CARETTA RELAX HOTEL 4*"
+      },
+      {
+        "value": "31284",
+        "label": "CARMEN SUITE HOTEL.. 3*"
+      },
+      {
+        "value": "45406",
+        "label": "CASA FORA BEACH RESORT 5*"
+      },
+      {
+        "value": "44285",
+        "label": "CASTIVAL HOTEL 5*"
+      },
+      {
+        "value": "31285",
+        "label": "CASTLE PARK HOTEL 4*"
+      },
+      {
+        "value": "37682",
+        "label": "CATCH HOTEL SULTANAHMET 5*"
+      },
+      {
+        "value": "45407",
+        "label": "CATS GARDEN HOTEL 3*"
+      },
+      {
+        "value": "31187",
+        "label": "CELAL SULTAN HOTEL 4*"
+      },
+      {
+        "value": "45321",
+        "label": "CENDER HOTEL 4*"
+      },
+      {
+        "value": "31286",
+        "label": "CENGER HOTEL BEACH RESORT & SPA 5*"
+      },
+      {
+        "value": "31287",
+        "label": "CESARS SIDE 5*"
+      },
+      {
+        "value": "42056",
+        "label": "CHAMPION HOLIDAY VILLAGE HV-1"
+      },
+      {
+        "value": "38395",
+        "label": "CHER HOTEL ISTANBUL 5*"
+      },
+      {
+        "value": "52435",
+        "label": "CIHANGIR PALACE 4*"
+      },
+      {
+        "value": "31289",
+        "label": "CINAR FAMILY SUITE HOTEL 3*+"
+      },
+      {
+        "value": "33611",
+        "label": "CITRUS PARK HOTEL 3*"
+      },
+      {
+        "value": "50320",
+        "label": "CITRUS PLAZA HOTEL (EX. ARTEMIS PRINCESS) 4*"
+      },
+      {
+        "value": "45322",
+        "label": "CITY INN FAMILY APART HOTEL APARTMENT"
+      },
+      {
+        "value": "45300",
+        "label": "CLEOPATRA GOLDEN BEACH HOTEL 4*"
+      },
+      {
+        "value": "31743",
+        "label": "CLUB APERION BEACH HOTEL 3*"
+      },
+      {
+        "value": "48140",
+        "label": "CLUB AQUA PLAZA 5*"
+      },
+      {
+        "value": "45384",
+        "label": "CLUB ARONA BY LAREN HOTELS 5*"
+      },
+      {
+        "value": "45294",
+        "label": "CLUB BIG BLUE SUITE HOTEL 4*"
+      },
+      {
+        "value": "45302",
+        "label": "CLUB DIZALYA HOTEL 4*"
+      },
+      {
+        "value": "31291",
+        "label": "CLUB HOTEL ANJELIQ 5*"
+      },
+      {
+        "value": "45646",
+        "label": "CLUB HOTEL BELPINAR 4*"
+      },
+      {
+        "value": "45303",
+        "label": "CLUB HOTEL MIRABELL 4*"
+      },
+      {
+        "value": "31292",
+        "label": "CLUB HOTEL RAMA 4*"
+      },
+      {
+        "value": "31293",
+        "label": "CLUB HOTEL SERA. 5*"
+      },
+      {
+        "value": "31294",
+        "label": "CLUB HOTEL SUNBEL. 4*"
+      },
+      {
+        "value": "31295",
+        "label": "CLUB KASTALIA HOLIDAY VILLAGE 5*"
+      },
+      {
+        "value": "45304",
+        "label": "CLUB MERMAID VILLAGE 4*"
+      },
+      {
+        "value": "31816",
+        "label": "CLUB MONTE CARLO HOTEL (EX. CLUB TESS) 4*"
+      },
+      {
+        "value": "42057",
+        "label": "CLUB NENA HOTEL 5*"
+      },
+      {
+        "value": "38808",
+        "label": "CLUB PARADISO HOTEL 5*"
+      },
+      {
+        "value": "31297",
+        "label": "CLUB PHASELIS ROSE 5*"
+      },
+      {
+        "value": "31298",
+        "label": "CLUB PRIVE BY RIXOS BELEK - THE LAND OF LEGEND FREE ACCESS 5*"
+      },
+      {
+        "value": "55422",
+        "label": "CLUB SUN PARADISE SOLENA BEACH HOTEL 3*"
+      },
+      {
+        "value": "52980",
+        "label": "CLUB TURTAS BEACH 4*"
+      },
+      {
+        "value": "45308",
+        "label": "CLUB WASA HOLIDAY VILLAGE 4*"
+      },
+      {
+        "value": "31300",
+        "label": "CONCORDE DE LUXE RESORT. 5*"
+      },
+      {
+        "value": "31301",
+        "label": "CONCORDIA CELES HOTEL. 5*"
+      },
+      {
+        "value": "52436",
+        "label": "CONRAD ISTANBUL BOSPHORUS 5*"
+      },
+      {
+        "value": "31157",
+        "label": "CONSTANTINOPOLIS HOTEL 3*"
+      },
+      {
+        "value": "52818",
+        "label": "CORENDON HYDROS CLUB (EX. AQI HYDROS CLUB) 5*"
+      },
+      {
+        "value": "31368",
+        "label": "CORENDON PLAYA KEMER 5*"
+      },
+      {
+        "value": "31830",
+        "label": "CORNELIA AZURE VILLAS. 5*"
+      },
+      {
+        "value": "31303",
+        "label": "CORNELIA DIAMOND GOLF RESORT 5*"
+      },
+      {
+        "value": "21402",
+        "label": "CROWNE PLAZA ISTANBUL FLORYA 5*"
+      },
+      {
+        "value": "51916",
+        "label": "CROWNE PLAZA ISTANBUL FLORYA 5*"
+      },
+      {
+        "value": "32119",
+        "label": "CROWNE PLAZA OLD CITY 5*"
+      },
+      {
+        "value": "31304",
+        "label": "CRYSTAL ADMIRAL AQUA COLLECTION (EX. CRYSTAL ADMIRAL RESORT SUITES & SPA) 5*"
+      },
+      {
+        "value": "31307",
+        "label": "CRYSTAL AURA AQUA COLLECTION (EX. CRYSTAL AURA BEACH RESORT & SPA ) 5*"
+      },
+      {
+        "value": "31308",
+        "label": "CRYSTAL BOUTIQUE COMFORT COLLECTION (EX. CRYSTAL BOUTIQUE BEACH RESORT) 5*"
+      },
+      {
+        "value": "31736",
+        "label": "CRYSTAL CENTRO PEARL COLLECTION 5*"
+      },
+      {
+        "value": "34123",
+        "label": "CRYSTAL CLUB WORLD OF COLOURS RESORT & SPA 5*"
+      },
+      {
+        "value": "31309",
+        "label": "CRYSTAL DE LUXE COMFORT COLLECTION (EX. CRYSTAL DE LUXE RESORT & SPA) 5*"
+      },
+      {
+        "value": "31310",
+        "label": "CRYSTAL FAMILY COMFORT COLLECTION (EX. CRYSTAL FAMILY RESORT & SPA) 5*"
+      },
+      {
+        "value": "31311",
+        "label": "CRYSTAL FLORA PEARL COLLECTION (EX. CRYSTAL FLORA BEACH RESORT) 5*"
+      },
+      {
+        "value": "31313",
+        "label": "CRYSTAL PARAISO AQUA COLLECTION (EX. CRYSTAL PARAISO VERDE RESORT & SPA) 5*"
+      },
+      {
+        "value": "31213",
+        "label": "CRYSTAL PRESTIGE ELITE PEARL COLLECTION (EX. CRYSTAL PRESTIGE ELITE HOTEL) 5*"
+      },
+      {
+        "value": "31316",
+        "label": "CRYSTAL SUNSET PEARL COLLECTION(EX. CRYSTAL SUNSET LUXURY RESORT & SPA) 5*"
+      },
+      {
+        "value": "31318",
+        "label": "CRYSTAL TAT BEACH PEARL COLLECTION (EX. CRYSTAL TAT BEACH GOLF RESORT & SPA) 5*"
+      },
+      {
+        "value": "31319",
+        "label": "CRYSTAL WATERWORLD AQUA COLLECTION (EX. CRYSTAL WATERWORLD RESORT & SPA) 5*"
+      },
+      {
+        "value": "48316",
+        "label": "CSK THE HALICH PORT HOTEL 4*"
+      },
+      {
+        "value": "39264",
+        "label": "CULLINAN GOLF & RESORT BELEK 5*"
+      },
+      {
+        "value": "51917",
+        "label": "CVK PARK BOSPHORUS HOTEL ISTANBUL 5*"
+      },
+      {
+        "value": "9444",
+        "label": "CVK PARK BOSPHORUS HOTEL ISTANBUL 5*"
+      },
+      {
+        "value": "31320",
+        "label": "DAIMA BIZ HOTEL 5*"
+      },
+      {
+        "value": "33974",
+        "label": "DANIS HOTEL ISTANBUL 4*"
+      },
+      {
+        "value": "31189",
+        "label": "DARKHILL HOTEL 4*"
+      },
+      {
+        "value": "52208",
+        "label": "DAY ONE BEACH RESORT & SPA ADULT +18 (exc. DAY ONE BEACH RESORT & SPA ADULT +18 3*) Boutique"
+      },
+      {
+        "value": "52364",
+        "label": "DAYS INN BY WYNDHAM ALANYA APARTMENT"
+      },
+      {
+        "value": "29946",
+        "label": "DE MAREE HOTEL 3*"
+      },
+      {
+        "value": "45651",
+        "label": "DEDEMAN KEMER RESORT 5*"
+      },
+      {
+        "value": "43089",
+        "label": "DELPHIN BE GRAND RESORT 5*"
+      },
+      {
+        "value": "31321",
+        "label": "DELPHIN BE GRAND RESORT.. 5*"
+      },
+      {
+        "value": "31322",
+        "label": "DELPHIN BOTANIK HOTEL. 5*"
+      },
+      {
+        "value": "31323",
+        "label": "DELPHIN BOTANIK PLATINUM. 5*"
+      },
+      {
+        "value": "31324",
+        "label": "DELPHIN DELUXE RESORT 5*"
+      },
+      {
+        "value": "31325",
+        "label": "DELPHIN DIVA 5*"
+      },
+      {
+        "value": "43090",
+        "label": "DELPHIN DIVA 5*"
+      },
+      {
+        "value": "43091",
+        "label": "DELPHIN IMPERIAL 5*"
+      },
+      {
+        "value": "31326",
+        "label": "DELPHIN IMPERIAL HOTEL 5*"
+      },
+      {
+        "value": "31327",
+        "label": "DELPHIN NEO PALACE 5*"
+      },
+      {
+        "value": "20115",
+        "label": "DELTA HOTEL ISTANBUL 4*"
+      },
+      {
+        "value": "23700",
+        "label": "DELUXE GOLDEN HORN HOTEL 4*"
+      },
+      {
+        "value": "45325",
+        "label": "DER INN HOTEL KONYAALTI Boutique"
+      },
+      {
+        "value": "45326",
+        "label": "DER INN HOTEL LARA Boutique"
+      },
+      {
+        "value": "33210",
+        "label": "DG HOTELS ROSE RESORT + 14 4*"
+      },
+      {
+        "value": "50414",
+        "label": "DIAMANT HOTEL 3*"
+      },
+      {
+        "value": "32621",
+        "label": "DIAMOND DE LUXE HOTEL & SPA 5*"
+      },
+      {
+        "value": "32619",
+        "label": "DIAMOND ELITE HOTEL & SPA ONLY ADULT+16 (EX. DIAMOND ELITE HOTEL & SPA) 5*"
+      },
+      {
+        "value": "49322",
+        "label": "DIAMOND EXCELLENCE RESORT (EX.CRYSTAL PALACE) 5*"
+      },
+      {
+        "value": "32620",
+        "label": "DIAMOND PREMIUM HOTEL & SPA 5*"
+      },
+      {
+        "value": "20061",
+        "label": "DIAMOND ROYAL HOTEL 4*"
+      },
+      {
+        "value": "33909",
+        "label": "DIAMORE HOTEL 3*"
+      },
+      {
+        "value": "31329",
+        "label": "DINC HOTEL LARA 3*"
+      },
+      {
+        "value": "29945",
+        "label": "DIVAS HOTEL 3*"
+      },
+      {
+        "value": "45312",
+        "label": "DIZALYA PALM GARDEN 5*"
+      },
+      {
+        "value": "15698",
+        "label": "DOBEDAN BEACH RESORT COMFORT 5*"
+      },
+      {
+        "value": "43075",
+        "label": "DOBEDAN EXCLUSIVE HOTEL & SPA (EX. ALVA DONNA EXCLUSIVE HOTEL & SPA) 5*"
+      },
+      {
+        "value": "15699",
+        "label": "DOBEDAN EXCLUSIVE HOTEL&SPA 5*"
+      },
+      {
+        "value": "15700",
+        "label": "DOBEDAN WORLD PALACE 5*"
+      },
+      {
+        "value": "43076",
+        "label": "DOBEDAN WORLD PALACE (EX. ALVA DONNA WORLD PALACE) 5*"
+      },
+      {
+        "value": "31724",
+        "label": "DOSI HOTEL 4*"
+      },
+      {
+        "value": "31712",
+        "label": "DOSINIA LUXURY RESORT HOTEL 5*"
+      },
+      {
+        "value": "20081",
+        "label": "DOSSO DOSSI DOWNTOWN & SPA 5*"
+      },
+      {
+        "value": "26645",
+        "label": "DOSSO DOSSI DOWNTOWN & SPA 5*"
+      },
+      {
+        "value": "41129",
+        "label": "DOSSO DOSSI GOLDEN HORN 4*"
+      },
+      {
+        "value": "41223",
+        "label": "DOSSO DOSSI GOLDEN HORN 5*"
+      },
+      {
+        "value": "37429",
+        "label": "DOSSO DOSSI LALELI 4*"
+      },
+      {
+        "value": "31170",
+        "label": "DOSSO DOSSI OLD CITY - SULTANAHMET 4*"
+      },
+      {
+        "value": "9364",
+        "label": "DOSSO DOSSI OLD CITY - SULTANAHMET 4*"
+      },
+      {
+        "value": "37430",
+        "label": "DOSSO DOSSI YENIKAPI 4*"
+      },
+      {
+        "value": "31332",
+        "label": "DOUBLE TREE BY HILTON ANTALYA KEMER 5*"
+      },
+      {
+        "value": "23722",
+        "label": "DOUBLETREE BY HILTON ISTANBUL TOPKAPI 5*"
+      },
+      {
+        "value": "31686",
+        "label": "DREAM FAMILY CLUB 4*"
+      },
+      {
+        "value": "31688",
+        "label": "DREAM WATER WORLD 5*"
+      },
+      {
+        "value": "31687",
+        "label": "DREAM WORLD AQUA 5*"
+      },
+      {
+        "value": "31333",
+        "label": "DREAM WORLD HILL 5*"
+      },
+      {
+        "value": "32925",
+        "label": "DREAM WORLD PALACE 5*"
+      },
+      {
+        "value": "31334",
+        "label": "DREAM WORLD RESORT 5*"
+      },
+      {
+        "value": "31335",
+        "label": "DRITA HOTEL RESORT & SPA 5*"
+      },
+      {
+        "value": "55421",
+        "label": "DUBLIN HOTEL 3*"
+      },
+      {
+        "value": "39118",
+        "label": "EDITION OLD CITY HOTEL 4*"
+      },
+      {
+        "value": "31337",
+        "label": "ELA EXCELLENCE RESORT BELEK 5*"
+      },
+      {
+        "value": "31820",
+        "label": "ELA EXCELLENCE RESORT BELEK SPECIAL ROOMS 5*"
+      },
+      {
+        "value": "31410",
+        "label": "ELAMIR BEACH BUNGALOW (EX KEMER BOTANIK BEACH BUNGALOW) Boutique"
+      },
+      {
+        "value": "31411",
+        "label": "ELAMIR RESORT HOTEL 4*"
+      },
+      {
+        "value": "45653",
+        "label": "ELIJAH HOTEL 3*"
+      },
+      {
+        "value": "52645",
+        "label": "ELIT LIFE HOTEL 4*"
+      },
+      {
+        "value": "45313",
+        "label": "ELITE LUXURY SUITE&SPA HV-1"
+      },
+      {
+        "value": "23720",
+        "label": "ELITE WORLD COMFY (ex. ELITE WORLD PRESTIGE) 4*"
+      },
+      {
+        "value": "21530",
+        "label": "ELITE WORLD ISTANBUL TAKSIM 5*"
+      },
+      {
+        "value": "32423",
+        "label": "ELITE WORLD ISTANBUL TAKSIM 5*"
+      },
+      {
+        "value": "31600",
+        "label": "EMELDA SUN CLUB (EX.SIMENA SUN CLUB) 5*"
+      },
+      {
+        "value": "45654",
+        "label": "EMELDA SUN CLUB VILLAS 5*"
+      },
+      {
+        "value": "45656",
+        "label": "EMILY ROSE HOTEL 4*"
+      },
+      {
+        "value": "30604",
+        "label": "EMIN HOTEL LALELI 3*"
+      },
+      {
+        "value": "45523",
+        "label": "EN VIE SUN BEACH HOTEL ONLY ADULT +16 (EX. SUN HOTEL BY EN VIE BEACH ONLY ADULT +16) 3*"
+      },
+      {
+        "value": "35012",
+        "label": "ENDICAN BEYAZIT 4*"
+      },
+      {
+        "value": "36454",
+        "label": "ENDICAN SULTANAHMET 4*"
+      },
+      {
+        "value": "53160",
+        "label": "EOS BEACH RESORT 4*+"
+      },
+      {
+        "value": "34027",
+        "label": "ERGUN HOTEL 3*"
+      },
+      {
+        "value": "31343",
+        "label": "ERKAL RESORT HOTEL. 4*"
+      },
+      {
+        "value": "44290",
+        "label": "ETHNO BELEK 5*"
+      },
+      {
+        "value": "45485",
+        "label": "EVA BEACH HOTEL 3*"
+      },
+      {
+        "value": "36427",
+        "label": "EVSEN HOTEL 3*"
+      },
+      {
+        "value": "38719",
+        "label": "FAME BEACH HOTEL 4*"
+      },
+      {
+        "value": "42058",
+        "label": "FAME HOTEL 3*"
+      },
+      {
+        "value": "53153",
+        "label": "FAME RESIDENCE GOYNUK 4*"
+      },
+      {
+        "value": "53154",
+        "label": "FAME RESIDENCE KEMER SPA 5*"
+      },
+      {
+        "value": "53155",
+        "label": "FAME RESIDENCE LARA SPA 5*"
+      },
+      {
+        "value": "49785",
+        "label": "FASHIONTV LUXE RESORT 5*"
+      },
+      {
+        "value": "31414",
+        "label": "FELICE HOTEL 3*"
+      },
+      {
+        "value": "52820",
+        "label": "FENIKS PRIORITY HOTEL ONLY ADULT +12 4*"
+      },
+      {
+        "value": "29071",
+        "label": "FER HOTEL 5*"
+      },
+      {
+        "value": "31346",
+        "label": "FIRST CLASS HOTEL 5*"
+      },
+      {
+        "value": "34117",
+        "label": "FLORA GARDEN BEACH ONLY ADULT +16 5*"
+      },
+      {
+        "value": "48141",
+        "label": "FLORIA BEACH HOTEL 4*"
+      },
+      {
+        "value": "45665",
+        "label": "FOREST IN HOTEL 3*"
+      },
+      {
+        "value": "45609",
+        "label": "FREYA HOTEL 4*"
+      },
+      {
+        "value": "38500",
+        "label": "FUAT BEY PALACE 4*"
+      },
+      {
+        "value": "49301",
+        "label": "GALATOWER HOTEL 3*"
+      },
+      {
+        "value": "31354",
+        "label": "GALAXY BEACH HOTEL 4*"
+      },
+      {
+        "value": "31355",
+        "label": "GALERI RESORT 5*"
+      },
+      {
+        "value": "45509",
+        "label": "GARDEN PARK BELDIBI 4*"
+      },
+      {
+        "value": "49326",
+        "label": "GARDENIA BEACH HOTEL 4*"
+      },
+      {
+        "value": "51961",
+        "label": "GARDENIA HOTEL 4*"
+      },
+      {
+        "value": "31730",
+        "label": "GAZIPASA STAR HOTEL 3*"
+      },
+      {
+        "value": "29078",
+        "label": "GENOVA HOTEL 4*"
+      },
+      {
+        "value": "9456",
+        "label": "GEZI BOSPHORUS HOTEL 5*"
+      },
+      {
+        "value": "31357",
+        "label": "GLORIA GOLF RESORT 5*"
+      },
+      {
+        "value": "31358",
+        "label": "GLORIA SERENITY RESORT 5*"
+      },
+      {
+        "value": "34346",
+        "label": "GLORIA SERENITY RESORT.. 5*"
+      },
+      {
+        "value": "31359",
+        "label": "GLORIA VERDE RESORT 5*"
+      },
+      {
+        "value": "20058",
+        "label": "GOLDEN CITY HOTEL 4*"
+      },
+      {
+        "value": "20045",
+        "label": "GOLDEN CROWN HOTEL 3*"
+      },
+      {
+        "value": "25155",
+        "label": "GOLDEN HORN SIRKECI 4*"
+      },
+      {
+        "value": "45332",
+        "label": "GOLDEN ORANGE HOTEL 3*"
+      },
+      {
+        "value": "23701",
+        "label": "GOLDEN ROYAL HOTEL 4*"
+      },
+      {
+        "value": "31362",
+        "label": "GRANADA LUXURY BEACH.. 5*"
+      },
+      {
+        "value": "45932",
+        "label": "GRANADA LUXURY BELEK 5*"
+      },
+      {
+        "value": "45929",
+        "label": "GRANADA LUXURY RED (ONLY ADULT +16) 5*"
+      },
+      {
+        "value": "43196",
+        "label": "GRANADA LUXURY RESORT & SPA OKURCULAR 5*"
+      },
+      {
+        "value": "47964",
+        "label": "GRAND ALISA HOTEL 3*"
+      },
+      {
+        "value": "38720",
+        "label": "GRAND BAHAMA BEACH HOTEL 4*"
+      },
+      {
+        "value": "31366",
+        "label": "GRAND BARHAN HOTEL (EX. GRAND BAYAR BEACH) 4*"
+      },
+      {
+        "value": "9560",
+        "label": "GRAND CEVAHIR HOTEL 5*"
+      },
+      {
+        "value": "32504",
+        "label": "GRAND CORTEZ RESORT HOTEL & SPA 5*"
+      },
+      {
+        "value": "52039",
+        "label": "GRAND EMIR HOTEL 3*"
+      },
+      {
+        "value": "34109",
+        "label": "GRAND HOTEL DE PERA 4*"
+      },
+      {
+        "value": "32021",
+        "label": "GRAND HOTEL DERIN 4*"
+      },
+      {
+        "value": "38251",
+        "label": "GRAND HYATT ISTANBUL 5*"
+      },
+      {
+        "value": "45490",
+        "label": "GRAND KAPTAN HOTEL 5*"
+      },
+      {
+        "value": "38807",
+        "label": "GRAND KOLIBRI PRESTIGE & SPA. 5*"
+      },
+      {
+        "value": "9373",
+        "label": "GRAND LIZA HOTEL 3*"
+      },
+      {
+        "value": "26619",
+        "label": "GRAND MARCELLO HOTEL 4*"
+      },
+      {
+        "value": "31367",
+        "label": "GRAND MIR'AMOR HOTEL 4*"
+      },
+      {
+        "value": "34075",
+        "label": "GRAND NAR HOTEL ONLY ADULT +16 4*"
+      },
+      {
+        "value": "50659",
+        "label": "GRAND OKAN HOTEL 4*"
+      },
+      {
+        "value": "13712",
+        "label": "GRAND PAMIR HOTEL 4*"
+      },
+      {
+        "value": "31369",
+        "label": "GRAND PARK LARA 4*"
+      },
+      {
+        "value": "31713",
+        "label": "GRAND RING HOTEL 5*"
+      },
+      {
+        "value": "33618",
+        "label": "GRAND SEKER HOTEL 5*"
+      },
+      {
+        "value": "31371",
+        "label": "GRAND VIKING HOTEL 4*"
+      },
+      {
+        "value": "25150",
+        "label": "GRAND WASHINGTON HOTEL 4*"
+      },
+      {
+        "value": "9374",
+        "label": "GRAND YAVUZ HOTEL 4*"
+      },
+      {
+        "value": "32109",
+        "label": "GRAND YAVUZ HOTEL 4*"
+      },
+      {
+        "value": "38722",
+        "label": "GRAND ZAMAN GARDEN & ANEX 4*"
+      },
+      {
+        "value": "31210",
+        "label": "GRAVEL HOTELS SELECT 5*"
+      },
+      {
+        "value": "33525",
+        "label": "GREAT FORTUNE DESIGN 4*"
+      },
+      {
+        "value": "51918",
+        "label": "GREAT FORTUNE DESIGN 4*"
+      },
+      {
+        "value": "20635",
+        "label": "GREAT FORTUNE HOTEL SPA 4*"
+      },
+      {
+        "value": "38723",
+        "label": "GREEN GARDEN RESORT SPA 5*"
+      },
+      {
+        "value": "45491",
+        "label": "GREEN GARDEN SUITES HOTEL 3*"
+      },
+      {
+        "value": "45492",
+        "label": "GREEN LIFE 4*"
+      },
+      {
+        "value": "53157",
+        "label": "GREEN LIFE HOTEL 4*"
+      },
+      {
+        "value": "31789",
+        "label": "GREEN MAX HOTEL BELEK 5*"
+      },
+      {
+        "value": "45493",
+        "label": "GREEN PEACE 3*"
+      },
+      {
+        "value": "31584",
+        "label": "GREENWOOD KEMER RESORT BY SHERWOOD 4*"
+      },
+      {
+        "value": "31586",
+        "label": "GREENWOOD SUITE RESORT 5*"
+      },
+      {
+        "value": "39217",
+        "label": "GYPSOPHILA CLUB MARINE 5*"
+      },
+      {
+        "value": "31375",
+        "label": "GYPSOPHILA HOLIDAY VILLAGE 5*"
+      },
+      {
+        "value": "51919",
+        "label": "HAGIA SOFIA MANSIONS ISTANBUL 5*"
+      },
+      {
+        "value": "9377",
+        "label": "HALI HOTEL 3*"
+      },
+      {
+        "value": "52040",
+        "label": "HAN SUITE HOTEL SULTANAHMET 3*"
+      },
+      {
+        "value": "31376",
+        "label": "HAVANA HOTEL 4*"
+      },
+      {
+        "value": "33599",
+        "label": "HAWAI BEACH SUITE HOTEL 3*"
+      },
+      {
+        "value": "31769",
+        "label": "HAYDARPASHA PALACE 5*"
+      },
+      {
+        "value": "31377",
+        "label": "HEDEF BEACH RESORT & SPA 5*"
+      },
+      {
+        "value": "31379",
+        "label": "HEDEF RESORT & SPA. 5*"
+      },
+      {
+        "value": "35407",
+        "label": "HHK DOWTOWN HOTEL 4*"
+      },
+      {
+        "value": "29248",
+        "label": "HILTON ISTANBUL BOMONTI HOTEL & CONFERENCE CENTER 5*"
+      },
+      {
+        "value": "41624",
+        "label": "HILTON ISTANBUL BOSPHORUS 5*"
+      },
+      {
+        "value": "31858",
+        "label": "HIMEROS BEACH HOTEL 4*"
+      },
+      {
+        "value": "31380",
+        "label": "HOLIDAY GARDEN RESORT HOTEL 5*"
+      },
+      {
+        "value": "31381",
+        "label": "HOLIDAY INN ANTALYA LARA 5*"
+      },
+      {
+        "value": "29951",
+        "label": "HOLIDAY INN ISTANBUL CITY 5*"
+      },
+      {
+        "value": "26662",
+        "label": "HOLIDAY INN ISTANBUL OLD CITY 4*"
+      },
+      {
+        "value": "31383",
+        "label": "HOLIDAY PARK RESORT HOTEL 5*"
+      },
+      {
+        "value": "33557",
+        "label": "HORUS PARADISE LUXURY RESORT HOTEL 5*"
+      },
+      {
+        "value": "45668",
+        "label": "HOTEL GOLD STONE 3*"
+      },
+      {
+        "value": "49236",
+        "label": "HOTEL GOLDEN SUN +12 ADULT ONLY 3*"
+      },
+      {
+        "value": "54568",
+        "label": "HOTEL ROYAL HILL 3*"
+      },
+      {
+        "value": "31704",
+        "label": "HOTEL TURAN PRINCE.. 5*"
+      },
+      {
+        "value": "31385",
+        "label": "IC HOTELS GREEN PALACE & VILLAS 5*"
+      },
+      {
+        "value": "43093",
+        "label": "IC HOTELS GREEN PALACE & VILLAS 5*"
+      },
+      {
+        "value": "31386",
+        "label": "IC HOTELS SANTAI FAMILY RESORT 5*"
+      },
+      {
+        "value": "40478",
+        "label": "IMAGINE HOTEL 4*"
+      },
+      {
+        "value": "31389",
+        "label": "IMEROS HOTEL 3*"
+      },
+      {
+        "value": "38842",
+        "label": "IMPERIAL SUNLAND RESORT & SPA 5*"
+      },
+      {
+        "value": "53189",
+        "label": "IMPERIAL TURKIZ RESORT 5*"
+      },
+      {
+        "value": "31390",
+        "label": "IMPERIAL TURKIZ RESORT HOTEL 5*"
+      },
+      {
+        "value": "45497",
+        "label": "INCEKUM SU HOTEL 4*"
+      },
+      {
+        "value": "45498",
+        "label": "INCEKUM WEST HOTEL 4*"
+      },
+      {
+        "value": "31391",
+        "label": "INFINITY BEACH ALANYA 4*"
+      },
+      {
+        "value": "9380",
+        "label": "INNOVA SULTANAHMET 4*"
+      },
+      {
+        "value": "31392",
+        "label": "INNVISTA HOTELS BELEK 5*"
+      },
+      {
+        "value": "49328",
+        "label": "INSULA RESORT & SPA 5*"
+      },
+      {
+        "value": "33612",
+        "label": "IPEK APART OTEL APARTMENT"
+      },
+      {
+        "value": "9381",
+        "label": "IPEK PALAS HOTEL 4*"
+      },
+      {
+        "value": "51153",
+        "label": "IREM GARDEN HOTEL 4*"
+      },
+      {
+        "value": "31805",
+        "label": "ISTANBUL BEACH HOTEL 4*"
+      },
+      {
+        "value": "32412",
+        "label": "JADORE DELUXE HOTEL & SPA 5*"
+      },
+      {
+        "value": "33571",
+        "label": "JUJU PREMIER PALACE (EX.AMARA PREMIER PALACE) 5*"
+      },
+      {
+        "value": "31396",
+        "label": "JUSTINIANO CLUB ALANYA 4*"
+      },
+      {
+        "value": "31398",
+        "label": "JUSTINIANO DE LUXE RESORT 5*"
+      },
+      {
+        "value": "31397",
+        "label": "JUSTINIANO PARK CONTI 5*"
+      },
+      {
+        "value": "51920",
+        "label": "JW MARRIOTT ISTANBUL BOSPHORUS 5*"
+      },
+      {
+        "value": "31401",
+        "label": "KAFTAN CITY HOTEL BY RRH & R 3*"
+      },
+      {
+        "value": "31400",
+        "label": "KAHYA HOTEL 4*"
+      },
+      {
+        "value": "31404",
+        "label": "KAHYA RESORT AQUA & SPA 5*"
+      },
+      {
+        "value": "33573",
+        "label": "KAILA BEACH HOTEL (EX.KATYA BEACH HOTEL) 5*"
+      },
+      {
+        "value": "38844",
+        "label": "KAILA CITY HOTEL 4*"
+      },
+      {
+        "value": "38843",
+        "label": "KAILA KRIZANTEM HOTEL 4*"
+      },
+      {
+        "value": "32858",
+        "label": "KALYON HOTEL ISTANBUL 4*"
+      },
+      {
+        "value": "31735",
+        "label": "KANDELOR HOTEL 4*"
+      },
+      {
+        "value": "45502",
+        "label": "KAPTAN HOTEL 4*"
+      },
+      {
+        "value": "31406",
+        "label": "KARMIR RESORT & SPA. 5*"
+      },
+      {
+        "value": "31407",
+        "label": "KAYA BELEK HOTEL. 5*"
+      },
+      {
+        "value": "30622",
+        "label": "KAYA MADRID HOTEL 3*"
+      },
+      {
+        "value": "31408",
+        "label": "KAYA PALAZZO GOLF RESORT 5*"
+      },
+      {
+        "value": "42059",
+        "label": "KAYA PALAZZO GOLF RESORT SPECIAL ROOMS 5*"
+      },
+      {
+        "value": "31694",
+        "label": "KAYA SIDE 5*"
+      },
+      {
+        "value": "31787",
+        "label": "KEMER DREAM HOTEL. 4*"
+      },
+      {
+        "value": "31412",
+        "label": "KEMER HOTEL 3*"
+      },
+      {
+        "value": "33977",
+        "label": "KEMER PARADISE HOTEL 3*"
+      },
+      {
+        "value": "45672",
+        "label": "KEMER STAR HOTEL 3*"
+      },
+      {
+        "value": "31415",
+        "label": "KEMPER WASSERMAN HOTEL 3*"
+      },
+      {
+        "value": "31416",
+        "label": "KEMPINSKI THE DOME 5*"
+      },
+      {
+        "value": "31418",
+        "label": "KILIKYA PALACE GOYNUK. 5*"
+      },
+      {
+        "value": "31422",
+        "label": "KIMEROS PARK HOLIDAY VILLAGE 1 5*"
+      },
+      {
+        "value": "42196",
+        "label": "KIRBIYIK RESORT HOTEL (EX. DINLER HOTEL) 5*"
+      },
+      {
+        "value": "31424",
+        "label": "KIRMAN BELAZUR RESORT & SPA 5*"
+      },
+      {
+        "value": "31434",
+        "label": "KLEOPATRA ADA BEACH HOTEL 4*"
+      },
+      {
+        "value": "31435",
+        "label": "KLEOPATRA ADA HOTEL 4*"
+      },
+      {
+        "value": "49327",
+        "label": "KLEOPATRA ALIN HOTEL 3*"
+      },
+      {
+        "value": "31437",
+        "label": "KLEOPATRA ARSI HOTEL 4*"
+      },
+      {
+        "value": "31242",
+        "label": "KLEOPATRA ASLAN CITY HOTEL (EX. ASLAN CITY ) 3*"
+      },
+      {
+        "value": "31243",
+        "label": "KLEOPATRA ASLAN CORNER HOTEL 3*"
+      },
+      {
+        "value": "45924",
+        "label": "KLEOPATRA AYTUR APART APART HOTEL APARTMENT"
+      },
+      {
+        "value": "50792",
+        "label": "KLEOPATRA AZAK BEACH HOTEL ONLY ADULT +16 3*+"
+      },
+      {
+        "value": "42197",
+        "label": "KLEOPATRA BALIK HOTEL 3*"
+      },
+      {
+        "value": "31440",
+        "label": "KLEOPATRA BEACH HOTEL 4*"
+      },
+      {
+        "value": "31442",
+        "label": "KLEOPATRA BLUE HAWAI HOTEL 3*"
+      },
+      {
+        "value": "50794",
+        "label": "KLEOPATRA CELINE HOTEL 4*"
+      },
+      {
+        "value": "45572",
+        "label": "KLEOPATRA FATIH HOTEL 4*"
+      },
+      {
+        "value": "38721",
+        "label": "KLEOPATRA GRAND ZAMAN BEACH 4*"
+      },
+      {
+        "value": "31443",
+        "label": "KLEOPATRA IKIZ HOTEL 3*"
+      },
+      {
+        "value": "45571",
+        "label": "KLEOPATRA LIFE HOTEL 4*"
+      },
+      {
+        "value": "31689",
+        "label": "KLEOPATRA MICADOR HOTEL. 4*"
+      },
+      {
+        "value": "31445",
+        "label": "KLEOPATRA MUZ HOTEL (EX.MUZ HOTEL) 3*"
+      },
+      {
+        "value": "32879",
+        "label": "KLEOPATRA RAMIRA HOTEL 4*"
+      },
+      {
+        "value": "31547",
+        "label": "KLEOPATRA RIVIERA HOTEL & SPA 4*"
+      },
+      {
+        "value": "47855",
+        "label": "KLEOPATRA RIVIERA ZEN HOTEL ONLY ADULT +16 4*"
+      },
+      {
+        "value": "31446",
+        "label": "KLEOPATRA ROYAL PALM HOTEL 4*"
+      },
+      {
+        "value": "31447",
+        "label": "KLEOPATRA SAHARA HOTEL 3*"
+      },
+      {
+        "value": "45569",
+        "label": "KLEOPATRA SMILE HOTEL 3*"
+      },
+      {
+        "value": "45568",
+        "label": "KLEOPATRA SUNLIGHT HOTEL 3*"
+      },
+      {
+        "value": "31448",
+        "label": "KOLIBRI HOTEL 3*"
+      },
+      {
+        "value": "32362",
+        "label": "KONAK HOTEL TAKSIM 4*"
+      },
+      {
+        "value": "49107",
+        "label": "LA BENATA HOTEL 5*"
+      },
+      {
+        "value": "48290",
+        "label": "LA PERLA HOTEL 4*"
+      },
+      {
+        "value": "33560",
+        "label": "LABRANDA ALANTUR HOTEL 5*"
+      },
+      {
+        "value": "9383",
+        "label": "LADY DIANA HOTEL 4*"
+      },
+      {
+        "value": "20057",
+        "label": "LADY DIANA HOTEL 4*"
+      },
+      {
+        "value": "31507",
+        "label": "LAGO HOTEL. 5*"
+      },
+      {
+        "value": "49325",
+        "label": "LAGUNA BEACH ALYA 5*"
+      },
+      {
+        "value": "31452",
+        "label": "LANCORA BEACH HOTEL 4*"
+      },
+      {
+        "value": "31453",
+        "label": "LARA BARUT COLLECTION 5*"
+      },
+      {
+        "value": "45341",
+        "label": "LARA GARDEN HOTEL 4*"
+      },
+      {
+        "value": "31458",
+        "label": "LAREN FAMILY HOTEL & SPA 3*"
+      },
+      {
+        "value": "31457",
+        "label": "LAREN SEASIDE HOTEL & SPA. 3*"
+      },
+      {
+        "value": "51548",
+        "label": "LARISTONE SUITE & SPA 4*"
+      },
+      {
+        "value": "31709",
+        "label": "LAVITAS KUMKOY HOTEL 3*+"
+      },
+      {
+        "value": "31693",
+        "label": "LE JARDIN RESORT 5*"
+      },
+      {
+        "value": "45678",
+        "label": "LE MARDEN BOUTIQUE HOTEL & SPA Boutique"
+      },
+      {
+        "value": "28353",
+        "label": "LE PETIT PALACE HOTEL 4*"
+      },
+      {
+        "value": "9414",
+        "label": "LEGACY OTTOMAN HOTEL 5*"
+      },
+      {
+        "value": "31426",
+        "label": "LEODIKYA KIRMAN PREMIUM 5*"
+      },
+      {
+        "value": "21531",
+        "label": "LEVNI HOTEL 4*"
+      },
+      {
+        "value": "31468",
+        "label": "LIMAK ARCADIA GOLF & SPORT RESORT 5*"
+      },
+      {
+        "value": "31469",
+        "label": "LIMAK ATLANTIS DE LUXE HOTEL 5*"
+      },
+      {
+        "value": "31470",
+        "label": "LIMAK LARA DE LUXE HOTEL & RESORT 5*"
+      },
+      {
+        "value": "31471",
+        "label": "LIMAK LIMRA HOTEL & RESORT. 5*"
+      },
+      {
+        "value": "48143",
+        "label": "LIMS BONA DEA BEACH HOTEL 4*"
+      },
+      {
+        "value": "31472",
+        "label": "LINDA RESORT HOTEL 5*"
+      },
+      {
+        "value": "31269",
+        "label": "LINDA SUNNY BEACH HOTEL (EX.BIENO CLUB SUNSET HOTEL) 5*"
+      },
+      {
+        "value": "42060",
+        "label": "LIU RESORTS 5*"
+      },
+      {
+        "value": "33472",
+        "label": "L'OCEANICA BEACH RESORT 5*"
+      },
+      {
+        "value": "53158",
+        "label": "LOCEANICA BEACH RESORT HOTEL 5*"
+      },
+      {
+        "value": "31473",
+        "label": "LONG BEACH RESORT & SPA 5*"
+      },
+      {
+        "value": "34084",
+        "label": "LONICERA CITY KLEOPATRA HOTEL 3*"
+      },
+      {
+        "value": "38753",
+        "label": "LONICERA PREMIUM 5*"
+      },
+      {
+        "value": "31474",
+        "label": "LONICERA RESORT & SPA 5*"
+      },
+      {
+        "value": "31475",
+        "label": "LONICERA WORLD HOTEL 4*"
+      },
+      {
+        "value": "31722",
+        "label": "LOWE HOTEL 3*"
+      },
+      {
+        "value": "33578",
+        "label": "LUCIDA BEACH HOTEL 5*"
+      },
+      {
+        "value": "47976",
+        "label": "LUSSO SORGUN 5*"
+      },
+      {
+        "value": "53159",
+        "label": "LUSSO SORGUN 5*"
+      },
+      {
+        "value": "45560",
+        "label": "LUXOR APART HOTEL APARTMENT"
+      },
+      {
+        "value": "31476",
+        "label": "LYKIA APART HOTEL APARTMENT"
+      },
+      {
+        "value": "45679",
+        "label": "MA BICHE KEMER HOTEL 5*"
+      },
+      {
+        "value": "31478",
+        "label": "MAGIC SUN HOTEL. 4*"
+      },
+      {
+        "value": "45680",
+        "label": "MALIBU GARDEN RESORT HOTEL (EX.MALIBU RESORT HOTEL) 4*"
+      },
+      {
+        "value": "30392",
+        "label": "MALKOC HOTEL 3*"
+      },
+      {
+        "value": "52033",
+        "label": "MANDALA HOTEL KARAKOY 4*"
+      },
+      {
+        "value": "42227",
+        "label": "MANORS HOTEL 4*"
+      },
+      {
+        "value": "31720",
+        "label": "MARCO POLO HOLIDAY VILLAGE 1 5*"
+      },
+      {
+        "value": "52997",
+        "label": "MARDAN PALACE HOTEL 5*"
+      },
+      {
+        "value": "16521",
+        "label": "MARDAN PALACE.. 5*"
+      },
+      {
+        "value": "45420",
+        "label": "MARINE FAMILY CLUB HOTEL 5*"
+      },
+      {
+        "value": "31466",
+        "label": "MARINEZ HOTEL (EX. RIOS LATTE BEACH HOTEL) 4*"
+      },
+      {
+        "value": "31755",
+        "label": "MARTI MYRA TEKIROVA. 5*"
+      },
+      {
+        "value": "54458",
+        "label": "MARVIDA CLUB PALMERAS PASCHA KAZ & UZBEKISTAN & MLD & KIRG & TAJIKISTAN 4*"
+      },
+      {
+        "value": "31726",
+        "label": "MARVIDA FAMILY ECO 5*"
+      },
+      {
+        "value": "31483",
+        "label": "MASTER FAMILY CLUB HOTEL/ 5*"
+      },
+      {
+        "value": "54569",
+        "label": "MAX NOVA HOTEL 3*"
+      },
+      {
+        "value": "31484",
+        "label": "MAXX ROYAL BELEK GOLF RESORT. 5*"
+      },
+      {
+        "value": "31757",
+        "label": "MAXX ROYAL KEMER RESORT. 5*"
+      },
+      {
+        "value": "20109",
+        "label": "MAY HOTEL 3*"
+      },
+      {
+        "value": "33608",
+        "label": "MAYA WORLD BELEK HOTEL 4*"
+      },
+      {
+        "value": "31485",
+        "label": "MC ARANCIA RESORT HOTEL 5*"
+      },
+      {
+        "value": "33617",
+        "label": "MC BEACH PARK RESORT HOTEL 5*"
+      },
+      {
+        "value": "31486",
+        "label": "MC MAHBERI BEACH 4*"
+      },
+      {
+        "value": "31808",
+        "label": "MEDER RESORT HOTEL 5*"
+      },
+      {
+        "value": "33876",
+        "label": "MEGARON HOTEL 3*"
+      },
+      {
+        "value": "31296",
+        "label": "MEGASARAY CLUB BELEK 5*"
+      },
+      {
+        "value": "45421",
+        "label": "MEGASARAY RESORT SIDE 5*"
+      },
+      {
+        "value": "45349",
+        "label": "MEGASARAY WESTBEACH ANTALYA 5*"
+      },
+      {
+        "value": "33473",
+        "label": "MELISSA MOMENT APART APARTMENT"
+      },
+      {
+        "value": "50411",
+        "label": "MELTEM HOTEL Boutique"
+      },
+      {
+        "value": "54460",
+        "label": "MERCURE ANTALYA KONYAALTI 4*"
+      },
+      {
+        "value": "40757",
+        "label": "MERCURE ISTANBUL BOMONTI 5*"
+      },
+      {
+        "value": "38177",
+        "label": "MERCURE ISTANBUL BOMONTI 5*"
+      },
+      {
+        "value": "45422",
+        "label": "MERVE SUN HOTEL & SPA 4*"
+      },
+      {
+        "value": "31491",
+        "label": "MESUT HOTEL 4*"
+      },
+      {
+        "value": "37356",
+        "label": "METROPOLITAN HOTELS BOSPHORUS 5*"
+      },
+      {
+        "value": "9466",
+        "label": "METROPOLITAN HOTELS TAKSIM 4*"
+      },
+      {
+        "value": "38273",
+        "label": "MEVLANA HOTEL SULTANAHMET 4*"
+      },
+      {
+        "value": "52763",
+        "label": "MEYDE BOUTIQUE & SUITES Boutique"
+      },
+      {
+        "value": "52764",
+        "label": "MEYDE PLUS SUITES Boutique"
+      },
+      {
+        "value": "33545",
+        "label": "MG CLUB AKMAN BEACH HOTEL 4*"
+      },
+      {
+        "value": "42199",
+        "label": "MICHELL HOTEL & SPA ADULT ONLY +16 5*"
+      },
+      {
+        "value": "34035",
+        "label": "MIKLAGORD HOTEL 3*"
+      },
+      {
+        "value": "29612",
+        "label": "MILANO HOTEL & SPA 4*"
+      },
+      {
+        "value": "38806",
+        "label": "MINTA APART HOTEL APARTMENT"
+      },
+      {
+        "value": "31494",
+        "label": "MIRACLE RESORT HOTEL 5*"
+      },
+      {
+        "value": "31495",
+        "label": "MIRADA DEL MAR 5*"
+      },
+      {
+        "value": "31496",
+        "label": "MIRAGE PARK RESORT 5*"
+      },
+      {
+        "value": "31497",
+        "label": "MIRAMARE BEACH 5*"
+      },
+      {
+        "value": "31498",
+        "label": "MIRAMARE QUEEN 5*"
+      },
+      {
+        "value": "36141",
+        "label": "MIRAMOR GARDEN RESORT (EX. SEKER RESORT) 4*"
+      },
+      {
+        "value": "31499",
+        "label": "MIRANDA MORAL HOTEL 3*"
+      },
+      {
+        "value": "49485",
+        "label": "MIRAY HOTEL KLEOPATRA 3*"
+      },
+      {
+        "value": "45554",
+        "label": "MISS CLEOPATRA HOTEL 2*"
+      },
+      {
+        "value": "45552",
+        "label": "MONTE CARLO HOTEL 4*"
+      },
+      {
+        "value": "45683",
+        "label": "MORE HOTEL 3*"
+      },
+      {
+        "value": "32210",
+        "label": "MOREA KALEICI ADULTS ONLY +16 Boutique"
+      },
+      {
+        "value": "45684",
+        "label": "MOVENPICK RESORT ANTALYA TEKIROVA(EX. ROYAL DIWA TEKIROVA) 5*"
+      },
+      {
+        "value": "50572",
+        "label": "MOXY ISTANBUL BEYOGLU 4*"
+      },
+      {
+        "value": "31501",
+        "label": "MR CRANE HOTEL 4*"
+      },
+      {
+        "value": "40748",
+        "label": "MUKARNAS PERA HOTEL 4*"
+      },
+      {
+        "value": "52594",
+        "label": "MUKARNAS PERA HOTEL 4*"
+      },
+      {
+        "value": "36365",
+        "label": "MUKARNAS SPA RESORT. 5*"
+      },
+      {
+        "value": "34014",
+        "label": "MUKARNAS TAKSIM HOTEL 4*"
+      },
+      {
+        "value": "32003",
+        "label": "MY ASSOS HOTEL 4*"
+      },
+      {
+        "value": "9387",
+        "label": "MY ASSOS HOTEL 4*"
+      },
+      {
+        "value": "38931",
+        "label": "MY BELEK COLLECTION (EX. HOTELLA HOTEL & SPA) 4*"
+      },
+      {
+        "value": "41571",
+        "label": "MY DREAM HOTEL 5*"
+      },
+      {
+        "value": "31503",
+        "label": "MY HOME RESORT 5*"
+      },
+      {
+        "value": "32029",
+        "label": "MY LOME LUXURY HOTEL & RESORT 5*"
+      },
+      {
+        "value": "31505",
+        "label": "MY SEA HOTELS ALARA 4*"
+      },
+      {
+        "value": "52815",
+        "label": "MYRA MERYDIA BEACH HOTEL(EX. MIRA MERIDIA BEACH HOTEL) 5*"
+      },
+      {
+        "value": "9655",
+        "label": "NANDA HOTEL 4*"
+      },
+      {
+        "value": "33649",
+        "label": "NAR HOTEL 3*+"
+      },
+      {
+        "value": "31818",
+        "label": "NARCIA RESORT SIDE 5*"
+      },
+      {
+        "value": "45351",
+        "label": "NASHIRA CITY RESORT HOTEL 4*"
+      },
+      {
+        "value": "31508",
+        "label": "NATURELLA HOTEL & APART 3*"
+      },
+      {
+        "value": "21400",
+        "label": "NAUMPASA KONAGI HOTEL 4*"
+      },
+      {
+        "value": "36352",
+        "label": "NEW EMIN HOTEL 4*"
+      },
+      {
+        "value": "44222",
+        "label": "NEX HOTEL 4*"
+      },
+      {
+        "value": "50793",
+        "label": "NEX ROYAL BEACH HOTEL 4*"
+      },
+      {
+        "value": "34065",
+        "label": "NG PHASELIS BAY 5*"
+      },
+      {
+        "value": "31737",
+        "label": "NIRVANA COSMOPOLITAN 5*"
+      },
+      {
+        "value": "31212",
+        "label": "NIRVANA DOLCE VITA LUXURY HOTEL 5*"
+      },
+      {
+        "value": "31512",
+        "label": "NIRVANA MEDITERRANEAN EXCELLENCE' 5*"
+      },
+      {
+        "value": "45426",
+        "label": "NOVA PARK HOTEL 5*"
+      },
+      {
+        "value": "31441",
+        "label": "NOVIS HOTEL CLEOPATRA (EX.BILKAY HOTEL) 3*"
+      },
+      {
+        "value": "20034",
+        "label": "NOWY EFENDI HOTEL Boutique"
+      },
+      {
+        "value": "45921",
+        "label": "NOXINN CLUB HOTEL 5*"
+      },
+      {
+        "value": "42061",
+        "label": "NOXINN DELUXE HOTEL. 5*"
+      },
+      {
+        "value": "31514",
+        "label": "OBA STAR HOTEL & SPA 4*"
+      },
+      {
+        "value": "45545",
+        "label": "OBA TIME HOTEL 4*"
+      },
+      {
+        "value": "45544",
+        "label": "OJI BEACH HOTEL (EX. OPIA BOUTIQUE HOTEL) 4*"
+      },
+      {
+        "value": "45353",
+        "label": "OLD TOWN POINT HOTEL & SPA 4*"
+      },
+      {
+        "value": "31515",
+        "label": "OLIMPOS BEACH HOTEL BY RRH & R 3*"
+      },
+      {
+        "value": "31516",
+        "label": "ONKEL RESORT 4*"
+      },
+      {
+        "value": "31183",
+        "label": "ORAN HOTEL 4*"
+      },
+      {
+        "value": "31521",
+        "label": "ORANGE COUNTY ALANYA 5*"
+      },
+      {
+        "value": "31522",
+        "label": "ORANGE COUNTY BELEK 5*"
+      },
+      {
+        "value": "31523",
+        "label": "ORANGE COUNTY RESORT KEMER 5*"
+      },
+      {
+        "value": "50946",
+        "label": "ORFEUS ARMIN HOTEL +16 3*"
+      },
+      {
+        "value": "32616",
+        "label": "ORFEUS PARK HOTEL 4*"
+      },
+      {
+        "value": "32617",
+        "label": "ORFEUS QUEEN HOTEL 4*"
+      },
+      {
+        "value": "20038",
+        "label": "ORIENT EXPRESS HOTEL & SPA BY ORKA HOTELS 4*"
+      },
+      {
+        "value": "37447",
+        "label": "ORIENTBANK HOTEL AUTOGRAPH COLLECTION 5*"
+      },
+      {
+        "value": "9390",
+        "label": "ORKA ROYAL HOTEL 4*"
+      },
+      {
+        "value": "32034",
+        "label": "OZ HOTELS INCEKUM BEACH HOTEL 5*"
+      },
+      {
+        "value": "31525",
+        "label": "OZ HOTELS SIDE PREMIUM 5*"
+      },
+      {
+        "value": "32036",
+        "label": "OZ HOTELS SUI 5*"
+      },
+      {
+        "value": "31528",
+        "label": "OZKAYMAK FALEZ HOTEL 5*"
+      },
+      {
+        "value": "31770",
+        "label": "OZKAYMAK INCEKUM HOTEL. 5*"
+      },
+      {
+        "value": "31771",
+        "label": "OZKAYMAK MARINA HOTEL 5*"
+      },
+      {
+        "value": "47854",
+        "label": "OZKAYMAK OTEM HOTEL 4*"
+      },
+      {
+        "value": "31772",
+        "label": "OZKAYMAK SELECT RESORT 5*"
+      },
+      {
+        "value": "49784",
+        "label": "PALEMON RESORT & SPA 5*"
+      },
+      {
+        "value": "33378",
+        "label": "PALOMA FINEESE RESORT. 5*"
+      },
+      {
+        "value": "33376",
+        "label": "PALOMA GRIDA HOTEL 5*"
+      },
+      {
+        "value": "33375",
+        "label": "PALOMA OCEANA RESORT. 5*"
+      },
+      {
+        "value": "33374",
+        "label": "PALOMA ORENDA RESORT 5*"
+      },
+      {
+        "value": "33373",
+        "label": "PALOMA PERISSIA HOTEL 5*"
+      },
+      {
+        "value": "49304",
+        "label": "PALOMA SENCIA 5*"
+      },
+      {
+        "value": "31530",
+        "label": "PAPILLON AYSCHA (EXCEPT MOLDOVA MARKET) 5*"
+      },
+      {
+        "value": "31531",
+        "label": "PAPILLON BELVIL (EXCEPT MOLDOVA MARKET) 5*"
+      },
+      {
+        "value": "31532",
+        "label": "PAPILLON ZEUGMA RELAXURY (EXCEPT MOLDOVA MARKET) 5*"
+      },
+      {
+        "value": "31791",
+        "label": "PARK AVRUPA HOTEL 3*"
+      },
+      {
+        "value": "45688",
+        "label": "PARUS HOTEL 3*"
+      },
+      {
+        "value": "31536",
+        "label": "PASHAS PRINCESS ONLY ADULT +16 4*"
+      },
+      {
+        "value": "31992",
+        "label": "PERA PALACE HOTEL 5*"
+      },
+      {
+        "value": "9470",
+        "label": "PERA ROSE HOTEL 4*"
+      },
+      {
+        "value": "32266",
+        "label": "PERA TULIP HOTEL 4*"
+      },
+      {
+        "value": "45540",
+        "label": "PERRE DELTA HOTEL 5*"
+      },
+      {
+        "value": "31538",
+        "label": "PERRE LA MER HOTEL. 5*"
+      },
+      {
+        "value": "31482",
+        "label": "PINE BEACH BELEK 5*"
+      },
+      {
+        "value": "31701",
+        "label": "PINE HOUSE 4*"
+      },
+      {
+        "value": "32120",
+        "label": "PIRATE'S BEACH CLUB 5*"
+      },
+      {
+        "value": "46052",
+        "label": "PIRATE'S PARK RESORT (EX.FESTIVAL NATURA HOTEL) 4*"
+      },
+      {
+        "value": "31738",
+        "label": "PORT NATURE LUXURY RESORT 5*"
+      },
+      {
+        "value": "31539",
+        "label": "PORT RIVER HOTEL 5*"
+      },
+      {
+        "value": "31540",
+        "label": "PORTO BELLO HOTEL RESORT & SPA 5*"
+      },
+      {
+        "value": "33803",
+        "label": "PREMIST HOTELS SULTANAHMET 4*"
+      },
+      {
+        "value": "52595",
+        "label": "PREMIST HOTELS SULTANAHMET 4*"
+      },
+      {
+        "value": "45387",
+        "label": "PRENSES SEALINE BEACH HOTEL 3*"
+      },
+      {
+        "value": "20084",
+        "label": "PRESTIGE HOTEL 4*"
+      },
+      {
+        "value": "45357",
+        "label": "PUDING MARINA HOTEL Boutique"
+      },
+      {
+        "value": "31692",
+        "label": "QUEEN'S PARK GOYNUK 5*"
+      },
+      {
+        "value": "9474",
+        "label": "RADISSON BLU ISTANBUL PERA 5*"
+      },
+      {
+        "value": "25099",
+        "label": "RADISSON BLU ISTANBUL PERA 5*"
+      },
+      {
+        "value": "52596",
+        "label": "RADISSON COLLECTION VADISTANBUL HOTEL 5*"
+      },
+      {
+        "value": "52981",
+        "label": "RAI FORESTA TEKIROVA 5*"
+      },
+      {
+        "value": "45477",
+        "label": "RAI PREMIUM TEKIROVA 5*"
+      },
+      {
+        "value": "33701",
+        "label": "RAMADA BY WYNDHAM ISTANBUL GRAND BAZAAR 4*"
+      },
+      {
+        "value": "51921",
+        "label": "RAMADA BY WYNDHAM ISTANBUL PERA 4*"
+      },
+      {
+        "value": "43963",
+        "label": "RAMADA BY WYNDHAM ISTANBUL PERA 5*"
+      },
+      {
+        "value": "31542",
+        "label": "RAMADA PLAZA BY WYNDHAM ANTALYA (ex.RAMADA PLAZA ANTALYA) 5*"
+      },
+      {
+        "value": "45539",
+        "label": "RAMIRA BEACH 4*"
+      },
+      {
+        "value": "32880",
+        "label": "RAMIRA CITY ONLY +16 4*"
+      },
+      {
+        "value": "32878",
+        "label": "RAMIRA JOY 4*"
+      },
+      {
+        "value": "9625",
+        "label": "RAYELIN HOTELS OLD CITY 5*"
+      },
+      {
+        "value": "50574",
+        "label": "RAYELIN OLD TOWN 4*"
+      },
+      {
+        "value": "31746",
+        "label": "RAYMAR RESORT & AQUA. 5*"
+      },
+      {
+        "value": "31544",
+        "label": "REGNUM CARYA GOLF & SPA RESORT. 5*"
+      },
+      {
+        "value": "49253",
+        "label": "REGNUM THE CROWN. 5*"
+      },
+      {
+        "value": "42062",
+        "label": "RELAX BEACH HOTEL 4*"
+      },
+      {
+        "value": "52362",
+        "label": "RENEX HOTELS 5*"
+      },
+      {
+        "value": "29083",
+        "label": "REYDEL HOTEL 3*"
+      },
+      {
+        "value": "52597",
+        "label": "RIA SUITES HOTEL 4*"
+      },
+      {
+        "value": "43608",
+        "label": "RIA SUITES HOTEL 4*"
+      },
+      {
+        "value": "45694",
+        "label": "RICH MELISSA HOTEL 4*"
+      },
+      {
+        "value": "31819",
+        "label": "RING BEACH HOTEL 5*"
+      },
+      {
+        "value": "31710",
+        "label": "RIO LAVITAS RESORT & SPA 5*"
+      },
+      {
+        "value": "33907",
+        "label": "RIOS BEACH HOTEL 4*"
+      },
+      {
+        "value": "31549",
+        "label": "RIXOS DOWNTOWN ANTALYA – THE LAND OF LEGENDS FREE ACCESS (EX. RIXOS DOWNTOWN ANTALYA) 5*"
+      },
+      {
+        "value": "41939",
+        "label": "RIXOS PARK BELEK – THE LAND OF LEGENDS FREE ACCESS (EX. RIXOS PARK BELEK) 5*"
+      },
+      {
+        "value": "45388",
+        "label": "RIXOS PARK BELEK SUITES & VILLA-LAND OF LEGENDS FREE ACCESS 5*"
+      },
+      {
+        "value": "9477",
+        "label": "RIXOS PERA 5*"
+      },
+      {
+        "value": "20632",
+        "label": "RIXOS PERA 5*"
+      },
+      {
+        "value": "31550",
+        "label": "RIXOS PREMIUM BELEK – THE LAND OF LEGENDS FREE ACCESS (EX. RIXOS PREMIUM BELEK) 5*"
+      },
+      {
+        "value": "31551",
+        "label": "RIXOS PREMIUM TEKIROVA – THE LAND OF LEGENDS FREE ACCESS (EX. RIXOS PREMIUM TEKIROVA) 5*"
+      },
+      {
+        "value": "31552",
+        "label": "RIXOS SUNGATE – THE LAND OF LEGENDS FREE ACCESS (EX. RIXOS SUNGATE) 5*"
+      },
+      {
+        "value": "31823",
+        "label": "RIXOS SUNGATE CLUB DIAMOND-THE LAND OF LEGENDS FREE ACCESS 5*"
+      },
+      {
+        "value": "44911",
+        "label": "RIXOS TERSANE ISTANBUL 5*"
+      },
+      {
+        "value": "52598",
+        "label": "RIXOS TERSANE ISTANBUL 5*"
+      },
+      {
+        "value": "45695",
+        "label": "RK MAGIC DREAM HOTEL(EX.MAGIC DREAM HOTEL) 4*"
+      },
+      {
+        "value": "50413",
+        "label": "ROBIN HOOD HOTEL ADULT ONLY +18 4*"
+      },
+      {
+        "value": "53190",
+        "label": "ROBINSON CAMYUVA HV (ONLY ADULT +18) 5*"
+      },
+      {
+        "value": "30962",
+        "label": "ROMANCE ISTANBUL HOTEL 5*"
+      },
+      {
+        "value": "31716",
+        "label": "ROMEO BEACH HOTEL 3*"
+      },
+      {
+        "value": "40685",
+        "label": "ROOT KARAKOY HOTEL 4*"
+      },
+      {
+        "value": "31464",
+        "label": "ROSE GARDEN PREMIUM HOTEL (EX. LARISSA MARE) 4*"
+      },
+      {
+        "value": "31553",
+        "label": "ROSELLA HOTEL 3*"
+      },
+      {
+        "value": "31554",
+        "label": "ROX RESORT HOTEL 5*"
+      },
+      {
+        "value": "31555",
+        "label": "ROYAL ALHAMBRA PALACE 5*"
+      },
+      {
+        "value": "33574",
+        "label": "ROYAL ATLANTIS BEACH 4*"
+      },
+      {
+        "value": "31754",
+        "label": "ROYAL ATLANTIS SPA & RESORT 5*"
+      },
+      {
+        "value": "31557",
+        "label": "ROYAL DRAGON HOTEL 5*"
+      },
+      {
+        "value": "45536",
+        "label": "ROYAL GARDEN BEACH HOTEL 5*"
+      },
+      {
+        "value": "31558",
+        "label": "ROYAL HOLIDAY PALACE 5*"
+      },
+      {
+        "value": "31559",
+        "label": "ROYAL SEGINUS 5*"
+      },
+      {
+        "value": "31560",
+        "label": "ROYAL TAJ MAHAL 5*"
+      },
+      {
+        "value": "31561",
+        "label": "ROYAL WINGS HOTEL 5*"
+      },
+      {
+        "value": "45533",
+        "label": "ROYALISA PALMIYE BEACH (ONLY ADULTS 16+) 4*"
+      },
+      {
+        "value": "39516",
+        "label": "ROYAN HAGIA SOPHIA RADISSON INDIVIDUALS 5*"
+      },
+      {
+        "value": "52599",
+        "label": "ROYAN HAGIA SOPHIA RADISSON INDIVIDUALS 4*"
+      },
+      {
+        "value": "51336",
+        "label": "RUBI PLATINUM SIGN-ONLY GEORGIA & KAZAKHSTAN & UZBEKISTAN 5*"
+      },
+      {
+        "value": "51335",
+        "label": "RUBI PLATINUM SPA & RESORT SUITES-ONLY GEORGIA & KAZAKHSTAN & UZBEKISTAN 5*"
+      },
+      {
+        "value": "31562",
+        "label": "SAILOR'S BEACH CLUB 5*"
+      },
+      {
+        "value": "42903",
+        "label": "SAINT STAR HOTELS&SPA ONLY ADULT +16 4*"
+      },
+      {
+        "value": "31563",
+        "label": "SANDY BEACH HOTEL 4*"
+      },
+      {
+        "value": "20086",
+        "label": "SANTA SOPHIA HOTEL 3*"
+      },
+      {
+        "value": "34125",
+        "label": "SANTANA HOTEL 3*"
+      },
+      {
+        "value": "31565",
+        "label": "SAPHIR HOTEL 5*"
+      },
+      {
+        "value": "31566",
+        "label": "SAPHIR RESORT & SPA 5*"
+      },
+      {
+        "value": "31714",
+        "label": "SARITAS HOTEL 4*"
+      },
+      {
+        "value": "20052",
+        "label": "SARNIC HOTEL 4*"
+      },
+      {
+        "value": "32103",
+        "label": "SARNIC PREMIER HOTEL 4*"
+      },
+      {
+        "value": "31568",
+        "label": "SAYANORA HOTEL. 4*"
+      },
+      {
+        "value": "31741",
+        "label": "SAYGILI BEACH HOTEL 3*"
+      },
+      {
+        "value": "31570",
+        "label": "SEA LIFE BUKET BEACH HOTEL 5*"
+      },
+      {
+        "value": "31571",
+        "label": "SEA LIFE FAMILY RESORT 5*"
+      },
+      {
+        "value": "34122",
+        "label": "SEA LIFE KEMER RESORT 5*"
+      },
+      {
+        "value": "31786",
+        "label": "SEADEN COROLLA HOTEL 4*"
+      },
+      {
+        "value": "31797",
+        "label": "SEADEN QUALITY RESORT & SPA 5*"
+      },
+      {
+        "value": "31782",
+        "label": "SEADEN SEA PLANET RESORT 5*"
+      },
+      {
+        "value": "31614",
+        "label": "SEADEN SEA WORLD RESORT & SPA 5*"
+      },
+      {
+        "value": "31785",
+        "label": "SEADEN VALENTINE RESORT HOTEL 5*"
+      },
+      {
+        "value": "45530",
+        "label": "SEALINE HOTEL 3*"
+      },
+      {
+        "value": "53191",
+        "label": "SEAMELIA BEACH HOTEL 5*"
+      },
+      {
+        "value": "45930",
+        "label": "SEAPHORIA HOTEL ADULT FRIENDLY (+12) 5*"
+      },
+      {
+        "value": "33593",
+        "label": "SEASHELL RESORT & SPA 5*"
+      },
+      {
+        "value": "45435",
+        "label": "SEASHELL VEGA HOTEL 5*"
+      },
+      {
+        "value": "31573",
+        "label": "SEHER RESORT & SPA HOTEL 5*"
+      },
+      {
+        "value": "31575",
+        "label": "SEHER SUN PALACE RESORT & SPA 5*"
+      },
+      {
+        "value": "31751",
+        "label": "SELCUKHAN HOTEL 4*"
+      },
+      {
+        "value": "37521",
+        "label": "SELENAY HOTEL 3*"
+      },
+      {
+        "value": "53192",
+        "label": "SELENE BEACH & SPA (+16 ONLY ADULT) 5*"
+      },
+      {
+        "value": "31578",
+        "label": "SEMT LUNA BEACH HOTEL 3*"
+      },
+      {
+        "value": "31580",
+        "label": "SENSITIVE PREMIUM RESORT & SPA 5*"
+      },
+      {
+        "value": "47853",
+        "label": "SENTIDO LYCUS BEACH HOTEL 5*"
+      },
+      {
+        "value": "31647",
+        "label": "SENTIDO TRENDY VERBENA BEACH 5*"
+      },
+      {
+        "value": "32215",
+        "label": "SERENIS HOTEL 5*"
+      },
+      {
+        "value": "45527",
+        "label": "SERENITY QUEEN HOTEL 5*"
+      },
+      {
+        "value": "31148",
+        "label": "SEVEN DAYS HOTEL 3*"
+      },
+      {
+        "value": "31727",
+        "label": "SEVEN SEAS HOTEL LIFE 5*"
+      },
+      {
+        "value": "45510",
+        "label": "SEVEN SEAS PALMERAS BAY KAZ & UZBEKISTAN & GEORGIA & MLD & AZERB & KIRG 5*"
+      },
+      {
+        "value": "53193",
+        "label": "SEY BEACH HOTEL 4*"
+      },
+      {
+        "value": "31795",
+        "label": "SEY BEACH HOTEL & SPA 4*"
+      },
+      {
+        "value": "41345",
+        "label": "SHANGRI-LA BOSPHORUS 5*"
+      },
+      {
+        "value": "31581",
+        "label": "SHERWOOD DREAMS RESORT 5*"
+      },
+      {
+        "value": "31582",
+        "label": "SHERWOOD EXCLUSIVE KEMER 5*"
+      },
+      {
+        "value": "31800",
+        "label": "SHERWOOD EXCLUSIVE KEMER VILLA (EX. SHERWOOD EXCLUSIVE KEMER VIP ROOMS) 5*"
+      },
+      {
+        "value": "31583",
+        "label": "SHERWOOD EXCLUSIVE LARA RESORT 5*"
+      },
+      {
+        "value": "42064",
+        "label": "SHERWOOD PREMIO HOTEL 3*"
+      },
+      {
+        "value": "31588",
+        "label": "SIDE ALEGRIA HOTEL & SPA ONLY ADULT+16 5*"
+      },
+      {
+        "value": "52982",
+        "label": "SIDE ALUNA HOTEL 5*"
+      },
+      {
+        "value": "42200",
+        "label": "SIDE AMOUR HOTEL 4*"
+      },
+      {
+        "value": "45441",
+        "label": "SIDE GOLDEN ROCK HOTEL +16 ADULT 4*"
+      },
+      {
+        "value": "33494",
+        "label": "SIDE LEGEND HOTEL 4*"
+      },
+      {
+        "value": "45443",
+        "label": "SIDE MOON PALACE HOTEL 5*"
+      },
+      {
+        "value": "51811",
+        "label": "SIDE PRENSES RESORT & SPA 5*"
+      },
+      {
+        "value": "33609",
+        "label": "SIDE SQUARE HOTEL 4*"
+      },
+      {
+        "value": "45449",
+        "label": "SIDE STAR BEACH 5*"
+      },
+      {
+        "value": "31715",
+        "label": "SIDE STAR PARK 5*"
+      },
+      {
+        "value": "45451",
+        "label": "SIDE SU HOTEL ONLY ADULT +16 4*"
+      },
+      {
+        "value": "45452",
+        "label": "SIDE SUNPORT HOTEL & SPA 5*"
+      },
+      {
+        "value": "31596",
+        "label": "SIDE YESILOZ OTEL 4*"
+      },
+      {
+        "value": "31427",
+        "label": "SIDEMARIN KIRMAN PREMIUM 5*"
+      },
+      {
+        "value": "31428",
+        "label": "SIDERA KIRMAN PREMIUM 5*"
+      },
+      {
+        "value": "45458",
+        "label": "SILVER HOTEL 3*"
+      },
+      {
+        "value": "45698",
+        "label": "SINATRA HOTEL 4*"
+      },
+      {
+        "value": "44912",
+        "label": "SINEM HOTEL 3*"
+      },
+      {
+        "value": "31601",
+        "label": "SIRENE BELEK HOTEL 5*"
+      },
+      {
+        "value": "45700",
+        "label": "SIRIUS HOTEL KEMER 4*"
+      },
+      {
+        "value": "45459",
+        "label": "SIRMA HOTEL 4*"
+      },
+      {
+        "value": "45701",
+        "label": "SIU COLLECTION 5*"
+      },
+      {
+        "value": "50623",
+        "label": "SKALION HOTEL 4*"
+      },
+      {
+        "value": "51922",
+        "label": "SKALION HOTEL 4*"
+      },
+      {
+        "value": "9400",
+        "label": "SOKULLU PASA HOTEL 4*"
+      },
+      {
+        "value": "31739",
+        "label": "SORGUN AKADIA LUXURY HOTEL ONLY ADULT +16 5*"
+      },
+      {
+        "value": "31604",
+        "label": "SPICE HOTEL & SPA 5*"
+      },
+      {
+        "value": "31605",
+        "label": "STARLIGHT RESORT HOTEL 5*"
+      },
+      {
+        "value": "31825",
+        "label": "STARLIGHT RESORT HOTEL SPECIAL ROOMS 5*"
+      },
+      {
+        "value": "31607",
+        "label": "STELLA HOTEL KEMER 4*"
+      },
+      {
+        "value": "31608",
+        "label": "SUENO HOTELS BEACH SIDE 5*"
+      },
+      {
+        "value": "31609",
+        "label": "SUENO HOTELS DELUXE BELEK 5*"
+      },
+      {
+        "value": "31610",
+        "label": "SUENO HOTELS GOLF BELEK 5*"
+      },
+      {
+        "value": "38649",
+        "label": "SULTAN HAMIT HOTEL 4*"
+      },
+      {
+        "value": "49248",
+        "label": "SULTANAHMET INN HOTEL 3*"
+      },
+      {
+        "value": "9403",
+        "label": "SULTANIA HOTEL 5*"
+      },
+      {
+        "value": "25077",
+        "label": "SUMENGEN HOTEL 4*"
+      },
+      {
+        "value": "45463",
+        "label": "SUN BEACH HILL 4*"
+      },
+      {
+        "value": "32146",
+        "label": "SUN BEACH PARK & SPA 4*"
+      },
+      {
+        "value": "32337",
+        "label": "SUN CITY HOTEL 4*"
+      },
+      {
+        "value": "32005",
+        "label": "SUN COMFORT HOTEL 3*"
+      },
+      {
+        "value": "31615",
+        "label": "SUN FIRE BEACH HOTEL 4*"
+      },
+      {
+        "value": "31760",
+        "label": "SUN HEAVEN HOTEL (EX. CLUB SUN HEAVEN HOTEL) 5*"
+      },
+      {
+        "value": "31761",
+        "label": "SUN HEAVEN QUEEN (EX.CLUB SUN HEAVEN SEA BIRD BEACH) 4*"
+      },
+      {
+        "value": "31617",
+        "label": "SUN SHINE ALANYA HOTEL 4*"
+      },
+      {
+        "value": "45521",
+        "label": "SUN STAR BEACH HOTEL 4*"
+      },
+      {
+        "value": "45520",
+        "label": "SUN STAR RESORT HOTEL 5*"
+      },
+      {
+        "value": "45519",
+        "label": "SUN VERA HOTEL 3*"
+      },
+      {
+        "value": "31618",
+        "label": "SUNIS ELITA BEACH RESORT HOTEL&SPA 5*"
+      },
+      {
+        "value": "31619",
+        "label": "SUNIS EVREN BEACH RESORT HOTEL & SPA 5*"
+      },
+      {
+        "value": "31620",
+        "label": "SUNIS HOTEL SU 5*"
+      },
+      {
+        "value": "31621",
+        "label": "SUNIS HOTELS KUMKOY BEACH 5*"
+      },
+      {
+        "value": "53194",
+        "label": "SUNLAND RESORT KEMER 5*"
+      },
+      {
+        "value": "33579",
+        "label": "SUNLIGHT GARDEN HOTEL 3*"
+      },
+      {
+        "value": "53195",
+        "label": "SUNMELIA BEACH HOTEL 5*"
+      },
+      {
+        "value": "49782",
+        "label": "SUNNY HILL ALYA HOTEL 4*"
+      },
+      {
+        "value": "31776",
+        "label": "SUNPRIME C-LOUNGE 5*"
+      },
+      {
+        "value": "53196",
+        "label": "SUNPRIME C-LOUNGE HOTEL 5*"
+      },
+      {
+        "value": "45466",
+        "label": "SUNRISE QUEEN LUXURY RESORT & SPA 5*"
+      },
+      {
+        "value": "31623",
+        "label": "SUNRISE RESORT HOTEL 5*"
+      },
+      {
+        "value": "50947",
+        "label": "SUNSHINE MIR HOTEL 3*"
+      },
+      {
+        "value": "38729",
+        "label": "SUNTHALIA HOTELS & RESORTS +16 5*"
+      },
+      {
+        "value": "9406",
+        "label": "SURA HAGIA SOPHIA HOTEL & SPA 5*"
+      },
+      {
+        "value": "20074",
+        "label": "SURA HAGIA SOPHIA HOTEL & SPA 5*"
+      },
+      {
+        "value": "31624",
+        "label": "SURAL GARDEN 3*"
+      },
+      {
+        "value": "31625",
+        "label": "SURAL HOTEL 5*"
+      },
+      {
+        "value": "31626",
+        "label": "SURAL RESORT 5*"
+      },
+      {
+        "value": "31627",
+        "label": "SURAL SARAY HOTEL ONLY ADULT +16 5*"
+      },
+      {
+        "value": "31628",
+        "label": "SUSESI LUXURY RESORT 5*"
+      },
+      {
+        "value": "23769",
+        "label": "SWISSOTEL ISTANBUL THE BOSPHORUS 5*"
+      },
+      {
+        "value": "51923",
+        "label": "SWISSOTEL ISTANBUL THE BOSPHORUS 5*"
+      },
+      {
+        "value": "52819",
+        "label": "SY HOTELS BOUTIQUE LUXURY 5*"
+      },
+      {
+        "value": "45705",
+        "label": "TAL BEACH HOTEL 3*"
+      },
+      {
+        "value": "32006",
+        "label": "TAXIM HILL HOTEL 4*"
+      },
+      {
+        "value": "32007",
+        "label": "TAYHAN HOTEL 3*"
+      },
+      {
+        "value": "31631",
+        "label": "TELATIYE RESORT HOTEL. 5*"
+      },
+      {
+        "value": "31632",
+        "label": "TEMIZ HOTEL 3*"
+      },
+      {
+        "value": "20064",
+        "label": "THE BYZANTIUM HOTEL 4*"
+      },
+      {
+        "value": "38332",
+        "label": "THE ELYSIUM TAKSIM 5*"
+      },
+      {
+        "value": "52037",
+        "label": "THE GALATA GLORY HOTEL 4*"
+      },
+      {
+        "value": "38133",
+        "label": "THE GALATA ISTANBUL HOTEL MGALLERY BY SOFITEL 5*"
+      },
+      {
+        "value": "32268",
+        "label": "THE GALATA ISTANBUL HOTEL MGALLERY BY SOFITEL 5*"
+      },
+      {
+        "value": "41508",
+        "label": "THE GIFT HOTEL 4*"
+      },
+      {
+        "value": "48315",
+        "label": "THE HALICH HOTEL 4*"
+      },
+      {
+        "value": "31119",
+        "label": "THE LAILA HOTEL 3*"
+      },
+      {
+        "value": "46624",
+        "label": "THE LAND OF LEGENDS - NICKELODEON HOTEL 5*"
+      },
+      {
+        "value": "31634",
+        "label": "THE LAND OF LEGENDS KINGDOM HOTEL 5*"
+      },
+      {
+        "value": "29944",
+        "label": "THE LOLA HOTEL 3*"
+      },
+      {
+        "value": "31635",
+        "label": "THE LUMOS DELUXE RESORT HOTEL & SPA/ 5*"
+      },
+      {
+        "value": "21405",
+        "label": "THE MARMARA TAKSIM 5*"
+      },
+      {
+        "value": "37823",
+        "label": "THE MERETTO HOTEL ISTANBUL 4*"
+      },
+      {
+        "value": "33426",
+        "label": "THE MILLION STONE HOTEL 4*"
+      },
+      {
+        "value": "45685",
+        "label": "THE NIX HOTEL (EX. OMORFI GARDEN RESORT) 4*"
+      },
+      {
+        "value": "32538",
+        "label": "THE NORA HOTELS FAMILY CLUB (EX.SCYLAX FAMILY CLUB) 4*"
+      },
+      {
+        "value": "44353",
+        "label": "THE NORM ORIENTAL 5*"
+      },
+      {
+        "value": "45470",
+        "label": "THE RAGA SIDE +16 5*"
+      },
+      {
+        "value": "31120",
+        "label": "THE REINA HOTEL 3*"
+      },
+      {
+        "value": "53197",
+        "label": "THE SAINT STAR HOTELS 16+ 4*"
+      },
+      {
+        "value": "31636",
+        "label": "THE SENSE DELUXE 5*"
+      },
+      {
+        "value": "45391",
+        "label": "THE X BELEK 5*"
+      },
+      {
+        "value": "32611",
+        "label": "THEODIAN HOTEL 3*"
+      },
+      {
+        "value": "45494",
+        "label": "TIME BEACH HOTEL (EX. HATIPOGLU BEACH HOTEL) 3*"
+      },
+      {
+        "value": "53198",
+        "label": "TIMO DELUXE RESORT 5*"
+      },
+      {
+        "value": "31641",
+        "label": "TITANIC DELUXE GOLF BELEK. 5*"
+      },
+      {
+        "value": "31640",
+        "label": "TITANIC DELUXE LARA (ex. TITANIC BEACH LARA) 5*"
+      },
+      {
+        "value": "44291",
+        "label": "TOLENZA HOTELS (EX.HEDEF KLEOPATRA HOTEL) 4*"
+      },
+      {
+        "value": "33722",
+        "label": "TRANS ATLANTIK HOTEL & SPA 5*"
+      },
+      {
+        "value": "44323",
+        "label": "TRANSATLANTIK BEACH 4*"
+      },
+      {
+        "value": "31646",
+        "label": "TRENDY LARA 5*"
+      },
+      {
+        "value": "31734",
+        "label": "TRENDY PALM BEACH +16 ONLY ADULT 5*"
+      },
+      {
+        "value": "52634",
+        "label": "TRENDY PERGE RESORT & SUITES 5*"
+      },
+      {
+        "value": "9407",
+        "label": "TRIA HOTEL 4*"
+      },
+      {
+        "value": "51547",
+        "label": "TRITON HOTEL ISTANBUL 4*"
+      },
+      {
+        "value": "31649",
+        "label": "TU CASA GELIDONYA 4*"
+      },
+      {
+        "value": "33166",
+        "label": "TUI BLUE BARUT ANDIZ 4*"
+      },
+      {
+        "value": "31650",
+        "label": "TUI BLUE SHERWOOD BELEK 5*"
+      },
+      {
+        "value": "31651",
+        "label": "TUI BLUE SIDE ONLY ADULT +16 5*"
+      },
+      {
+        "value": "31637",
+        "label": "TUI BLUE XANTHE 5*"
+      },
+      {
+        "value": "49321",
+        "label": "TUI MAGIC LIFE BELEK ( TUI HOTELS ) 5*"
+      },
+      {
+        "value": "54835",
+        "label": "TUI MAGIC LIFE JACARANDA UZBEKISTAN & MLD 5*"
+      },
+      {
+        "value": "31548",
+        "label": "TUI MAGIC LIFE RIXOS BELDIBI (EX. RIXOS BELDIBI- THE LAND OF LEGENDS FREE ACCESS) 5*"
+      },
+      {
+        "value": "23694",
+        "label": "TULIP CITY TAKSIM HOTEL 4*"
+      },
+      {
+        "value": "31705",
+        "label": "TURAN PRINCE WORLD CLUB HOTEL HV1 5*"
+      },
+      {
+        "value": "32653",
+        "label": "TUVANA HOTEL. Boutique"
+      },
+      {
+        "value": "32030",
+        "label": "UGUR HOTEL BEACH 3*"
+      },
+      {
+        "value": "38730",
+        "label": "UK HOTEL KIRIS 4*"
+      },
+      {
+        "value": "31655",
+        "label": "ULUSOY KEMER HOLIDAY CLUB HV1 5*"
+      },
+      {
+        "value": "49235",
+        "label": "UNAL BOUTIQUE HOTEL 3*"
+      },
+      {
+        "value": "33929",
+        "label": "URANUS ISTANBUL TOPKAPI HOTEL 5*"
+      },
+      {
+        "value": "31799",
+        "label": "UTOPIA WORLD HOTEL 5*"
+      },
+      {
+        "value": "20103",
+        "label": "VENERA HOTEL 4*"
+      },
+      {
+        "value": "20102",
+        "label": "VICENZA HOTEL 4*"
+      },
+      {
+        "value": "51888",
+        "label": "VICTORIA PRINCESS HOTEL ONLY ADULT +14 4*"
+      },
+      {
+        "value": "26649",
+        "label": "VICTORY HOTEL & SPA 4*"
+      },
+      {
+        "value": "45709",
+        "label": "VIKING BEACH HOTEL 16+ 4*"
+      },
+      {
+        "value": "53199",
+        "label": "VIKING EXPRESS HOTEL 4*"
+      },
+      {
+        "value": "31659",
+        "label": "VIKING EXPRESS HOTEL (EX. VIKING SUITE OTEL) +16 4*"
+      },
+      {
+        "value": "31758",
+        "label": "VIKING GARDEN HOTEL & SPA 4*"
+      },
+      {
+        "value": "31657",
+        "label": "VIKING NONA BEACH HOTEL 4*"
+      },
+      {
+        "value": "32579",
+        "label": "VIKING PARK HOTEL 4*"
+      },
+      {
+        "value": "31658",
+        "label": "VIKING STAR HOTEL 5*"
+      },
+      {
+        "value": "31662",
+        "label": "VILLA SONATA HOTEL 4*"
+      },
+      {
+        "value": "31663",
+        "label": "VILLA SUN FLOWER HOTEL 4*"
+      },
+      {
+        "value": "31214",
+        "label": "VITA SILVA 5*"
+      },
+      {
+        "value": "29072",
+        "label": "VOGUE HOTEL SUPREME ISTANBUL 5*"
+      },
+      {
+        "value": "45473",
+        "label": "VOX MARIS RESORT - ONLY ADULT +16 5*"
+      },
+      {
+        "value": "31666",
+        "label": "VOYAGE BELEK 5*"
+      },
+      {
+        "value": "51960",
+        "label": "VOYAGE KUNDU 5*"
+      },
+      {
+        "value": "31703",
+        "label": "VOYAGE SORGUN 5*"
+      },
+      {
+        "value": "31667",
+        "label": "WASA HOTEL 3*"
+      },
+      {
+        "value": "42065",
+        "label": "WASHINGTON RESORT HOTEL & SPA 5*"
+      },
+      {
+        "value": "31668",
+        "label": "WATER SIDE RESORT & SPA 5*"
+      },
+      {
+        "value": "45474",
+        "label": "WELL PALACE SIDE 5*"
+      },
+      {
+        "value": "45512",
+        "label": "WHITE GOLD HOTEL 4*"
+      },
+      {
+        "value": "31492",
+        "label": "WHITE LILYUM HOTEL (EX. MG WHITE LILYUM HOTEL) 4*"
+      },
+      {
+        "value": "45369",
+        "label": "WIND OF LARA HOTEL & SPA 5*"
+      },
+      {
+        "value": "32882",
+        "label": "WOODLINE HOTEL 3*"
+      },
+      {
+        "value": "54570",
+        "label": "WORLD STAR BEACH RESORT & SPA 5*"
+      },
+      {
+        "value": "48274",
+        "label": "WOXX HOTEL 3*"
+      },
+      {
+        "value": "21406",
+        "label": "WYNDHAM OLD CITY ISTANBUL (EX.CELAL AGA KONAGI) 5*"
+      },
+      {
+        "value": "9616",
+        "label": "WYNDHAM OLD CITY ISTANBUL (EX.CELAL AGA KONAGI) 5*"
+      },
+      {
+        "value": "31206",
+        "label": "XAFIRA DELUXE RESORT & SPA 5*"
+      },
+      {
+        "value": "31670",
+        "label": "XANADU RESORT HOTEL 5*"
+      },
+      {
+        "value": "34063",
+        "label": "XENO EFTALIA RESORT 4*"
+      },
+      {
+        "value": "45511",
+        "label": "XORIA DELUXE HOTEL 5*"
+      },
+      {
+        "value": "31717",
+        "label": "XPERIA GRAND BALI HOTEL 4*"
+      },
+      {
+        "value": "31678",
+        "label": "XPERIA SARAY BEACH HOTEL + 7 YEARS 4*"
+      },
+      {
+        "value": "33610",
+        "label": "YAMAN LIFE HOTEL 3*"
+      },
+      {
+        "value": "32141",
+        "label": "YASMAK SULTAN HOTEL 4*"
+      },
+      {
+        "value": "9421",
+        "label": "YASMAK SULTAN HOTEL 4*"
+      },
+      {
+        "value": "32264",
+        "label": "YILSAM SULTANAHMET HOTEL 4*"
+      },
+      {
+        "value": "9409",
+        "label": "YUSUF PASA KONAGI HOTEL 4*"
+      },
+      {
+        "value": "20099",
+        "label": "ZAGREB HOTEL 4*"
+      },
+      {
+        "value": "31679",
+        "label": "ZENA RESORT HOTEL 5*"
+      },
+      {
+        "value": "45371",
+        "label": "ZEYNEL HOTEL 3*"
+      },
+      {
+        "value": "35831",
+        "label": "ВЕЛИКОЛЕПНЫЙ СТАМБУЛ Exc. Tour"
+      },
+      {
+        "value": "50337",
+        "label": "ЗНАКОМСТВО СО СТАМБУЛОМ Exc. Tour"
+      },
+      {
+        "value": "30172",
+        "label": "ЗОЛОТОЕ КОЛЬЦО С ЭКСКУРСИЕЙ \"ЗАГАДОЧНАЯ КАППАДОКИЯ\" Exc. Tour"
+      },
+      {
+        "value": "53312",
+        "label": "ЗОЛОТОЙ ГРАНД ТУР Exc. Tour"
+      },
+      {
+        "value": "33660",
+        "label": "КАППАДОКИЯ (2н) + СТАМБУЛ Exc. Tour"
+      },
+      {
+        "value": "38531",
+        "label": "ОСМАНСКАЯ ЖИЗНЬ-СТАМБУЛ Exc. Tour"
+      },
+      {
+        "value": "30173",
+        "label": "СТАМБУЛ + КАППАДОКИЯ (2н) 3* Light Exc. Tour"
+      },
+      {
+        "value": "30174",
+        "label": "СТАМБУЛ + КАППАДОКИЯ (2н) 4* Light Exc. Tour"
+      },
+      {
+        "value": "30168",
+        "label": "СТАМБУЛ ГОРОД МЕЧТЫ 3* Exc. Tour"
+      },
+      {
+        "value": "30169",
+        "label": "СТАМБУЛ ГОРОД МЕЧТЫ 4* Exc. Tour"
+      },
+      {
+        "value": "30170",
+        "label": "СТАМБУЛ ГОРОД МЕЧТЫ 5* Exc. Tour"
+      },
+      {
+        "value": "41938",
+        "label": "ТАИНСТВЕННЫЙ СТАМБУЛ Exc. Tour"
+      },
+      {
+        "value": "10001",
+        "label": "AI"
+      },
+      {
+        "value": "10003",
+        "label": "BB"
+      },
+      {
+        "value": "10014",
+        "label": "FB"
+      },
+      {
+        "value": "10002",
+        "label": "HB"
+      },
+      {
+        "value": "10004",
+        "label": "ROOM ONLY"
+      },
+      {
+        "value": "10009",
+        "label": "UAI"
+      }
+    ],
+    "PARTITION_PRICE": [
+      {
+        "value": "160",
+        "label": "группировать результаты"
+      }
+    ]
+  }
+}
