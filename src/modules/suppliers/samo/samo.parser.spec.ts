@@ -3,13 +3,6 @@ import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { parseSamoRows, unescapeJs } from './samo.parser'
 
-/**
- * Fixture: a real PRICESGROUP response, Tashkent → Turkey, captured
- * 2026-08-22. Exactly 100 rows, which is SAMO's page cap.
- *
- * The golden file is the reference tester's own parsed output, so this asserts
- * against a result a human already eyeballed in the browser.
- */
 const FIXTURES = join(__dirname, '../fixtures')
 const payload = readFileSync(join(FIXTURES, 'kompastour-tashkent-turkey-p1.txt'), 'utf8')
 const golden = JSON.parse(
@@ -36,8 +29,8 @@ describe('parseSamoRows', () => {
 
   it('reads the structured data-* payload', () => {
     expect(rows[0]).toMatchObject({
-      townfrom: '26',      // Tashkent
-      state: '17',         // Turkey
+      townfrom: '26',
+      state: '17',
       checkin: '20260822',
       nights: '7',
       hotel: '20086',
@@ -46,8 +39,6 @@ describe('parseSamoRows', () => {
   })
 
   it('separates the operator price from SAMO’s own conversion', () => {
-    // Same row, two numbers: 1340.13 in currency 3, displayed as 1568 USD.
-    // Trusting the displayed one would silently import their FX rate.
     expect(rows[0]).toMatchObject({
       priceSource: '1340.13',
       currencySource: '3',
@@ -59,7 +50,6 @@ describe('parseSamoRows', () => {
   it('recognises a stop-sale', () => {
     expect(rows[0].flags).toContain('red_row')
     expect(rows[0].saleState).toBe('stop')
-    // Cyrillic must survive the double escaping, or the reason is unreadable.
     expect(rows[0].stopReason).toMatch(/^Остановка продаж/)
   })
 

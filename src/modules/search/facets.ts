@@ -2,19 +2,6 @@ import type { Offer } from './models/Offer'
 import { Availability } from './contracts/search'
 
 /**
- * Facet counts derived from the offers we actually received.
- *
- * Deliberately not "how many tours exist" — SAMO answers with a page of the
- * 100 cheapest rows and no totals, so any number claiming to describe the whole
- * market would be a guess. These counts describe *this result set*, and
- * `partial` says so.
- *
- * That distinction has teeth: because a page is the cheapest rows, filtering
- * locally on these facets would narrow an already-truncated list and look
- * confident doing it. Filters therefore go back into the query and re-run the
- * search — which is why the API returns facets rather than the client deriving
- * them.
- *
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
  */
 export interface FacetOption {
@@ -24,15 +11,23 @@ export interface FacetOption {
 }
 
 export interface SearchFacets {
+  suppliers: FacetOption[]
   stars: FacetOption[]
   meals: FacetOption[]
   districts: FacetOption[]
   availability: FacetOption[]
+  /**
+   * The cheapest offer's price as its operator quoted it.
+   *
+   * Separate from priceMin/priceMax, which are converted so that one slider
+   * can span four operators. This is what the results heading shows, so the
+   * figure there matches the first card rather than a currency no card is in.
+   */
+  priceFrom: { amount: number, currency: string } | null
   priceMin: number | null
   priceMax: number | null
   priceBuckets: Array<{ from: number, to: number, count: number }>
   currency: string | null
-  /** true when the result set was capped, so the counts are a lower bound */
   partial: boolean
   total: number
 }
@@ -83,6 +78,11 @@ export function buildFacets(offers: Offer[], pageSize: number): SearchFacets {
       return stars ? { value: String(stars), label: '★'.repeat(stars) } : null
     }).sort((a, b) => Number(b.value) - Number(a.value)),
 
+    suppliers: tally(offers, o => ({
+      value: o.get('supplier').id,
+      label: o.get('supplier').name,
+    })),
+
     meals: tally(offers, (o) => {
       const code = o.get('mealCode')
       const name = o.get('mealName')
@@ -100,12 +100,21 @@ export function buildFacets(offers: Offer[], pageSize: number): SearchFacets {
     })).sort((a, b) =>
       Number(a.value === Availability.Stopped) - Number(b.value === Availability.Stopped)),
 
+    priceFrom: (() => {
+      const cheapest = [...offers].sort((a, b) => a.sortPrice() - b.sortPrice())[0]?.get('price').source
+
+      return cheapest ? { amount: cheapest.amount, currency: cheapest.currency } : null
+    })(),
+
     priceMin: min !== null ? Math.floor(min) : null,
     priceMax: max !== null ? Math.ceil(max) : null,
     priceBuckets: buckets,
-    currency: offers[0]?.get('price').source.currency ?? null,
+    currency: (() => {
+      const price = offers[0]?.get('price')
 
-    // A full page means the listing was cut, so every count below is a floor.
+      return price ? (price.converted?.currency ?? price.source.currency) : null
+    })(),
+
     partial: offers.length >= pageSize,
     total: offers.length,
   }

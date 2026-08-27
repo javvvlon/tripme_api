@@ -9,8 +9,6 @@ import { AppModule } from './app.module'
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule)
 
-  // Session cookies are scoped to .tripme.uz so the sibling frontend can use
-  // them (§3.5); credentialed CORS therefore needs explicit origins.
   app.enableCors({
     origin: (process.env.CORS_ORIGINS ?? 'http://localhost:3000').split(','),
     credentials: true,

@@ -1,0 +1,58 @@
+import { Injectable } from '@nestjs/common'
+import { InjectRepository } from '@nestjs/typeorm'
+import { Repository } from 'typeorm'
+import { UserEntity } from '~/modules/auth/entities'
+import { User } from '~/modules/auth/models/User'
+import type { UserRole } from '~/modules/auth/contracts/auth'
+
+/**
+ * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
+ */
+export interface ICreateUser {
+  email: string
+  passwordHash: string
+  firstName: string
+  lastName: string
+  phoneNumber: string
+  role: UserRole
+}
+
+export const normaliseEmail = (email: string): string => email.trim().toLowerCase()
+
+@Injectable()
+export class UserRepository {
+  constructor(
+    @InjectRepository(UserEntity)
+    private readonly users: Repository<UserEntity>,
+  ) {}
+
+  async findByEmail(email: string): Promise<User | null> {
+    const entity = await this.users
+      .createQueryBuilder('user')
+      .addSelect('user.passwordHash')
+      .where('user.email = :email', { email: normaliseEmail(email) })
+      .getOne()
+
+    return entity ? User.fromRaw(entity) : null
+  }
+
+  async findById(id: string): Promise<User | null> {
+    const entity = await this.users.findOne({ where: { id } })
+
+    return entity ? User.fromRaw(entity) : null
+  }
+
+  async create(data: ICreateUser): Promise<User> {
+    const entity = this.users.create({ ...data, email: normaliseEmail(data.email) })
+
+    return User.fromRaw(await this.users.save(entity))
+  }
+
+  async markVerified(id: string): Promise<void> {
+    await this.users.update({ id }, { isVerified: true })
+  }
+
+  async emailExists(email: string): Promise<boolean> {
+    return this.users.existsBy({ email: normaliseEmail(email) })
+  }
+}

@@ -1,15 +1,4 @@
 /**
- * Slug ↔ supplier code, seeded from the reference data harvested off the
- * search form.
- *
- * This belongs in Postgres, editable by a human — supplier codes are facts we
- * learn, not constants we own, and when Kompas renumbers a country nobody
- * wants to ship a release. It lives in code today only because the first
- * milestone runs on fixtures with no database behind it.
- *
- * Matching is by the supplier's own label, so adding a country is adding one
- * line here rather than hunting for a numeric id.
- *
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
  */
 export const DEPARTURE_LABELS: Record<string, string[]> = {
@@ -18,8 +7,25 @@ export const DEPARTURE_LABELS: Record<string, string[]> = {
   bukhara: ['Бухара'],
   urgench: ['Ургенч'],
   fergana: ['Фергана'],
+  termez: ['Термез'],
   almaty: ['Алматы'],
+  astana: ['Астана', 'Нур-Султан'],
   aktau: ['Актау'],
+  aktobe: ['Актобе'],
+  atyrau: ['Атырау'],
+  karaganda: ['Караганда'],
+  kostanay: ['Костанай'],
+  petropavlovsk: ['Петропавловск'],
+  pavlodar: ['Павлодар'],
+  semey: ['Семей'],
+  shymkent: ['Шымкент'],
+  taraz: ['Тараз'],
+  turkestan: ['Туркестан'],
+  uralsk: ['Уральск'],
+  ustkamenogorsk: ['Усть-Каменогорск'],
+  kyzylorda: ['Кызылорда'],
+  dushanbe: ['Душанбе'],
+  bishkek: ['Бишкек'],
   baku: ['Баку'],
   tbilisi: ['Тбилиси'],
   vienna: ['Вена'],
@@ -38,9 +44,31 @@ export const COUNTRY_LABELS: Record<string, string[]> = {
   china: ['Китай'],
   azerbaijan: ['Азербайджан'],
   kazakhstan: ['Казахстан'],
+  armenia: ['Армения'],
+  czechia: ['Чехия'],
+  spain: ['Испания'],
+  italy: ['Италия'],
+  mauritius: ['Маврикий'],
+  srilanka: ['Шри-Ланка'],
+  qatar: ['Катар'],
+  oman: ['Оман'],
+  bahrain: ['Бахрейн'],
+  jordan: ['Иордания'],
+  cuba: ['Куба'],
+  seychelles: ['Сейшелы', 'Сейшельские острова'],
+  greece: ['Греция'],
+  cyprus: ['Кипр'],
+  tunisia: ['Тунис'],
+  montenegro: ['Черногория'],
+  uzbekistan: ['Узбекистан'],
+  kyrgyzstan: ['Киргизия', 'Кыргызстан'],
+  russia: ['Россия'],
+  malaysia: ['Малайзия'],
+  singapore: ['Сингапур'],
+  japan: ['Япония'],
+  israel: ['Израиль'],
 }
 
-/** SAMO currency ids, confirmed off the live form. */
 export const CURRENCY_CODES: Record<string, string> = {
   EUR: '3',
   USD: '2',

@@ -23,6 +23,7 @@ export interface SearchFilters {
   hotels: string[]
   priceMin?: number
   priceMax?: number
+  suppliers: string[]
 }
 
 export enum Availability {

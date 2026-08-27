@@ -3,13 +3,6 @@ import type { CurrencyCode } from '~/shared/contracts/data'
 import type { SearchCriteria } from './contracts/search'
 
 /**
- * The query string an agent's browser sends, and its translation into
- * criteria.
- *
- * Kept apart from the controller because it is the outward-facing contract:
- * everything here is slugs, ISO dates and plain numbers — the vocabulary the
- * frontend already speaks in useSearchCriteria.
- *
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
  */
 export interface SearchQueryDto {
@@ -28,6 +21,7 @@ export interface SearchQueryDto {
   hotels?: string
   priceMin?: string
   priceMax?: string
+  suppliers?: string
 }
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/
@@ -67,6 +61,7 @@ export function toCriteria(query: SearchQueryDto): SearchCriteria {
       hotels: list(query.hotels),
       priceMin: query.priceMin ? Number(query.priceMin) : undefined,
       priceMax: query.priceMax ? Number(query.priceMax) : undefined,
+      suppliers: list(query.suppliers),
     },
   }
 }

@@ -1,0 +1,243 @@
+{
+  "sections": [
+    {
+      "uuid": "sec-offers",
+      "position": 1,
+      "link": "/search",
+      "list_id": "list-presale",
+      "layout_id": "layout-4-4-4",
+      "translations": [
+        {
+          "locale": "ru",
+          "title": "Горящие направления"
+        },
+        {
+          "locale": "uz",
+          "title": "Yonayotgan yo‘nalishlar"
+        },
+        {
+          "locale": "en",
+          "title": "Hot destinations"
+        }
+      ]
+    },
+    {
+      "uuid": "sec-experiences",
+      "position": 2,
+      "link": null,
+      "list_id": "list-experiences",
+      "layout_id": "layout-8-444",
+      "translations": [
+        {
+          "locale": "ru",
+          "title": "Незабываемые впечатления"
+        },
+        {
+          "locale": "uz",
+          "title": "Unutilmas taassurotlar"
+        },
+        {
+          "locale": "en",
+          "title": "Unforgettable experiences"
+        }
+      ]
+    }
+  ],
+  "layouts": [
+    {
+      "uuid": "layout-4-4-4",
+      "grid": "4_4_4",
+      "name": "Три в ряд"
+    },
+    {
+      "uuid": "layout-8-444",
+      "grid": "8_4.4.4",
+      "name": "Крупный и три малых"
+    },
+    {
+      "uuid": "layout-6-6",
+      "grid": "6_6",
+      "name": "Два в ряд"
+    },
+    {
+      "uuid": "layout-12",
+      "grid": "12",
+      "name": "Во всю ширину"
+    }
+  ],
+  "lists": [
+    {
+      "uuid": "list-presale",
+      "name": "Pre-Sale",
+      "items": [
+        {
+          "uuid": "it-eg",
+          "position": 1,
+          "image_url": null,
+          "link": "/search?from=tashkent&to=egypt",
+          "translations": [
+            {
+              "locale": "ru",
+              "title": "Египет",
+              "description": "Красное море, вылет из Ташкента"
+            },
+            {
+              "locale": "uz",
+              "title": "Misr",
+              "description": "Qizil dengiz, Toshkentdan uchish"
+            },
+            {
+              "locale": "en",
+              "title": "Egypt",
+              "description": "The Red Sea, departing Tashkent"
+            }
+          ]
+        },
+        {
+          "uuid": "it-tr",
+          "position": 2,
+          "image_url": null,
+          "link": "/search?from=tashkent&to=turkey",
+          "translations": [
+            {
+              "locale": "ru",
+              "title": "Турция",
+              "description": "Анталия и Стамбул круглый год"
+            },
+            {
+              "locale": "uz",
+              "title": "Turkiya",
+              "description": "Antaliya va Istanbul yil bo‘yi"
+            },
+            {
+              "locale": "en",
+              "title": "Turkey",
+              "description": "Antalya and Istanbul all year"
+            }
+          ]
+        },
+        {
+          "uuid": "it-mv",
+          "position": 3,
+          "image_url": null,
+          "link": "/search?from=tashkent&to=maldives",
+          "translations": [
+            {
+              "locale": "ru",
+              "title": "Мальдивы",
+              "description": "Виллы на воде"
+            },
+            {
+              "locale": "uz",
+              "title": "Maldiv orollari",
+              "description": "Suv ustidagi villalar"
+            },
+            {
+              "locale": "en",
+              "title": "Maldives",
+              "description": "Villas over the water"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "uuid": "list-experiences",
+      "name": "Впечатления",
+      "items": [
+        {
+          "uuid": "it-ant",
+          "position": 1,
+          "image_url": null,
+          "link": "/experiences/antelope-canyon",
+          "translations": [
+            {
+              "locale": "ru",
+              "title": "Каньон Антилопы",
+              "description": "Аризона, США"
+            },
+            {
+              "locale": "uz",
+              "title": "Antilopa kanyoni",
+              "description": "Arizona, AQSH"
+            },
+            {
+              "locale": "en",
+              "title": "Antelope Canyon",
+              "description": "Arizona, USA"
+            }
+          ]
+        },
+        {
+          "uuid": "it-heli",
+          "position": 2,
+          "image_url": null,
+          "link": "/experiences/grand-canyon-heli",
+          "translations": [
+            {
+              "locale": "ru",
+              "title": "Полёт над Гранд-Каньоном",
+              "description": "Невада, США"
+            },
+            {
+              "locale": "uz",
+              "title": "Grand-Kanyon uzra parvoz",
+              "description": "Nevada, AQSH"
+            },
+            {
+              "locale": "en",
+              "title": "Grand Canyon by helicopter",
+              "description": "Nevada, USA"
+            }
+          ]
+        },
+        {
+          "uuid": "it-air",
+          "position": 3,
+          "image_url": null,
+          "link": "/experiences/everglades-airboat",
+          "translations": [
+            {
+              "locale": "ru",
+              "title": "Аэролодка по Эверглейдс",
+              "description": "Флорида, США"
+            },
+            {
+              "locale": "uz",
+              "title": "Everglades bo‘ylab aerokema",
+              "description": "Florida, AQSH"
+            },
+            {
+              "locale": "en",
+              "title": "Everglades airboat",
+              "description": "Florida, USA"
+            }
+          ]
+        },
+        {
+          "uuid": "it-kay",
+          "position": 4,
+          "image_url": null,
+          "link": "/experiences/emerald-cave-kayak",
+          "translations": [
+            {
+              "locale": "ru",
+              "title": "Каяк в Изумрудной бухте",
+              "description": "Аризона, США"
+            },
+            {
+              "locale": "uz",
+              "title": "Zumrad ko‘rfazida kayak",
+              "description": "Arizona, AQSH"
+            },
+            {
+              "locale": "en",
+              "title": "Emerald Cove by kayak",
+              "description": "Arizona, USA"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

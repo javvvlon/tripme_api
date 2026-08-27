@@ -3,40 +3,18 @@ import { Availability } from '~/modules/search/contracts/search'
 import type { Money, PriceBreakdown, SupplierRef } from '~/modules/search/contracts/search'
 
 /**
- * One bookable (or explicitly not-bookable) package: hotel + room + meal +
- * dates + price, from one supplier.
- *
- * This is the canonical shape every supplier normalises into. It is the only
- * shape the search API emits, and the frontend's Tour model mirrors it.
- *
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
  */
 export interface IOffer {
-  /** deterministic: same offer from the same supplier yields the same id */
   id: string
   supplier: SupplierRef
 
   hotelName: string
   hotelStars: number | null
-  /** supplier's own hotel code — the join key until identity resolution runs */
   hotelSupplierCode: string
-  /** their canonical url path, a better cross-supplier hint than the name */
   hotelSlug: string | null
-  /**
-   * The operator's own page for this hotel — photos and description. Present
-   * on roughly a quarter of rows; null otherwise.
-   */
   hotelUrl: string | null
 
-  /**
-   * Deep link into the operator's own search, pre-filled with this offer's
-   * route, dates, nights and party.
-   *
-   * This is the hand-off. We do not book (§4: booking stays with the
-   * operator), so the agent's last step is always "open it there" — and
-   * dropping them on a blank search form means retyping everything we already
-   * know, which is the manual work the product exists to remove.
-   */
   bookingUrl: string | null
   district: string | null
 
@@ -51,12 +29,10 @@ export interface IOffer {
 
   price: PriceBreakdown
   availability: Availability
-  /** «Остановка продаж с … по …» — shown verbatim, never paraphrased */
   availabilityNote: string | null
   flightNote: string | null
   refundable: boolean | null
 
-  /** programme/tour name, e.g. «TR: Стамбул из Ташкента» */
   programme: string | null
   fare: string | null
 }
@@ -66,16 +42,12 @@ export class Offer extends Model<IOffer> {
     return this.get('availability') === Availability.Available
   }
 
-  /** What the results list sorts by: the supplier's own number, not a conversion. */
   public sortPrice(): number {
-    return this.get('price').source.amount
+    const price = this.get('price')
+
+    return price.converted?.amount ?? price.source.amount
   }
 
-  /**
-   * Identity for merging the same physical offer arriving twice — across page
-   * boundaries, or from a retry. Deliberately excludes price: a price change
-   * between pages is a new value for the same offer, not a new offer.
-   */
   public dedupeKey(): string {
     return [
       this.get('supplier').id,

@@ -23,19 +23,6 @@ export function fromSamoDate(value: string): string {
     : value
 }
 
-/**
- * A link that opens the operator's own search with this offer's parameters
- * already filled in.
- *
- * Verified against the live form: it reads TOWNFROMINC, STATEINC, STATEFROM,
- * CHECKIN_BEG/END, NIGHTS_FROM/TILL, ADULT, CHILD and CURRENCY straight from
- * the query string — but note the dates are dd.MM.yyyy here, where the AJAX
- * endpoint wants yyyyMMdd. Same system, two formats.
- *
- * HOTELS is sent hopefully rather than reliably: their hotel list loads only
- * when the selector is opened, so the parameter is ignored on a cold page
- * load. It costs nothing and pins the hotel if they ever change that.
- */
 export function buildBookingUrl(
   row: SamoRow,
   baseUrl: string,
@@ -61,7 +48,6 @@ export function buildBookingUrl(
   return `${baseUrl}?${params.toString()}`
 }
 
-/** 20260911 → 11.09.2026, the format their search *page* expects. */
 export function toFormDate(value: string): string {
   return /^\d{8}$/.test(value)
     ? `${value.slice(6, 8)}.${value.slice(4, 6)}.${value.slice(0, 4)}`

@@ -2,7 +2,7 @@
   "name": "tripme_api",
   "version": "0.1.0",
   "private": true,
-  "description": "TripMe API \u2014 unified tour search across suppliers. Level 1 of the concept: the agent workspace.",
+  "description": "TripMe API — unified tour search across suppliers. Level 1 of the concept: the agent workspace.",
   "engines": {
     "node": "^22.19.0 || ^24.11.0 || >=26.0.0"
   },
@@ -14,23 +14,36 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
-    "copy:fixtures": "mkdir -p dist/modules/suppliers/fixtures && cp src/modules/suppliers/fixtures/* dist/modules/suppliers/fixtures/",
-    "start:live": "SUPPLIER_LIVE=1 node dist/main.js"
+    "copy:fixtures": "mkdir -p dist/modules/suppliers/fixtures dist/modules/content/fixtures && cp src/modules/suppliers/fixtures/* dist/modules/suppliers/fixtures/ && cp src/modules/content/fixtures/* dist/modules/content/fixtures/",
+    "start:live": "SUPPLIER_LIVE=1 node dist/main.js",
+    "migrate": "node dist/shared/database/migrate.js",
+    "user:create": "./scripts/create-user.sh",
+    "migrate:revert": "node dist/shared/database/migrate.js --revert",
+    "seed:content": "node dist/modules/content/cli/seed-content.js"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1119.0",
     "@nestjs/common": "^11.2.1",
     "@nestjs/config": "^4.0.4",
     "@nestjs/core": "^11.2.1",
+    "@nestjs/jwt": "^11.0.2",
     "@nestjs/platform-express": "^11.2.1",
+    "@nestjs/typeorm": "^11.0.3",
+    "dotenv": "^17.4.2",
+    "multer": "^2.2.0",
     "node-html-parser": "^9.0.1",
+    "pg": "^8.23.0",
     "reflect-metadata": "^0.2.2",
-    "rxjs": "^7.8.2"
+    "rxjs": "^7.8.2",
+    "typeorm": "^1.1.0"
   },
   "devDependencies": {
     "@nestjs/cli": "^11.0.24",
     "@nestjs/schematics": "^11.1.0",
     "@types/express": "^5.0.6",
+    "@types/multer": "^2.2.0",
     "@types/node": "^26.2.0",
+    "@types/pg": "^8.23.1",
     "tsc-alias": "^1.9.2",
     "typescript": "^6.0.3",
     "vitest": "^4.1.11"
