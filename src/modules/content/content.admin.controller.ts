@@ -25,6 +25,11 @@ export class ContentAdminController {
     private readonly storage: StorageService,
   ) {}
 
+  @Get('uploads')
+  library() {
+    return this.storage.list()
+  }
+
   @Post('uploads')
   @UseInterceptors(FileInterceptor('file', { limits: { fileSize: MAX_IMAGE_BYTES } }))
   async upload(@UploadedFile() file?: IUploadedFile) {

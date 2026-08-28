@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import { BadRequestException, Injectable, Logger, ServiceUnavailableException } from '@nestjs/common'
-import { DeleteObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
+import { DeleteObjectCommand, ListObjectsV2Command, PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -8,6 +8,13 @@ import { DeleteObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client
 export const ALLOWED_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/avif'] as const
 
 export const MAX_IMAGE_BYTES = 8 * 1024 * 1024
+
+export interface IStoredFile {
+  url: string
+  path: string
+  size: number
+  uploaded_at: string | null
+}
 
 export interface IUploadedFile {
   buffer: Buffer
@@ -111,6 +118,35 @@ export class StorageService {
     }
 
     return { path, url: `${origin}/storage/v1/object/public/${this.bucket}/${path}` }
+  }
+
+  async list(folder = 'content', limit = 200): Promise<IStoredFile[]> {
+    if (!this.configured || !this.publicOrigin) return []
+
+    const origin = this.publicOrigin
+
+    try {
+      const response = await this.s3().send(new ListObjectsV2Command({
+        Bucket: this.bucket,
+        Prefix: `${folder}/`,
+        MaxKeys: limit,
+      }))
+
+      return (response.Contents ?? [])
+        .filter(object => Boolean(object.Key) && !object.Key!.endsWith('/'))
+        .sort((a, b) => (b.LastModified?.getTime() ?? 0) - (a.LastModified?.getTime() ?? 0))
+        .map(object => ({
+          path: object.Key!,
+          url: `${origin}/storage/v1/object/public/${this.bucket}/${object.Key}`,
+          size: object.Size ?? 0,
+          uploaded_at: object.LastModified ? object.LastModified.toISOString() : null,
+        }))
+    }
+    catch (error) {
+      this.logger.warn(`could not list ${folder}: ${String(error)}`)
+
+      return []
+    }
   }
 
   async remove(publicUrl: string): Promise<void> {
