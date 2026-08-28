@@ -6,6 +6,7 @@ import { AuthModule } from '~/modules/auth/auth.module'
 import { ContentModule } from '~/modules/content/content.module'
 import { DatabaseModule } from '~/shared/database/database.module'
 import { StorageModule } from '~/shared/storage/storage.module'
+import { HealthModule } from '~/shared/health/health.module'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -13,6 +14,7 @@ import { StorageModule } from '~/shared/storage/storage.module'
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    HealthModule,
     DatabaseModule,
     StorageModule,
     SearchModule,

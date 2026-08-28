@@ -17,7 +17,7 @@ async function bootstrap(): Promise<void> {
   app.setGlobalPrefix('api/v1')
 
   const port = Number(process.env.PORT ?? 3001)
-  await app.listen(port)
+  await app.listen(port, '0.0.0.0')
 
   new Logger('bootstrap').log(
     `listening on :${port} — suppliers in ${process.env.SUPPLIER_LIVE === '1' ? 'LIVE' : 'FIXTURE'} mode`,
