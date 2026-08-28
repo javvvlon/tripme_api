@@ -9,7 +9,7 @@ import { RolesGuard } from '~/modules/auth/guards/roles.guard'
 import { Roles } from '~/modules/auth/decorators'
 import { UserRole } from '~/modules/auth/contracts/auth'
 import { ContentAdminService } from './content.admin.service'
-import { RevalidationService } from './revalidation.service'
+import { RevalidationService } from '~/shared/revalidation/revalidation.service'
 import type { IBannerInput, IListInput, ISectionInput } from './content.admin.service'
 
 /**

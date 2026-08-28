@@ -18,12 +18,15 @@ export class ContentSectionEntity {
   @Column({ type: 'text', nullable: true })
   link!: string | null
 
-  @Column({ name: 'list_id', type: 'uuid' })
-  listId!: string
+  @Column({ type: 'text', default: 'list' })
+  variant!: string
 
-  @ManyToOne(() => ContentListEntity, { onDelete: 'RESTRICT' })
+  @Column({ name: 'list_id', type: 'uuid', nullable: true })
+  listId!: string | null
+
+  @ManyToOne(() => ContentListEntity, { onDelete: 'RESTRICT', nullable: true })
   @JoinColumn({ name: 'list_id' })
-  list!: ContentListEntity
+  list!: ContentListEntity | null
 
   @Column({ name: 'layout_id', type: 'uuid' })
   layoutId!: string

@@ -4,8 +4,11 @@ import { SearchModule } from '~/modules/search/search.module'
 import { ReferencesModule } from '~/modules/references/references.module'
 import { AuthModule } from '~/modules/auth/auth.module'
 import { ContentModule } from '~/modules/content/content.module'
+import { PostsModule } from '~/modules/posts/posts.module'
+import { ContactModule } from '~/modules/contact/contact.module'
 import { DatabaseModule } from '~/shared/database/database.module'
 import { StorageModule } from '~/shared/storage/storage.module'
+import { RevalidationModule } from '~/shared/revalidation/revalidation.module'
 import { HealthModule } from '~/shared/health/health.module'
 
 /**
@@ -17,10 +20,13 @@ import { HealthModule } from '~/shared/health/health.module'
     HealthModule,
     DatabaseModule,
     StorageModule,
+    RevalidationModule,
     SearchModule,
     ReferencesModule,
     AuthModule,
     ContentModule,
+    PostsModule,
+    ContactModule,
   ],
 })
 export class AppModule {}

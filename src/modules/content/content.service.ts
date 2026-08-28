@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 import { ContentBannerEntity, ContentSectionEntity } from './entities'
+import { PostsService } from '~/modules/posts/posts.service'
+import type { IPostPayload } from '~/modules/posts/posts.service'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -19,7 +21,8 @@ export interface IHomeContentResponse {
     uuid: string
     translations: Array<{ locale: string, title: string }>
     link: string | null
-    list_id: string
+    variant: string
+    list_id: string | null
     layout_id: string
     position: number
   }>
@@ -41,7 +44,10 @@ export interface IHomeContentResponse {
       }>
     }>
   }>
+  posts: IPostPayload[]
 }
+
+const POSTS_IN_SECTION = 12
 
 @Injectable()
 export class ContentService {
@@ -50,6 +56,7 @@ export class ContentService {
     private readonly sections: Repository<ContentSectionEntity>,
     @InjectRepository(ContentBannerEntity)
     private readonly banners: Repository<ContentBannerEntity>,
+    private readonly postsService: PostsService,
   ) {}
 
   async forPage(page = 'home'): Promise<IHomeContentResponse> {
@@ -58,7 +65,7 @@ export class ContentService {
      * the home page cannot render without both, and two requests would be two
      * chances to render half of it.
      */
-    const [banner, sections] = await Promise.all([
+    const [banner, sections, posts] = await Promise.all([
       this.banners.findOne({ where: { page }, relations: { translations: true } }),
       this.sections.find({
         where: { page, isPublished: true },
@@ -69,6 +76,7 @@ export class ContentService {
         },
         order: { position: 'ASC' },
       }),
+      this.postsService.published(POSTS_IN_SECTION),
     ])
 
     const layouts = new Map<string, IHomeContentResponse['layouts'][number]>()
@@ -117,8 +125,10 @@ export class ContentService {
             })),
           }
         : null,
+      posts,
       sections: sections.map(section => ({
         uuid: section.id,
+        variant: section.variant,
         translations: (section.translations ?? []).map(t => ({ locale: t.locale, title: t.title })),
         link: section.link,
         list_id: section.listId,

@@ -46,7 +46,8 @@ export interface IBannerInput {
 
 export interface ISectionInput {
   link?: string | null
-  list_id: string
+  variant?: string
+  list_id?: string | null
   layout_id: string
   is_published?: boolean
   translations: Array<{ locale: string, title: string }>
@@ -217,6 +218,7 @@ export class ContentAdminService {
     return sections.map(section => ({
       uuid: section.id,
       link: section.link,
+      variant: section.variant,
       list_id: section.listId,
       layout_id: section.layoutId,
       position: section.position,
@@ -233,7 +235,8 @@ export class ContentAdminService {
         await manager.getRepository(ContentSectionEntity).save({
           page,
           link: blank(section.link),
-          listId: section.list_id,
+          variant: sectionVariant(section.variant),
+          listId: sectionVariant(section.variant) === 'posts' ? null : (section.list_id ?? null),
           layoutId: section.layout_id,
           position: index + 1,
           isPublished: section.is_published ?? true,
@@ -245,6 +248,11 @@ export class ContentAdminService {
     })
   }
 }
+
+const SECTION_VARIANTS = ['list', 'posts']
+
+const sectionVariant = (value: string | null | undefined): string =>
+  SECTION_VARIANTS.includes(value ?? '') ? value! : 'list'
 
 const blank = (value: string | null | undefined): string | null => value?.trim() || null
 
