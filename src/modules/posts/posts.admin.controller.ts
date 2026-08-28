@@ -1,8 +1,9 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, UseGuards } from '@nestjs/common'
 import { AuthGuard } from '~/modules/auth/guards/auth.guard'
 import { RolesGuard } from '~/modules/auth/guards/roles.guard'
-import { Roles } from '~/modules/auth/decorators'
+import { CurrentUser, Roles } from '~/modules/auth/decorators'
 import { UserRole } from '~/modules/auth/contracts/auth'
+import type { IAccessTokenClaims } from '~/modules/auth/contracts/auth'
 import { RevalidationService } from '~/shared/revalidation/revalidation.service'
 import { PostsAdminService } from './posts.admin.service'
 import type { IPostCreateInput, IPostInput } from './posts.admin.service'
@@ -30,8 +31,8 @@ export class PostsAdminController {
   }
 
   @Post()
-  async create(@Body() body: IPostCreateInput) {
-    const post = await this.admin.create(body)
+  async create(@Body() body: IPostCreateInput, @CurrentUser() claims: IAccessTokenClaims) {
+    const post = await this.admin.create(body, claims?.sub ?? null)
 
     this.revalidation.revalidate()
 

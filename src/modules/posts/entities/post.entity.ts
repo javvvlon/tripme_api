@@ -1,4 +1,5 @@
-import { Column, Entity, Index, OneToMany, PrimaryGeneratedColumn } from 'typeorm'
+import { Column, Entity, Index, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm'
+import { UserEntity } from '~/modules/auth/entities'
 import { PostTranslationEntity } from './post-translation.entity'
 
 /**
@@ -21,6 +22,13 @@ export class PostEntity {
 
   @Column({ type: 'text', nullable: true })
   link!: string | null
+
+  @Column({ name: 'author_id', type: 'uuid', nullable: true })
+  authorId!: string | null
+
+  @ManyToOne(() => UserEntity, { onDelete: 'SET NULL', nullable: true })
+  @JoinColumn({ name: 'author_id' })
+  author!: UserEntity | null
 
   @Column({ name: 'is_published', type: 'boolean', default: false })
   isPublished!: boolean

@@ -21,6 +21,8 @@ import { ItemBadges1755900002000 } from './migrations/1755900002000-ItemBadges'
 import { Banner1755900003000 } from './migrations/1755900003000-Banner'
 import { BannerSubtitle1755900004000 } from './migrations/1755900004000-BannerSubtitle'
 import { Posts1755900005000 } from './migrations/1755900005000-Posts'
+import { PostAuthor1755900006000 } from './migrations/1755900006000-PostAuthor'
+import { SectionPosts1755900007000 } from './migrations/1755900007000-SectionPosts'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -48,6 +50,8 @@ export const databaseOptions = (): DataSourceOptions => {
       Auth1755900000000, Content1755900001000, ItemBadges1755900002000, Banner1755900003000,
       BannerSubtitle1755900004000,
       Posts1755900005000,
+      PostAuthor1755900006000,
+      SectionPosts1755900007000,
     ],
     synchronize: false,
     migrationsRun: false,

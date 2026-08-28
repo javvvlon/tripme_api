@@ -47,6 +47,7 @@ export interface IBannerInput {
 export interface ISectionInput {
   link?: string | null
   variant?: string
+  post_ids?: string[]
   list_id?: string | null
   layout_id: string
   is_published?: boolean
@@ -219,6 +220,7 @@ export class ContentAdminService {
       uuid: section.id,
       link: section.link,
       variant: section.variant,
+      post_ids: section.postIds ?? [],
       list_id: section.listId,
       layout_id: section.layoutId,
       position: section.position,
@@ -236,6 +238,7 @@ export class ContentAdminService {
           page,
           link: blank(section.link),
           variant: sectionVariant(section.variant),
+          postIds: sectionVariant(section.variant) === 'posts' ? (section.post_ids ?? []) : [],
           listId: sectionVariant(section.variant) === 'posts' ? null : (section.list_id ?? null),
           layoutId: section.layout_id,
           position: index + 1,

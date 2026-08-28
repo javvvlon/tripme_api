@@ -22,6 +22,7 @@ export interface IHomeContentResponse {
     translations: Array<{ locale: string, title: string }>
     link: string | null
     variant: string
+    post_ids: string[]
     list_id: string | null
     layout_id: string
     position: number
@@ -79,6 +80,10 @@ export class ContentService {
       this.postsService.published(POSTS_IN_SECTION),
     ])
 
+    const pinned = sections.flatMap(section => section.postIds ?? [])
+    const missing = pinned.filter(id => !posts.some(post => post.uuid === id))
+    const extra = await this.postsService.byIds([...new Set(missing)])
+
     const layouts = new Map<string, IHomeContentResponse['layouts'][number]>()
     const lists = new Map<string, IHomeContentResponse['lists'][number]>()
 
@@ -125,10 +130,11 @@ export class ContentService {
             })),
           }
         : null,
-      posts,
+      posts: [...posts, ...extra],
       sections: sections.map(section => ({
         uuid: section.id,
         variant: section.variant,
+        post_ids: section.postIds ?? [],
         translations: (section.translations ?? []).map(t => ({ locale: t.locale, title: t.title })),
         link: section.link,
         list_id: section.listId,

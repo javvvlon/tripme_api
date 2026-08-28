@@ -182,10 +182,17 @@ function parseBanner(body: Record<string, unknown>): IBannerInput {
 function parseSection(raw: unknown): ISectionInput {
   const section = raw as Record<string, unknown>
   const translations = Array.isArray(section.translations) ? section.translations : []
+  const variant = section.variant === 'posts' ? 'posts' : 'list'
 
   return {
     link: typeof section.link === 'string' ? section.link : null,
-    list_id: str(section.list_id, 'list_id'),
+    variant,
+    post_ids: Array.isArray(section.post_ids)
+      ? section.post_ids.filter((id): id is string => typeof id === 'string')
+      : [],
+    list_id: variant === 'posts'
+      ? (typeof section.list_id === 'string' ? section.list_id : null)
+      : str(section.list_id, 'list_id'),
     layout_id: str(section.layout_id, 'layout_id'),
     is_published: section.is_published !== false,
     translations: translations.map((t) => {

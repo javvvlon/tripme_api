@@ -48,7 +48,7 @@ export class PostsAdminService {
 
   async list(): Promise<IPostAdminPayload[]> {
     const rows = await this.posts.find({
-      relations: { translations: true },
+      relations: { translations: true, author: true },
       order: { updatedAt: 'DESC' },
     })
 
@@ -56,13 +56,13 @@ export class PostsAdminService {
   }
 
   async one(id: string): Promise<IPostAdminPayload> {
-    const row = await this.posts.findOne({ where: { id }, relations: { translations: true } })
+    const row = await this.posts.findOne({ where: { id }, relations: { translations: true, author: true } })
 
     if (!row) throw new NotFoundException('Post not found')
 
     return this.toAdminPayload(row)
   }
-  async create(input: IPostCreateInput): Promise<IPostAdminPayload> {
+  async create(input: IPostCreateInput, authorId: string | null): Promise<IPostAdminPayload> {
     const slug = this.normaliseSlug(input.slug ?? '')
     const title = (input.title ?? '').trim()
     const locale = (input.locale ?? 'ru').trim() || 'ru'
@@ -73,6 +73,7 @@ export class PostsAdminService {
 
     const post = this.posts.create({
       slug,
+      authorId,
       isPublished: false,
       translations: [this.translations.create({ locale, title, excerpt: '', body: '' })],
     })
@@ -83,7 +84,7 @@ export class PostsAdminService {
   }
 
   async update(id: string, input: IPostInput): Promise<IPostAdminPayload> {
-    const post = await this.posts.findOne({ where: { id }, relations: { translations: true } })
+    const post = await this.posts.findOne({ where: { id }, relations: { translations: true, author: true } })
 
     if (!post) throw new NotFoundException('Post not found')
 

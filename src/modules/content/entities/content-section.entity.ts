@@ -28,6 +28,9 @@ export class ContentSectionEntity {
   @JoinColumn({ name: 'list_id' })
   list!: ContentListEntity | null
 
+  @Column({ name: 'post_ids', type: 'uuid', array: true, default: () => `'{}'` })
+  postIds!: string[]
+
   @Column({ name: 'layout_id', type: 'uuid' })
   layoutId!: string
 
