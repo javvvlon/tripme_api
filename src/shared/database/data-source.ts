@@ -26,6 +26,7 @@ import { PostAuthor1755900006000 } from './migrations/1755900006000-PostAuthor'
 import { SectionPosts1755900007000 } from './migrations/1755900007000-SectionPosts'
 import { Leads1755900008000 } from './migrations/1755900008000-Leads'
 import { LeadOrders1755900009000 } from './migrations/1755900009000-LeadOrders'
+import { LeadPassport1755900010000 } from './migrations/1755900010000-LeadPassport'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -57,6 +58,7 @@ export const databaseOptions = (): DataSourceOptions => {
       SectionPosts1755900007000,
       Leads1755900008000,
       LeadOrders1755900009000,
+      LeadPassport1755900010000,
     ],
     synchronize: false,
     migrationsRun: false,

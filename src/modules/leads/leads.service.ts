@@ -21,6 +21,8 @@ export interface ILeadInput {
   first_name?: string
   last_name?: string
   phone?: string
+  passport_id?: string
+  passport_expires_at?: string
   comment?: string
   locale?: string
   trip?: ILeadTripInput
@@ -30,6 +32,8 @@ export interface ILeadPatch {
   status?: string
   supplier_order_id?: string
   comment?: string
+  passport_id?: string
+  passport_expires_at?: string | null
 }
 
 export interface ILeadPayload {
@@ -41,6 +45,8 @@ export interface ILeadPayload {
   first_name: string
   last_name: string
   phone: string
+  passport_id: string
+  passport_expires_at: string | null
   comment: string
   locale: string
   hotel_name: string
@@ -62,6 +68,9 @@ const MAX_COMMENT = 2000
 
 const text = (value: unknown, limit = 160): string =>
   typeof value === 'string' ? value.trim().slice(0, limit) : ''
+
+const asDate = (value: unknown): string | null =>
+  /^\d{4}-\d{2}-\d{2}$/.test(String(value ?? '')) ? String(value) : null
 
 const count = (value: unknown): number =>
   Number.isFinite(Number(value)) ? Math.max(0, Math.trunc(Number(value))) : 0
@@ -92,11 +101,13 @@ export class LeadsService {
       firstName,
       lastName: text(input.last_name, 120),
       phone,
+      passportId: text(input.passport_id, 40),
+      passportExpiresAt: asDate(input.passport_expires_at),
       comment: text(input.comment, MAX_COMMENT),
       locale: text(input.locale, 8) || 'ru',
       hotelName: text(trip.hotel_name, 240),
       supplierName: text(trip.supplier_name, 120),
-      checkIn: /^\d{4}-\d{2}-\d{2}$/.test(String(trip.check_in ?? '')) ? String(trip.check_in) : null,
+      checkIn: asDate(trip.check_in),
       nights: count(trip.nights),
       adults: count(trip.adults),
       children: count(trip.children),
@@ -150,6 +161,12 @@ export class LeadsService {
 
     if (input.comment !== undefined) lead.comment = text(input.comment, MAX_COMMENT)
 
+    if (input.passport_id !== undefined) lead.passportId = text(input.passport_id, 40)
+
+    if (input.passport_expires_at !== undefined) {
+      lead.passportExpiresAt = asDate(input.passport_expires_at)
+    }
+
     lead.updatedAt = new Date()
 
     await this.leads.save(lead)
@@ -175,6 +192,8 @@ export class LeadsService {
       first_name: row.firstName,
       last_name: row.lastName,
       phone: row.phone,
+      passport_id: row.passportId ?? '',
+      passport_expires_at: row.passportExpiresAt,
       comment: row.comment,
       locale: row.locale,
       hotel_name: row.hotelName,

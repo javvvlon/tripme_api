@@ -44,6 +44,12 @@ export class LeadEntity {
   @Column({ type: 'text' })
   phone!: string
 
+  @Column({ name: 'passport_id', type: 'text', default: '' })
+  passportId!: string
+
+  @Column({ name: 'passport_expires_at', type: 'date', nullable: true })
+  passportExpiresAt!: string | null
+
   @Column({ type: 'text', default: '' })
   comment!: string
 
