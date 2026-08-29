@@ -15,6 +15,7 @@ import {
 } from '~/modules/content/entities'
 import { PostEntity, PostTranslationEntity } from '~/modules/posts/entities'
 import { ContactMessageEntity } from '~/modules/contact/contact-message.entity'
+import { LeadEntity } from '~/modules/leads/lead.entity'
 import { Auth1755900000000 } from './migrations/1755900000000-Auth'
 import { Content1755900001000 } from './migrations/1755900001000-Content'
 import { ItemBadges1755900002000 } from './migrations/1755900002000-ItemBadges'
@@ -23,6 +24,8 @@ import { BannerSubtitle1755900004000 } from './migrations/1755900004000-BannerSu
 import { Posts1755900005000 } from './migrations/1755900005000-Posts'
 import { PostAuthor1755900006000 } from './migrations/1755900006000-PostAuthor'
 import { SectionPosts1755900007000 } from './migrations/1755900007000-SectionPosts'
+import { Leads1755900008000 } from './migrations/1755900008000-Leads'
+import { LeadOrders1755900009000 } from './migrations/1755900009000-LeadOrders'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -44,7 +47,7 @@ export const databaseOptions = (): DataSourceOptions => {
       ContentLayoutEntity, ContentListEntity, ContentItemEntity,
       ContentItemTranslationEntity, ContentSectionEntity, ContentSectionTranslationEntity,
       ContentBannerEntity, ContentBannerTranslationEntity,
-      PostEntity, PostTranslationEntity, ContactMessageEntity,
+      PostEntity, PostTranslationEntity, ContactMessageEntity, LeadEntity,
     ],
     migrations: [
       Auth1755900000000, Content1755900001000, ItemBadges1755900002000, Banner1755900003000,
@@ -52,6 +55,8 @@ export const databaseOptions = (): DataSourceOptions => {
       Posts1755900005000,
       PostAuthor1755900006000,
       SectionPosts1755900007000,
+      Leads1755900008000,
+      LeadOrders1755900009000,
     ],
     synchronize: false,
     migrationsRun: false,

@@ -6,6 +6,7 @@ import { AuthModule } from '~/modules/auth/auth.module'
 import { ContentModule } from '~/modules/content/content.module'
 import { PostsModule } from '~/modules/posts/posts.module'
 import { ContactModule } from '~/modules/contact/contact.module'
+import { LeadsModule } from '~/modules/leads/leads.module'
 import { DatabaseModule } from '~/shared/database/database.module'
 import { StorageModule } from '~/shared/storage/storage.module'
 import { RevalidationModule } from '~/shared/revalidation/revalidation.module'
@@ -27,6 +28,7 @@ import { HealthModule } from '~/shared/health/health.module'
     ContentModule,
     PostsModule,
     ContactModule,
+    LeadsModule,
   ],
 })
 export class AppModule {}
