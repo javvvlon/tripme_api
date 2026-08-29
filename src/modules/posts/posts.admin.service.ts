@@ -17,6 +17,7 @@ export interface IPostInput {
   badge_type?: string | null
   link?: string | null
   is_published?: boolean
+  tour?: Record<string, unknown> | null
   translations?: Array<{
     locale: string
     title?: string
@@ -99,6 +100,10 @@ export class PostsAdminService {
     if (input.image_url !== undefined) post.imageUrl = input.image_url
     if (input.badge_type !== undefined) post.badgeType = input.badge_type
     if (input.link !== undefined) post.link = input.link
+
+    if (input.tour !== undefined) {
+      post.tour = input.tour && Object.keys(input.tour).length ? input.tour : null
+    }
     if (input.is_published !== undefined) {
       post.isPublished = input.is_published
 

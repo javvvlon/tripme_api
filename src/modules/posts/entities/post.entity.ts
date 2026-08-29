@@ -30,6 +30,9 @@ export class PostEntity {
   @JoinColumn({ name: 'author_id' })
   author!: UserEntity | null
 
+  @Column({ type: 'jsonb', nullable: true })
+  tour!: Record<string, unknown> | null
+
   @Column({ name: 'is_published', type: 'boolean', default: false })
   isPublished!: boolean
 

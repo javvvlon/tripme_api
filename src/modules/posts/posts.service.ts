@@ -24,6 +24,7 @@ export interface IPostPayload {
   badge_type: string | null
   link: string | null
   published_at: string | null
+  tour: Record<string, unknown> | null
   author: IPostAuthorPayload | null
   translations: IPostTranslationPayload[]
 }
@@ -78,6 +79,7 @@ export class PostsService {
       badge_type: row.badgeType,
       link: row.link,
       published_at: row.publishedAt ? row.publishedAt.toISOString() : null,
+      tour: row.tour ?? null,
       author: row.author
         ? { uuid: row.author.id, first_name: row.author.firstName, last_name: row.author.lastName }
         : null,
