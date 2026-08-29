@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { Repository } from 'typeorm'
+import { Brackets, Repository } from 'typeorm'
 import { LEAD_STATUSES, LeadEntity, LeadSource, LeadStatus } from './lead.entity'
 
 export interface ILeadTripInput {
@@ -26,6 +26,28 @@ export interface ILeadInput {
   comment?: string
   locale?: string
   trip?: ILeadTripInput
+}
+
+export const LEAD_SORTS = {
+  order: 'lead.orderId',
+  created: 'lead.createdAt',
+  client: 'lead.firstName',
+  phone: 'lead.phone',
+  tour: 'lead.hotelName',
+  dates: 'lead.checkIn',
+  party: 'lead.adults',
+  price: 'lead.priceAmount',
+  supplier: 'lead.supplierName',
+  status: 'lead.status',
+} as const
+
+export type LeadSort = keyof typeof LEAD_SORTS
+
+export interface ILeadQuery {
+  status?: string
+  q?: string
+  sort?: string
+  dir?: string
 }
 
 export interface ILeadPatch {
@@ -65,6 +87,8 @@ export interface ILeadPayload {
 }
 
 const MAX_COMMENT = 2000
+
+const PHONE_FRAGMENT_MIN = 4
 
 const text = (value: unknown, limit = 160): string =>
   typeof value === 'string' ? value.trim().slice(0, limit) : ''
@@ -132,12 +156,41 @@ export class LeadsService {
     return this.toPayload(lead)
   }
 
-  async list(status?: string): Promise<ILeadPayload[]> {
-    const rows = await this.leads.find({
-      where: status && LEAD_STATUSES.includes(status as LeadStatus) ? { status } : {},
-      order: { createdAt: 'DESC' },
-      take: 500,
-    })
+  async list(query: ILeadQuery = {}): Promise<ILeadPayload[]> {
+    const column = LEAD_SORTS[query.sort as LeadSort] ?? LEAD_SORTS.order
+    const direction = query.dir === 'asc' ? 'ASC' : 'DESC'
+
+    const builder = this.leads.createQueryBuilder('lead')
+
+    if (query.status && LEAD_STATUSES.includes(query.status as LeadStatus)) {
+      builder.andWhere('lead.status = :status', { status: query.status })
+    }
+
+    const needle = (query.q ?? '').trim()
+
+    if (needle) {
+      const like = `%${needle.toLowerCase()}%`
+      const digits = needle.replace(/\D/g, '')
+
+      builder.andWhere(new Brackets((where) => {
+        where
+          .where('lower(lead.firstName) like :like', { like })
+          .orWhere('lower(lead.lastName) like :like', { like })
+          .orWhere('lower(lead.hotelName) like :like', { like })
+          .orWhere('lower(lead.supplierName) like :like', { like })
+          .orWhere('lower(lead.supplierOrderId) like :like', { like })
+          .orWhere('cast(lead.orderId as text) like :like', { like })
+
+        if (digits.length >= PHONE_FRAGMENT_MIN) {
+          where.orWhere('lead.phone like :phone', { phone: `%${digits}%` })
+        }
+      }))
+    }
+
+    const rows = await builder
+      .orderBy(column, direction, 'NULLS LAST')
+      .take(500)
+      .getMany()
 
     return rows.map(row => this.toPayload(row))
   }

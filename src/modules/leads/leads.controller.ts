@@ -33,8 +33,13 @@ export class LeadsAdminController {
   }
 
   @Get()
-  list(@Query('status') status?: string) {
-    return this.leads.list(status)
+  list(
+    @Query('status') status?: string,
+    @Query('q') q?: string,
+    @Query('sort') sort?: string,
+    @Query('dir') dir?: string,
+  ) {
+    return this.leads.list({ status, q, sort, dir })
   }
 
   @Get(':id')
