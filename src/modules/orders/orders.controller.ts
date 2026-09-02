@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, UseGuards } from '@nestjs/common'
+import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Query, UseGuards } from '@nestjs/common'
 import { AuthGuard } from '~/modules/auth/guards/auth.guard'
 import { RolesGuard } from '~/modules/auth/guards/roles.guard'
 import { CurrentUser, Roles } from '~/modules/auth/decorators'
@@ -16,6 +16,11 @@ import type { IOrderCreateInput, IOrderPatchInput } from './orders.service'
 @Roles(UserRole.Agent, UserRole.Manager, UserRole.Admin)
 export class OrdersController {
   constructor(private readonly orders: OrdersService) {}
+
+  @Get('orders')
+  list(@Query('q') q?: string, @Query('status') status?: string) {
+    return this.orders.list({ q, status })
+  }
 
   @Get('orders/statuses')
   statuses() {

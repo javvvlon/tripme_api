@@ -19,6 +19,12 @@ export interface IOrderTripInput {
 
 export interface IOrderCreateInput {
   trip?: IOrderTripInput
+  traveller_name?: string
+  country?: string
+  deal_date?: string
+  return_date?: string
+  manager_id?: string | null
+  branch?: string
   note?: string
   passport_id?: string
   passport_expires_at?: string
@@ -26,6 +32,20 @@ export interface IOrderCreateInput {
 
 export interface IOrderPatchInput {
   status?: string
+  traveller_name?: string
+  country?: string
+  hotel_name?: string
+  supplier_name?: string
+  deal_date?: string | null
+  check_in?: string | null
+  return_date?: string | null
+  nights?: number
+  adults?: number
+  children?: number
+  price_amount?: number | null
+  price_currency?: string
+  manager_id?: string | null
+  branch?: string
   supplier_order_id?: string
   passport_id?: string
   passport_expires_at?: string | null
@@ -37,6 +57,12 @@ export interface IOrderPayload {
   order_no: number
   lead_id: string
   status: string
+  traveller_name: string
+  country: string
+  deal_date: string | null
+  return_date: string | null
+  manager_id: string | null
+  branch: string
   supplier_order_id: string
   passport_id: string
   passport_expires_at: string | null
@@ -84,6 +110,31 @@ export class OrdersService {
     return rows.map(row => this.toPayload(row))
   }
 
+  async list(query: { q?: string, status?: string } = {}): Promise<IOrderPayload[]> {
+    const builder = this.orders.createQueryBuilder('o')
+
+    if (query.status && ORDER_STATUSES.includes(query.status as OrderStatus)) {
+      builder.andWhere('o.status = :status', { status: query.status })
+    }
+
+    const needle = (query.q ?? '').trim()
+
+    if (needle) {
+      const like = `%${needle.toLowerCase()}%`
+
+      builder.andWhere(
+        `(lower(o.travellerName) like :like or lower(o.hotelName) like :like
+          or lower(o.supplierName) like :like or lower(o.country) like :like
+          or lower(o.supplierOrderId) like :like or cast(o.orderNo as text) like :like)`,
+        { like },
+      )
+    }
+
+    const rows = await builder.orderBy('o.orderNo', 'DESC').take(500).getMany()
+
+    return rows.map(row => this.toPayload(row))
+  }
+
   async one(id: string): Promise<IOrderPayload> {
     const order = await this.orders.findOne({ where: { id } })
 
@@ -121,6 +172,12 @@ export class OrdersService {
       note: text(input.note, 2000),
       passportId: text(input.passport_id, 40),
       passportExpiresAt: asDate(input.passport_expires_at),
+      travellerName: text(input.traveller_name, 240),
+      country: text(input.country, 120) || text(trip.route_to, 120),
+      dealDate: asDate(input.deal_date),
+      returnDate: asDate(input.return_date),
+      managerId: typeof input.manager_id === 'string' ? input.manager_id : null,
+      branch: text(input.branch, 120),
       hotelName: text(trip.hotel_name, 240),
       supplierName: text(trip.supplier_name, 120),
       checkIn: asDate(trip.check_in),
@@ -170,6 +227,23 @@ export class OrdersService {
       if (input.passport_id !== undefined) order.passportId = text(input.passport_id, 40)
       if (input.passport_expires_at !== undefined) order.passportExpiresAt = asDate(input.passport_expires_at)
       if (input.note !== undefined) order.note = text(input.note, 2000)
+      if (input.traveller_name !== undefined) order.travellerName = text(input.traveller_name, 240)
+      if (input.country !== undefined) order.country = text(input.country, 120)
+      if (input.hotel_name !== undefined) order.hotelName = text(input.hotel_name, 240)
+      if (input.supplier_name !== undefined) order.supplierName = text(input.supplier_name, 120)
+      if (input.deal_date !== undefined) order.dealDate = asDate(input.deal_date)
+      if (input.check_in !== undefined) order.checkIn = asDate(input.check_in)
+      if (input.return_date !== undefined) order.returnDate = asDate(input.return_date)
+      if (input.nights !== undefined) order.nights = count(input.nights)
+      if (input.adults !== undefined) order.adults = count(input.adults)
+      if (input.children !== undefined) order.children = count(input.children)
+      if (input.price_currency !== undefined) order.priceCurrency = text(input.price_currency, 8)
+      if (input.manager_id !== undefined) order.managerId = input.manager_id || null
+      if (input.branch !== undefined) order.branch = text(input.branch, 120)
+
+      if (input.price_amount !== undefined) {
+        order.priceAmount = input.price_amount === null ? null : String(input.price_amount)
+      }
 
       order.updatedAt = new Date()
 
@@ -257,6 +331,12 @@ export class OrdersService {
       order_no: Number(row.orderNo ?? 0),
       lead_id: row.leadId,
       status: row.status,
+      traveller_name: row.travellerName ?? '',
+      country: row.country ?? '',
+      deal_date: row.dealDate,
+      return_date: row.returnDate,
+      manager_id: row.managerId,
+      branch: row.branch ?? '',
       supplier_order_id: row.supplierOrderId ?? '',
       passport_id: row.passportId ?? '',
       passport_expires_at: row.passportExpiresAt,

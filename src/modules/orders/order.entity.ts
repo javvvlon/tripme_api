@@ -62,6 +62,15 @@ export class OrderEntity {
   @Column({ name: 'passport_expires_at', type: 'date', nullable: true })
   passportExpiresAt!: string | null
 
+  @Column({ name: 'deal_date', type: 'date', nullable: true })
+  dealDate!: string | null
+
+  @Column({ name: 'traveller_name', type: 'text', default: '' })
+  travellerName!: string
+
+  @Column({ type: 'text', default: '' })
+  country!: string
+
   @Column({ name: 'hotel_name', type: 'text', default: '' })
   hotelName!: string
 
@@ -79,6 +88,15 @@ export class OrderEntity {
 
   @Column({ type: 'int', default: 0 })
   children!: number
+
+  @Column({ name: 'return_date', type: 'date', nullable: true })
+  returnDate!: string | null
+
+  @Column({ name: 'manager_id', type: 'uuid', nullable: true })
+  managerId!: string | null
+
+  @Column({ type: 'text', default: '' })
+  branch!: string
 
   @Column({ name: 'price_amount', type: 'numeric', nullable: true })
   priceAmount!: string | null

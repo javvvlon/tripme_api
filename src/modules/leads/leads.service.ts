@@ -18,6 +18,13 @@ export interface ILeadTripInput {
 }
 
 export interface ILeadInput {
+  channel?: string
+  destination?: string
+  planned_dates?: string
+  party_size?: number
+  budget_amount?: number
+  budget_currency?: string
+  manager_id?: string | null
   first_name?: string
   last_name?: string
   phone?: string
@@ -50,6 +57,17 @@ export interface ILeadQuery {
 
 export interface ILeadPatch {
   status?: string
+  reject_reason?: string
+  channel?: string
+  destination?: string
+  planned_dates?: string
+  party_size?: number
+  budget_amount?: number | null
+  budget_currency?: string
+  manager_id?: string | null
+  first_name?: string
+  last_name?: string
+  phone?: string
   comment?: string
 }
 
@@ -58,6 +76,15 @@ export interface ILeadPayload {
   order_id: number
   source: string
   status: string
+  reject_reason: string
+  channel: string
+  destination: string
+  planned_dates: string
+  party_size: number
+  budget_amount: number | null
+  budget_currency: string
+  manager_id: string | null
+  manager_name: string
   first_name: string
   last_name: string
   phone: string
@@ -129,6 +156,15 @@ export class LeadsService {
       phone,
       comment: text(input.comment, MAX_COMMENT),
       locale: text(input.locale, 8) || 'ru',
+      channel: text(input.channel, 24) || (source === LeadSource.Manual ? 'manual' : 'site'),
+      destination: text(input.destination, 120) || text(trip.route_to, 120),
+      plannedDates: text(input.planned_dates, 120),
+      partySize: count(input.party_size) || count(trip.adults) + count(trip.children),
+      budgetAmount: Number.isFinite(Number(input.budget_amount)) && Number(input.budget_amount) > 0
+        ? String(input.budget_amount)
+        : null,
+      budgetCurrency: text(input.budget_currency, 8),
+      managerId: typeof input.manager_id === 'string' ? input.manager_id : null,
       hotelName: text(trip.hotel_name, 240),
       supplierName: text(trip.supplier_name, 120),
       checkIn: asDate(trip.check_in),
@@ -216,6 +252,20 @@ export class LeadsService {
     }
 
     if (input.comment !== undefined) lead.comment = text(input.comment, MAX_COMMENT)
+    if (input.reject_reason !== undefined) lead.rejectReason = text(input.reject_reason, 500)
+    if (input.channel !== undefined) lead.channel = text(input.channel, 24)
+    if (input.destination !== undefined) lead.destination = text(input.destination, 120)
+    if (input.planned_dates !== undefined) lead.plannedDates = text(input.planned_dates, 120)
+    if (input.party_size !== undefined) lead.partySize = count(input.party_size)
+    if (input.budget_currency !== undefined) lead.budgetCurrency = text(input.budget_currency, 8)
+    if (input.manager_id !== undefined) lead.managerId = input.manager_id || null
+    if (input.first_name !== undefined) lead.firstName = text(input.first_name, 120)
+    if (input.last_name !== undefined) lead.lastName = text(input.last_name, 120)
+    if (input.phone !== undefined) lead.phone = text(input.phone, 40)
+
+    if (input.budget_amount !== undefined) {
+      lead.budgetAmount = input.budget_amount === null ? null : String(input.budget_amount)
+    }
 
     lead.updatedAt = new Date()
 
@@ -238,6 +288,15 @@ export class LeadsService {
       order_id: Number(row.orderId ?? 0),
       source: row.source,
       status: row.status,
+      reject_reason: row.rejectReason ?? '',
+      channel: row.channel ?? 'site',
+      destination: row.destination ?? '',
+      planned_dates: row.plannedDates ?? '',
+      party_size: row.partySize ?? 0,
+      budget_amount: row.budgetAmount === null ? null : Number(row.budgetAmount),
+      budget_currency: row.budgetCurrency ?? '',
+      manager_id: row.managerId,
+      manager_name: '',
       first_name: row.firstName,
       last_name: row.lastName,
       phone: row.phone,

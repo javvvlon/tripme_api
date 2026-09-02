@@ -31,6 +31,7 @@ import { LeadOrders1755900009000 } from './migrations/1755900009000-LeadOrders'
 import { LeadPassport1755900010000 } from './migrations/1755900010000-LeadPassport'
 import { PostTour1755900011000 } from './migrations/1755900011000-PostTour'
 import { Orders1755900012000 } from './migrations/1755900012000-Orders'
+import { ClientFields1755900013000 } from './migrations/1755900013000-ClientFields'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -65,6 +66,7 @@ export const databaseOptions = (): DataSourceOptions => {
       LeadPassport1755900010000,
       PostTour1755900011000,
       Orders1755900012000,
+      ClientFields1755900013000,
     ],
     synchronize: false,
     migrationsRun: false,

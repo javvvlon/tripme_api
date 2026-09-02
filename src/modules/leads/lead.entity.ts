@@ -13,6 +13,8 @@ export enum LeadStatus {
 
 export const LEAD_STATUSES = Object.values(LeadStatus)
 
+export const LEAD_CHANNELS = ['site', 'telegram', 'call', 'referral', 'instagram', 'walk_in', 'manual'] as const
+
 export const LEAD_TRANSITIONS: Record<LeadStatus, LeadStatus[]> = {
   [LeadStatus.New]: [LeadStatus.InProgress, LeadStatus.QuoteSent, LeadStatus.Rejected],
   [LeadStatus.InProgress]: [LeadStatus.QuoteSent, LeadStatus.Won, LeadStatus.Rejected],
@@ -55,6 +57,30 @@ export class LeadEntity {
 
   @Column({ type: 'text', default: 'ru' })
   locale!: string
+
+  @Column({ type: 'text', default: 'site' })
+  channel!: string
+
+  @Column({ type: 'text', default: '' })
+  destination!: string
+
+  @Column({ name: 'planned_dates', type: 'text', default: '' })
+  plannedDates!: string
+
+  @Column({ name: 'party_size', type: 'int', default: 0 })
+  partySize!: number
+
+  @Column({ name: 'budget_amount', type: 'numeric', nullable: true })
+  budgetAmount!: string | null
+
+  @Column({ name: 'budget_currency', type: 'text', default: '' })
+  budgetCurrency!: string
+
+  @Column({ name: 'manager_id', type: 'uuid', nullable: true })
+  managerId!: string | null
+
+  @Column({ name: 'reject_reason', type: 'text', default: '' })
+  rejectReason!: string
 
   @Column({ name: 'hotel_name', type: 'text', default: '' })
   hotelName!: string
