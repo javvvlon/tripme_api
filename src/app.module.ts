@@ -8,6 +8,7 @@ import { PostsModule } from '~/modules/posts/posts.module'
 import { ContactModule } from '~/modules/contact/contact.module'
 import { LeadsModule } from '~/modules/leads/leads.module'
 import { OrdersModule } from '~/modules/orders/orders.module'
+import { OperatorsModule } from '~/modules/operators/operators.module'
 import { DatabaseModule } from '~/shared/database/database.module'
 import { StorageModule } from '~/shared/storage/storage.module'
 import { RevalidationModule } from '~/shared/revalidation/revalidation.module'
@@ -31,6 +32,7 @@ import { HealthModule } from '~/shared/health/health.module'
     ContactModule,
     LeadsModule,
     OrdersModule,
+    OperatorsModule,
   ],
 })
 export class AppModule {}

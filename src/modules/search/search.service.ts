@@ -1,6 +1,7 @@
 import { Inject, Injectable, Logger } from '@nestjs/common'
 import { isUnsupported } from '~/modules/suppliers/base/contracts'
 import { SUPPLIERS } from '~/modules/suppliers/base/tokens'
+import { OperatorsService } from '~/modules/operators/operators.service'
 import { SupplierState } from './contracts/search'
 import type { ISupplier } from '~/modules/suppliers/base/contracts'
 import type { Offer } from './models/Offer'
@@ -21,14 +22,28 @@ export interface SearchPage {
 export class SearchService {
   private readonly logger = new Logger(SearchService.name)
 
-  constructor(@Inject(SUPPLIERS) private readonly suppliers: ISupplier[]) {}
+  constructor(
+    @Inject(SUPPLIERS) private readonly suppliers: ISupplier[],
+    private readonly operators: OperatorsService,
+  ) {}
+
+  /**
+   * Only the operators the CMS has switched on. A supplier that is off is not
+   * merely hidden from the filter — it is never asked, so nothing of theirs
+   * can reach a result even if a stale request names it.
+   */
+  private async live(): Promise<ISupplier[]> {
+    const enabled = new Set(await this.operators.enabledSlugs())
+
+    return this.suppliers.filter(supplier => enabled.has(supplier.ref.id))
+  }
 
   async fetchPage(criteria: SearchCriteria, page: number, signal?: AbortSignal): Promise<SearchPage> {
-    const asked = criteria.filters.suppliers?.length
-      ? this.suppliers.filter(s => criteria.filters.suppliers.includes(s.ref.id))
-      : this.suppliers
+    const live = await this.live()
 
-    const suppliers = asked.length ? asked : this.suppliers
+    const suppliers = criteria.filters.suppliers?.length
+      ? live.filter(s => criteria.filters.suppliers.includes(s.ref.id))
+      : live
 
     const results = await Promise.all(
       suppliers.map(async (supplier): Promise<{ status: SupplierStatus, offers: Offer[], hasMore: boolean }> => {
