@@ -3,6 +3,7 @@ import { SuppliersModule } from '~/modules/suppliers/suppliers.module'
 import { OperatorsModule } from '~/modules/operators/operators.module'
 import { SearchController } from './search.controller'
 import { SearchService } from './search.service'
+import { SoonestCache } from './soonest.cache'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -10,6 +11,6 @@ import { SearchService } from './search.service'
 @Module({
   imports: [SuppliersModule, OperatorsModule],
   controllers: [SearchController],
-  providers: [SearchService],
+  providers: [SearchService, SoonestCache],
 })
 export class SearchModule {}

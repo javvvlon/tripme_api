@@ -18,6 +18,31 @@ export interface SearchPage {
   appliedLocally: string[]
 }
 
+export interface SoonestDeparture {
+  date: string | null
+  /** How wide a window had to be asked for before something came back. */
+  span: number
+  statuses: SupplierStatus[]
+}
+
+/**
+ * Widths of the windows the probe asks for, in days.
+ *
+ * Suppliers answer one page at a time, so a window wide enough to be
+ * truncated could hide the earliest day behind the hundredth row. Starting
+ * narrow keeps the first — and usually only — answer complete, and widening
+ * is what a route with nothing in the next week needs anyway.
+ */
+const SOONEST_WINDOWS = [7, 21, 60] as const
+
+const addDays = (day: string, count: number): string => {
+  const date = new Date(`${day}T00:00:00Z`)
+
+  date.setUTCDate(date.getUTCDate() + count)
+
+  return date.toISOString().slice(0, 10)
+}
+
 @Injectable()
 export class SearchService {
   private readonly logger = new Logger(SearchService.name)
@@ -100,6 +125,37 @@ export class SearchService {
       hasMore: results.some(r => r.hasMore),
       appliedLocally,
     }
+  }
+
+  /**
+   * The first day from `criteria.dateFrom` that anyone is actually selling.
+   *
+   * The operators' calendars say which days they fly, which is not the same
+   * as having something to sell: they leave days open that turn up nothing.
+   * Asking for a range and taking the earliest check-in answers that in one
+   * fan-out, where walking day by day costs one per empty day.
+   */
+  async soonest(criteria: SearchCriteria, signal?: AbortSignal): Promise<SoonestDeparture> {
+    let statuses: SupplierStatus[] = []
+
+    for (const span of SOONEST_WINDOWS) {
+      const page = await this.fetchPage(
+        { ...criteria, dateTo: addDays(criteria.dateFrom, span - 1) },
+        1,
+        signal,
+      )
+
+      statuses = page.statuses
+
+      const earliest = page.offers
+        .map(offer => offer.get('checkIn'))
+        .filter(Boolean)
+        .sort()[0]
+
+      if (earliest) return { date: earliest, span, statuses }
+    }
+
+    return { date: null, span: SOONEST_WINDOWS.at(-1)!, statuses }
   }
 
   private applyLocalFilters(

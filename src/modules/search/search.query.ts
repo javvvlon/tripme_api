@@ -65,3 +65,29 @@ export function toCriteria(query: SearchQueryDto): SearchCriteria {
     },
   }
 }
+
+/**
+ * Criteria for "when could I go?", where the date is the question rather
+ * than part of it. Defaults to today; filters play no part, since a day is
+ * available or it is not.
+ */
+export function toSoonestCriteria(query: SearchQueryDto, today: string): SearchCriteria {
+  if (!query.from) throw new BadRequestException('from is required')
+  if (!query.to) throw new BadRequestException('to is required')
+
+  const from = query.date && ISO_DATE.test(query.date) && query.date > today ? query.date : today
+  const nightsFrom = int(query.nights, 7)
+
+  return {
+    from: query.from,
+    to: query.to,
+    dateFrom: from,
+    dateTo: from,
+    nightsFrom,
+    nightsTo: int(query.nightsTo, nightsFrom),
+    adults: int(query.adults, 2),
+    childrenAges: list(query.children).map(Number).filter(Number.isFinite),
+    currency: ((query.currency ?? 'USD').toUpperCase() as CurrencyCode),
+    filters: { stars: [], meals: [], resorts: [], hotels: [], suppliers: [] },
+  }
+}
