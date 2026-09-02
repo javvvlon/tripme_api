@@ -16,6 +16,8 @@ import {
 import { PostEntity, PostTranslationEntity } from '~/modules/posts/entities'
 import { ContactMessageEntity } from '~/modules/contact/contact-message.entity'
 import { LeadEntity } from '~/modules/leads/lead.entity'
+import { OrderEntity } from '~/modules/orders/order.entity'
+import { OrderEventEntity } from '~/modules/orders/order-event.entity'
 import { Auth1755900000000 } from './migrations/1755900000000-Auth'
 import { Content1755900001000 } from './migrations/1755900001000-Content'
 import { ItemBadges1755900002000 } from './migrations/1755900002000-ItemBadges'
@@ -28,6 +30,7 @@ import { Leads1755900008000 } from './migrations/1755900008000-Leads'
 import { LeadOrders1755900009000 } from './migrations/1755900009000-LeadOrders'
 import { LeadPassport1755900010000 } from './migrations/1755900010000-LeadPassport'
 import { PostTour1755900011000 } from './migrations/1755900011000-PostTour'
+import { Orders1755900012000 } from './migrations/1755900012000-Orders'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -49,7 +52,7 @@ export const databaseOptions = (): DataSourceOptions => {
       ContentLayoutEntity, ContentListEntity, ContentItemEntity,
       ContentItemTranslationEntity, ContentSectionEntity, ContentSectionTranslationEntity,
       ContentBannerEntity, ContentBannerTranslationEntity,
-      PostEntity, PostTranslationEntity, ContactMessageEntity, LeadEntity,
+      PostEntity, PostTranslationEntity, ContactMessageEntity, LeadEntity, OrderEntity, OrderEventEntity,
     ],
     migrations: [
       Auth1755900000000, Content1755900001000, ItemBadges1755900002000, Banner1755900003000,
@@ -61,6 +64,7 @@ export const databaseOptions = (): DataSourceOptions => {
       LeadOrders1755900009000,
       LeadPassport1755900010000,
       PostTour1755900011000,
+      Orders1755900012000,
     ],
     synchronize: false,
     migrationsRun: false,

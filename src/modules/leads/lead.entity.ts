@@ -6,11 +6,20 @@ import { Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm'
 export enum LeadStatus {
   New = 'new',
   InProgress = 'in_progress',
-  Booked = 'booked',
+  QuoteSent = 'quote_sent',
+  Won = 'won',
   Rejected = 'rejected',
 }
 
 export const LEAD_STATUSES = Object.values(LeadStatus)
+
+export const LEAD_TRANSITIONS: Record<LeadStatus, LeadStatus[]> = {
+  [LeadStatus.New]: [LeadStatus.InProgress, LeadStatus.QuoteSent, LeadStatus.Rejected],
+  [LeadStatus.InProgress]: [LeadStatus.QuoteSent, LeadStatus.Won, LeadStatus.Rejected],
+  [LeadStatus.QuoteSent]: [LeadStatus.InProgress, LeadStatus.Won, LeadStatus.Rejected],
+  [LeadStatus.Won]: [LeadStatus.InProgress, LeadStatus.Rejected],
+  [LeadStatus.Rejected]: [],
+}
 
 export enum LeadSource {
   Site = 'site',
@@ -24,9 +33,6 @@ export class LeadEntity {
 
   @Column({ name: 'order_id', type: 'bigint', generated: 'increment' })
   orderId!: string
-
-  @Column({ name: 'supplier_order_id', type: 'text', default: '' })
-  supplierOrderId!: string
 
   @Column({ type: 'text', default: LeadSource.Site })
   source!: string
@@ -43,12 +49,6 @@ export class LeadEntity {
 
   @Column({ type: 'text' })
   phone!: string
-
-  @Column({ name: 'passport_id', type: 'text', default: '' })
-  passportId!: string
-
-  @Column({ name: 'passport_expires_at', type: 'date', nullable: true })
-  passportExpiresAt!: string | null
 
   @Column({ type: 'text', default: '' })
   comment!: string

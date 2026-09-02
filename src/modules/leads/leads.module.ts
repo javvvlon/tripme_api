@@ -12,5 +12,6 @@ import { LeadEntity } from './lead.entity'
   imports: [AuthModule, TypeOrmModule.forFeature([LeadEntity])],
   controllers: [LeadsController, LeadsAdminController],
   providers: [LeadsService],
+  exports: [LeadsService],
 })
 export class LeadsModule {}

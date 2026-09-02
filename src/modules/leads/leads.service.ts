@@ -1,7 +1,7 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common'
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Brackets, Repository } from 'typeorm'
-import { LEAD_STATUSES, LeadEntity, LeadSource, LeadStatus } from './lead.entity'
+import { LEAD_STATUSES, LEAD_TRANSITIONS, LeadEntity, LeadSource, LeadStatus } from './lead.entity'
 
 export interface ILeadTripInput {
   hotel_name?: string
@@ -21,8 +21,6 @@ export interface ILeadInput {
   first_name?: string
   last_name?: string
   phone?: string
-  passport_id?: string
-  passport_expires_at?: string
   comment?: string
   locale?: string
   trip?: ILeadTripInput
@@ -52,23 +50,17 @@ export interface ILeadQuery {
 
 export interface ILeadPatch {
   status?: string
-  supplier_order_id?: string
   comment?: string
-  passport_id?: string
-  passport_expires_at?: string | null
 }
 
 export interface ILeadPayload {
   uuid: string
   order_id: number
-  supplier_order_id: string
   source: string
   status: string
   first_name: string
   last_name: string
   phone: string
-  passport_id: string
-  passport_expires_at: string | null
   comment: string
   locale: string
   hotel_name: string
@@ -109,6 +101,16 @@ export class LeadsService {
     private readonly leads: Repository<LeadEntity>,
   ) {}
 
+  /**
+   * Set by the orders module, which owns the rule that a lead with a paid
+   * order cannot be rejected. Kept as a hook so leads stay unaware of orders.
+   */
+  private guard: ((leadId: string, next: string) => Promise<void>) | null = null
+
+  registerStatusGuard(guard: (leadId: string, next: string) => Promise<void>): void {
+    this.guard = guard
+  }
+
   async submit(input: ILeadInput, source = LeadSource.Site): Promise<{ uuid: string, order_id: number }> {
     const firstName = text(input.first_name, 120)
     const phone = text(input.phone, 40)
@@ -125,8 +127,6 @@ export class LeadsService {
       firstName,
       lastName: text(input.last_name, 120),
       phone,
-      passportId: text(input.passport_id, 40),
-      passportExpiresAt: asDate(input.passport_expires_at),
       comment: text(input.comment, MAX_COMMENT),
       locale: text(input.locale, 8) || 'ru',
       hotelName: text(trip.hotel_name, 240),
@@ -178,7 +178,6 @@ export class LeadsService {
           .orWhere('lower(lead.lastName) like :like', { like })
           .orWhere('lower(lead.hotelName) like :like', { like })
           .orWhere('lower(lead.supplierName) like :like', { like })
-          .orWhere('lower(lead.supplierOrderId) like :like', { like })
           .orWhere('cast(lead.orderId as text) like :like', { like })
 
         if (digits.length >= PHONE_FRAGMENT_MIN) {
@@ -200,25 +199,23 @@ export class LeadsService {
 
     if (!lead) throw new NotFoundException('Lead not found')
 
-    if (input.status !== undefined) {
+    if (input.status !== undefined && input.status !== lead.status) {
       if (!LEAD_STATUSES.includes(input.status as LeadStatus)) {
         throw new BadRequestException('Unknown status')
       }
 
+      const allowed = LEAD_TRANSITIONS[lead.status as LeadStatus] ?? []
+
+      if (!allowed.includes(input.status as LeadStatus)) {
+        throw new ConflictException(`A lead cannot go from ${lead.status} to ${input.status}`)
+      }
+
+      await this.guard?.(id, input.status)
+
       lead.status = input.status
     }
 
-    if (input.supplier_order_id !== undefined) {
-      lead.supplierOrderId = text(input.supplier_order_id, 80)
-    }
-
     if (input.comment !== undefined) lead.comment = text(input.comment, MAX_COMMENT)
-
-    if (input.passport_id !== undefined) lead.passportId = text(input.passport_id, 40)
-
-    if (input.passport_expires_at !== undefined) {
-      lead.passportExpiresAt = asDate(input.passport_expires_at)
-    }
 
     lead.updatedAt = new Date()
 
@@ -239,14 +236,11 @@ export class LeadsService {
     return {
       uuid: row.id,
       order_id: Number(row.orderId ?? 0),
-      supplier_order_id: row.supplierOrderId ?? '',
       source: row.source,
       status: row.status,
       first_name: row.firstName,
       last_name: row.lastName,
       phone: row.phone,
-      passport_id: row.passportId ?? '',
-      passport_expires_at: row.passportExpiresAt,
       comment: row.comment,
       locale: row.locale,
       hotel_name: row.hotelName,
