@@ -19,6 +19,7 @@ import { LeadEntity } from '~/modules/leads/lead.entity'
 import { OrderEntity } from '~/modules/orders/order.entity'
 import { OrderEventEntity } from '~/modules/orders/order-event.entity'
 import { OperatorEntity } from '~/modules/operators/operator.entity'
+import { MediaTitleEntity } from '~/shared/storage/media-title.entity'
 import { Auth1755900000000 } from './migrations/1755900000000-Auth'
 import { Content1755900001000 } from './migrations/1755900001000-Content'
 import { ItemBadges1755900002000 } from './migrations/1755900002000-ItemBadges'
@@ -34,6 +35,7 @@ import { PostTour1755900011000 } from './migrations/1755900011000-PostTour'
 import { Orders1755900012000 } from './migrations/1755900012000-Orders'
 import { ClientFields1755900013000 } from './migrations/1755900013000-ClientFields'
 import { Operators1755900014000 } from './migrations/1755900014000-Operators'
+import { MediaTitles1755900015000 } from './migrations/1755900015000-MediaTitles'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -56,6 +58,7 @@ export const databaseOptions = (): DataSourceOptions => {
       ContentItemTranslationEntity, ContentSectionEntity, ContentSectionTranslationEntity,
       ContentBannerEntity, ContentBannerTranslationEntity,
       PostEntity, PostTranslationEntity, ContactMessageEntity, LeadEntity, OrderEntity, OrderEventEntity, OperatorEntity,
+      MediaTitleEntity,
     ],
     migrations: [
       Auth1755900000000, Content1755900001000, ItemBadges1755900002000, Banner1755900003000,
@@ -70,6 +73,7 @@ export const databaseOptions = (): DataSourceOptions => {
       Orders1755900012000,
       ClientFields1755900013000,
       Operators1755900014000,
+      MediaTitles1755900015000,
     ],
     synchronize: false,
     migrationsRun: false,

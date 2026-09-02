@@ -1,7 +1,8 @@
-import { Body, Controller, Delete, Get, HttpCode, Param, Post, Put, Query, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common'
+import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Put, Query, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common'
 import { BadRequestException } from '@nestjs/common'
 import { FileInterceptor } from '@nestjs/platform-express'
 import { StorageService } from '~/shared/storage/storage.service'
+import { MediaService } from '~/shared/storage/media.service'
 import { MAX_IMAGE_BYTES } from '~/shared/storage/storage.service'
 import type { IUploadedFile } from '~/shared/storage/storage.service'
 import { AuthGuard } from '~/modules/auth/guards/auth.guard'
@@ -23,11 +24,12 @@ export class ContentAdminController {
     private readonly admin: ContentAdminService,
     private readonly revalidation: RevalidationService,
     private readonly storage: StorageService,
+    private readonly media: MediaService,
   ) {}
 
   @Get('uploads')
-  library() {
-    return this.storage.list()
+  library(@Query('q') q?: string) {
+    return this.media.library(q ?? '')
   }
 
   @Post('uploads')
@@ -51,7 +53,19 @@ export class ContentAdminController {
   async removeUpload(@Query('url') url?: string): Promise<void> {
     if (!url) throw new BadRequestException('"url" is required')
 
-    await this.storage.remove(url)
+    await this.media.remove(url)
+  }
+
+  /**
+   * Names a stored file. The name is a label the gallery shows, not the
+   * object key — the key stays as uploaded so that everything already
+   * pointing at this URL keeps resolving.
+   */
+  @Patch('uploads')
+  async renameUpload(@Body() body: { url?: string, title?: string }) {
+    if (!body.url) throw new BadRequestException('"url" is required')
+
+    return this.media.rename(body.url, body.title ?? '')
   }
 
   @Get('home/banner')

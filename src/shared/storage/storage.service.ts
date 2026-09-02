@@ -12,6 +12,7 @@ export const MAX_IMAGE_BYTES = 8 * 1024 * 1024
 export interface IStoredFile {
   url: string
   path: string
+  title: string
   size: number
   uploaded_at: string | null
 }
@@ -138,6 +139,7 @@ export class StorageService {
         .map(object => ({
           path: object.Key!,
           url: `${origin}/storage/v1/object/public/${this.bucket}/${object.Key}`,
+          title: '',
           size: object.Size ?? 0,
           uploaded_at: object.LastModified ? object.LastModified.toISOString() : null,
         }))
@@ -149,19 +151,22 @@ export class StorageService {
     }
   }
 
-  async remove(publicUrl: string): Promise<void> {
-    if (!this.configured) return
-
+  keyOf(publicUrl: string): string | null {
     const marker = `/storage/v1/object/public/${this.bucket}/`
     const at = publicUrl.indexOf(marker)
 
-    if (at === -1) return
+    return at === -1 ? null : publicUrl.slice(at + marker.length)
+  }
+
+  async remove(publicUrl: string): Promise<void> {
+    if (!this.configured) return
+
+    const key = this.keyOf(publicUrl)
+
+    if (!key) return
 
     try {
-      await this.s3().send(new DeleteObjectCommand({
-        Bucket: this.bucket,
-        Key: publicUrl.slice(at + marker.length),
-      }))
+      await this.s3().send(new DeleteObjectCommand({ Bucket: this.bucket, Key: key }))
     }
     catch (error) {
       this.logger.warn(`could not remove ${publicUrl}: ${String(error)}`)
