@@ -27,6 +27,39 @@ export const ALLOWED_ATTACHMENTS = [
 
 const FOLDER = 'documents'
 
+/**
+ * What the CMS reads. Shaped here rather than handed back as the entity:
+ * every other endpoint speaks snake_case, and returning `createdAt` where
+ * the reader expected `created_at` left it formatting an undefined date.
+ */
+export interface IDocumentPayload {
+  id: string
+  order_id: string
+  kind: string
+  name: string
+  url: string
+  size: number
+  created_at: string
+}
+
+/**
+ * The entity as the CMS reads it. Everything the API returns speaks
+ * snake_case; handing back the entity meant `createdAt` where the page
+ * looked for `created_at`, and formatting that undefined threw inside the
+ * template — which stops Vue re-rendering and freezes the section.
+ */
+export function toDocumentPayload(row: OrderDocumentEntity): IDocumentPayload {
+  return {
+    id: row.id,
+    order_id: row.orderId,
+    kind: row.kind,
+    name: row.name,
+    url: row.url,
+    size: Number(row.size ?? 0),
+    created_at: (row.createdAt ?? new Date()).toISOString(),
+  }
+}
+
 @Injectable()
 export class DocumentsService {
   private readonly logger = new Logger(DocumentsService.name)
@@ -41,8 +74,10 @@ export class DocumentsService {
     private readonly leads: Repository<LeadEntity>,
   ) {}
 
-  list(orderId: string): Promise<OrderDocumentEntity[]> {
-    return this.documents.find({ where: { orderId }, order: { createdAt: 'DESC' } })
+  async list(orderId: string): Promise<IDocumentPayload[]> {
+    const rows = await this.documents.find({ where: { orderId }, order: { createdAt: 'DESC' } })
+
+    return rows.map(row => toDocumentPayload(row))
   }
 
   /**
@@ -52,7 +87,7 @@ export class DocumentsService {
    * attaching `passport.pdf` must not overwrite each other, and a filename
    * someone typed is a path traversal waiting to happen.
    */
-  async attach(orderId: string, file: IUploadedFile, actorId: string | null): Promise<OrderDocumentEntity> {
+  async attach(orderId: string, file: IUploadedFile, actorId: string | null): Promise<IDocumentPayload> {
     await this.orderOrFail(orderId)
 
     if (!ALLOWED_ATTACHMENTS.includes(file.mimetype)) {
@@ -70,7 +105,7 @@ export class DocumentsService {
       maxBytes: MAX_ATTACHMENT_BYTES,
     })
 
-    return this.documents.save(this.documents.create({
+    const saved = await this.documents.save(this.documents.create({
       orderId,
       kind: DocumentKind.Attachment,
       name: file.originalname.slice(0, 240) || 'file',
@@ -79,6 +114,8 @@ export class DocumentsService {
       size: file.size,
       createdBy: actorId,
     }))
+
+    return toDocumentPayload(saved)
   }
 
   /**
@@ -94,7 +131,7 @@ export class DocumentsService {
     orderId: string,
     flavour: DocumentFlavour,
     actorId: string | null,
-  ): Promise<OrderDocumentEntity> {
+  ): Promise<IDocumentPayload> {
     const order = await this.orderOrFail(orderId)
     const lead = await this.leads.findOne({ where: { id: order.leadId } })
 
@@ -152,7 +189,7 @@ export class DocumentsService {
 
     if (flavour === 'offer') await this.followOffer(lead)
 
-    return saved
+    return toDocumentPayload(saved)
   }
 
   async remove(id: string): Promise<void> {
