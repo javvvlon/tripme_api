@@ -28,8 +28,33 @@ export class ContentAdminController {
   ) {}
 
   @Get('uploads')
-  library(@Query('q') q?: string) {
-    return this.media.library(q ?? '')
+  library(@Query('q') q?: string, @Query('folder') folder?: string) {
+    return this.media.library(q ?? '', folder ?? '')
+  }
+
+  @Get('media/folders')
+  folders() {
+    return this.media.folderList()
+  }
+
+  @Post('media/folders')
+  createFolder(@Body() body: { name?: string }) {
+    return this.media.createFolder(body.name ?? '')
+  }
+
+  @Patch('media/folders/:id')
+  renameFolder(@Param('id') id: string, @Body() body: { name?: string }) {
+    return this.media.renameFolder(id, body.name ?? '')
+  }
+
+  /**
+   * Drops the folder and leaves its files where they are, unfiled. Deleting
+   * a shelf should not delete the books on it.
+   */
+  @Delete('media/folders/:id')
+  @HttpCode(204)
+  removeFolder(@Param('id') id: string): Promise<void> {
+    return this.media.removeFolder(id)
   }
 
   @Post('uploads')
@@ -62,10 +87,10 @@ export class ContentAdminController {
    * pointing at this URL keeps resolving.
    */
   @Patch('uploads')
-  async renameUpload(@Body() body: { url?: string, title?: string }) {
+  async describeUpload(@Body() body: { url?: string, title?: string, folder?: string | null }) {
     if (!body.url) throw new BadRequestException('"url" is required')
 
-    return this.media.rename(body.url, body.title ?? '')
+    return this.media.describe(body.url, { title: body.title, folder: body.folder })
   }
 
   @Get('home/banner')

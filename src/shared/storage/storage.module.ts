@@ -1,6 +1,7 @@
 import { Global, Module } from '@nestjs/common'
 import { TypeOrmModule } from '@nestjs/typeorm'
-import { MediaTitleEntity } from './media-title.entity'
+import { MediaFileEntity } from './media-file.entity'
+import { MediaFolderEntity } from './media-folder.entity'
 import { MediaService } from './media.service'
 import { StorageService } from './storage.service'
 
@@ -9,7 +10,7 @@ import { StorageService } from './storage.service'
  */
 @Global()
 @Module({
-  imports: [TypeOrmModule.forFeature([MediaTitleEntity])],
+  imports: [TypeOrmModule.forFeature([MediaFileEntity, MediaFolderEntity])],
   providers: [StorageService, MediaService],
   exports: [StorageService, MediaService],
 })

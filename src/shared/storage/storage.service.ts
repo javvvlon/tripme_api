@@ -13,6 +13,7 @@ export interface IStoredFile {
   url: string
   path: string
   title: string
+  folder_id: string | null
   size: number
   uploaded_at: string | null
 }
@@ -140,6 +141,7 @@ export class StorageService {
           path: object.Key!,
           url: `${origin}/storage/v1/object/public/${this.bucket}/${object.Key}`,
           title: '',
+          folder_id: null,
           size: object.Size ?? 0,
           uploaded_at: object.LastModified ? object.LastModified.toISOString() : null,
         }))
