@@ -18,6 +18,7 @@ import { ContactMessageEntity } from '~/modules/contact/contact-message.entity'
 import { LeadEntity } from '~/modules/leads/lead.entity'
 import { OrderEntity } from '~/modules/orders/order.entity'
 import { OrderEventEntity } from '~/modules/orders/order-event.entity'
+import { OrderDocumentEntity } from '~/modules/orders/order-document.entity'
 import { OperatorEntity } from '~/modules/operators/operator.entity'
 import { MediaFileEntity } from '~/shared/storage/media-file.entity'
 import { MediaFolderEntity } from '~/shared/storage/media-folder.entity'
@@ -38,6 +39,7 @@ import { ClientFields1755900013000 } from './migrations/1755900013000-ClientFiel
 import { Operators1755900014000 } from './migrations/1755900014000-Operators'
 import { MediaTitles1755900015000 } from './migrations/1755900015000-MediaTitles'
 import { MediaFolders1755900016000 } from './migrations/1755900016000-MediaFolders'
+import { OrderDocuments1755900017000 } from './migrations/1755900017000-OrderDocuments'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -59,7 +61,7 @@ export const databaseOptions = (): DataSourceOptions => {
       ContentLayoutEntity, ContentListEntity, ContentItemEntity,
       ContentItemTranslationEntity, ContentSectionEntity, ContentSectionTranslationEntity,
       ContentBannerEntity, ContentBannerTranslationEntity,
-      PostEntity, PostTranslationEntity, ContactMessageEntity, LeadEntity, OrderEntity, OrderEventEntity, OperatorEntity,
+      PostEntity, PostTranslationEntity, ContactMessageEntity, LeadEntity, OrderEntity, OrderEventEntity, OrderDocumentEntity, OperatorEntity,
       MediaFileEntity, MediaFolderEntity,
     ],
     migrations: [
@@ -77,6 +79,7 @@ export const databaseOptions = (): DataSourceOptions => {
       Operators1755900014000,
       MediaTitles1755900015000,
       MediaFolders1755900016000,
+      OrderDocuments1755900017000,
     ],
     synchronize: false,
     migrationsRun: false,
