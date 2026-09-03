@@ -65,7 +65,10 @@ export class DocumentsService {
       )
     }
 
-    const stored = await this.storage.upload(file, FOLDER)
+    const stored = await this.storage.upload(file, FOLDER, {
+      allowed: ALLOWED_ATTACHMENTS,
+      maxBytes: MAX_ATTACHMENT_BYTES,
+    })
 
     return this.documents.save(this.documents.create({
       orderId,
@@ -135,7 +138,7 @@ export class DocumentsService {
       mimetype: 'application/pdf',
       originalname: name,
       size: pdf.length,
-    }, FOLDER)
+    }, FOLDER, { allowed: ['application/pdf'], maxBytes: MAX_ATTACHMENT_BYTES })
 
     const saved = await this.documents.save(this.documents.create({
       orderId,

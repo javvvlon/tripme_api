@@ -18,6 +18,15 @@ export interface IStoredFile {
   uploaded_at: string | null
 }
 
+/**
+ * What a caller will accept. The bucket holds more than pictures now, and
+ * the rules belong to whoever is storing the file rather than to the store.
+ */
+export interface IUploadLimits {
+  allowed?: readonly string[]
+  maxBytes?: number
+}
+
 export interface IUploadedFile {
   buffer: Buffer
   mimetype: string
@@ -76,13 +85,20 @@ export class StorageService {
     return this.client
   }
 
-  async upload(file: IUploadedFile, folder = 'content'): Promise<{ url: string, path: string }> {
-    if (!ALLOWED_IMAGE_TYPES.includes(file.mimetype as typeof ALLOWED_IMAGE_TYPES[number])) {
+  async upload(
+    file: IUploadedFile,
+    folder = 'content',
+    limits: IUploadLimits = {},
+  ): Promise<{ url: string, path: string }> {
+    const allowed = limits.allowed ?? ALLOWED_IMAGE_TYPES
+    const maxBytes = limits.maxBytes ?? MAX_IMAGE_BYTES
+
+    if (!allowed.includes(file.mimetype)) {
       throw new BadRequestException(`Unsupported file type ${file.mimetype}`)
     }
 
-    if (file.size > MAX_IMAGE_BYTES) {
-      throw new BadRequestException(`File is larger than ${Math.round(MAX_IMAGE_BYTES / 1024 / 1024)}MB`)
+    if (file.size > maxBytes) {
+      throw new BadRequestException(`File is larger than ${Math.round(maxBytes / 1024 / 1024)}MB`)
     }
 
     /**
