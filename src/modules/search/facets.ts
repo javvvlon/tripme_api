@@ -16,13 +16,6 @@ export interface SearchFacets {
   meals: FacetOption[]
   districts: FacetOption[]
   availability: FacetOption[]
-  /**
-   * The cheapest offer's price as its operator quoted it.
-   *
-   * Separate from priceMin/priceMax, which are converted so that one slider
-   * can span four operators. This is what the results heading shows, so the
-   * figure there matches the first card rather than a currency no card is in.
-   */
   priceFrom: { amount: number, currency: string } | null
   priceMin: number | null
   priceMax: number | null

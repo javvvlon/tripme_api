@@ -47,10 +47,6 @@ export class ContentAdminController {
     return this.media.renameFolder(id, body.name ?? '')
   }
 
-  /**
-   * Drops the folder and leaves its files where they are, unfiled. Deleting
-   * a shelf should not delete the books on it.
-   */
   @Delete('media/folders/:id')
   @HttpCode(204)
   removeFolder(@Param('id') id: string): Promise<void> {
@@ -65,14 +61,6 @@ export class ContentAdminController {
     return this.storage.upload(file)
   }
 
-  /**
-   * Drops a stored file. Called when an editor removes or replaces an image,
-   * so the bucket holds what the CMS references and nothing else.
-   *
-   * Idempotent: a URL that is already gone, or that belongs to somewhere else
-   * entirely, is a no-op rather than an error — the caller is tidying up, and
-   * failing that is worse than doing nothing.
-   */
   @Delete('uploads')
   @HttpCode(204)
   async removeUpload(@Query('url') url?: string): Promise<void> {
@@ -81,11 +69,6 @@ export class ContentAdminController {
     await this.media.remove(url)
   }
 
-  /**
-   * Names a stored file. The name is a label the gallery shows, not the
-   * object key — the key stays as uploaded so that everything already
-   * pointing at this URL keeps resolving.
-   */
   @Patch('uploads')
   async describeUpload(@Body() body: { url?: string, title?: string, folder?: string | null }) {
     if (!body.url) throw new BadRequestException('"url" is required')

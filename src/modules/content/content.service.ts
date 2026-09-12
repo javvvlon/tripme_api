@@ -61,11 +61,6 @@ export class ContentService {
   ) {}
 
   async forPage(page = 'home'): Promise<IHomeContentResponse> {
-    /**
-     * The banner travels with the sections rather than on its own endpoint:
-     * the home page cannot render without both, and two requests would be two
-     * chances to render half of it.
-     */
     const [banner, sections, posts] = await Promise.all([
       this.banners.findOne({ where: { page }, relations: { translations: true } }),
       this.sections.find({

@@ -1,5 +1,5 @@
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common'
-import { ConflictException, NotFoundException } from '@nestjs/common'
+import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common'
 import { UserRepository } from '~/modules/auth/repositories/user.repository'
 import { SessionRepository } from '~/modules/auth/repositories/session.repository'
 import { PasswordService } from './password.service'
@@ -79,6 +79,44 @@ export class AuthService {
 
   async logout(refreshToken: string | null): Promise<void> {
     if (refreshToken) await this.tokens.revoke(refreshToken)
+  }
+
+  async updateProfile(
+    userId: string,
+    changes: { first_name?: string, last_name?: string, phone_number?: string },
+  ): Promise<User> {
+    const clean = (value: unknown, limit: number): string | undefined =>
+      typeof value === 'string' ? value.trim().slice(0, limit) : undefined
+
+    const next = {
+      firstName: clean(changes.first_name, 120),
+      lastName: clean(changes.last_name, 120),
+      phoneNumber: clean(changes.phone_number, 40),
+    }
+
+    if (next.firstName === '') throw new BadRequestException('A first name is required')
+
+    await this.users.updateProfile(userId, Object.fromEntries(
+      Object.entries(next).filter(([, value]) => value !== undefined),
+    ))
+
+    return this.profile(userId)
+  }
+
+  async changePassword(userId: string, current: string, next: string): Promise<void> {
+    const user = await this.users.findByIdWithPassword(userId)
+
+    if (!user) throw new NotFoundException('User not found')
+
+    const stored = user.get('passwordHash')
+
+    if (!stored || !await this.passwords.verify(current, stored)) {
+      throw new UnauthorizedException('The current password is wrong')
+    }
+
+    if (next.length < 8) throw new BadRequestException('A password needs at least 8 characters')
+
+    await this.users.setPassword(userId, await this.passwords.hash(next))
   }
 
   async profile(userId: string): Promise<User> {

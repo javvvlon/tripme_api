@@ -40,6 +40,7 @@ import { Operators1755900014000 } from './migrations/1755900014000-Operators'
 import { MediaTitles1755900015000 } from './migrations/1755900015000-MediaTitles'
 import { MediaFolders1755900016000 } from './migrations/1755900016000-MediaFolders'
 import { OrderDocuments1755900017000 } from './migrations/1755900017000-OrderDocuments'
+import { LeadUser1755900018000 } from './migrations/1755900018000-LeadUser'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -80,6 +81,7 @@ export const databaseOptions = (): DataSourceOptions => {
       MediaTitles1755900015000,
       MediaFolders1755900016000,
       OrderDocuments1755900017000,
+      LeadUser1755900018000,
     ],
     synchronize: false,
     migrationsRun: false,

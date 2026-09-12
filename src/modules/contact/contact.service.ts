@@ -11,19 +11,12 @@ export interface IContactInput {
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
- *
- * Someone writing in from the contact form wants the same thing as someone
- * asking about a tour: to be called back. It files a lead, so it lands on
- * the board an agent already watches.
- *
- * It used to write its own `contact_messages` row, and nothing anywhere
- * read that table — every enquiry sent through the form was invisible.
  */
 @Injectable()
 export class ContactService {
   constructor(private readonly leads: LeadsService) {}
 
-  async submit(input: IContactInput): Promise<{ received: boolean }> {
+  async submit(input: IContactInput, userId: string | null = null): Promise<{ received: boolean }> {
     await this.leads.submit({
       first_name: input.first_name,
       last_name: input.last_name,
@@ -31,7 +24,7 @@ export class ContactService {
       comment: input.message,
       locale: input.locale,
       channel: 'contact',
-    })
+    }, undefined, userId)
 
     return { received: true }
   }

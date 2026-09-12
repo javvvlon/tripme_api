@@ -13,7 +13,6 @@ export const MAX_TITLE_LENGTH = 120
 
 export const MAX_FOLDER_NAME = 60
 
-/** The filter a caller can ask for instead of a folder id. */
 export const UNFILED = 'none'
 
 export interface IMediaFolder {
@@ -32,13 +31,6 @@ export class MediaService {
     private readonly folders: Repository<MediaFolderEntity>,
   ) {}
 
-  /**
-   * Every folder, with how many files sit in it.
-   *
-   * Counted from the rows rather than the bucket: a row can outlive its file
-   * only briefly, and an approximate count is worth more than a second
-   * listing of the whole bucket on every open.
-   */
   async folderList(): Promise<IMediaFolder[]> {
     const folders = await this.folders.find({ order: { name: 'ASC' } })
 
@@ -85,30 +77,14 @@ export class MediaService {
     return { id: folder.id, name: folder.name, count: 0 }
   }
 
-  /**
-   * Drops the folder, not the files in it.
-   *
-   * The foreign key clears `folder_id` on the way out, so everything filed
-   * here goes back to being unfiled rather than disappearing with it.
-   */
   async removeFolder(id: string): Promise<void> {
     const gone = await this.folders.delete({ id })
 
     if (!gone.affected) throw new NotFoundException('Folder not found')
 
-    /**
-     * The files that lived here now have an empty row each — no name, no
-     * folder. Nothing reads them, so they go rather than accumulating one
-     * per deleted folder.
-     */
     await this.files.delete({ title: '', folderId: IsNull() })
   }
 
-  /**
-   * Searches the name the editor gave a file, falling back to the stored
-   * key — a file nobody has named is still findable by what it was called
-   * when it landed.
-   */
   async library(query = '', folder = ''): Promise<IStoredFile[]> {
     const files = await this.storage.list()
 
@@ -134,13 +110,6 @@ export class MediaService {
       file.title.toLowerCase().includes(needle) || file.path.toLowerCase().includes(needle))
   }
 
-  /**
-   * Names a file and files it, without moving it.
-   *
-   * The object key stays as uploaded, so every banner, list and article
-   * already pointing at this URL keeps working — a folder that was part of
-   * the path would break all of them the moment a file was moved.
-   */
   async describe(
     url: string,
     changes: { title?: string, folder?: string | null },
@@ -159,7 +128,6 @@ export class MediaService {
       ? held?.folderId ?? null
       : await this.folderOrNull(changes.folder)
 
-    /** Nothing left to remember means no row to keep. */
     if (!title && !folderId) {
       await this.files.delete({ path })
 
@@ -179,7 +147,6 @@ export class MediaService {
     if (path) await this.files.delete({ path })
   }
 
-  /** How many files are not in any folder, for the "all" and "unfiled" tabs. */
   async unfiledCount(): Promise<number> {
     const files = await this.storage.list()
 

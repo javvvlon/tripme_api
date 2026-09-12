@@ -15,10 +15,6 @@ export class SearchController {
     private readonly soonestCache: SoonestCache,
   ) {}
 
-  /**
-   * The first day this route is actually being sold on, so a visitor who
-   * arrived without a date is shown tours rather than an empty page.
-   */
   @Get('soonest')
   async soonest(@Query() query: SearchQueryDto): Promise<unknown> {
     const today = new Date().toISOString().slice(0, 10)

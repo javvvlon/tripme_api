@@ -267,10 +267,6 @@ export class OrdersService {
     return { removed: true }
   }
 
-  /**
-   * Refuses a lead's own status change when its orders contradict it. Called by
-   * the leads service, which owns the lead but not this rule.
-   */
   async assertLeadMayBecome(leadId: string, next: string): Promise<void> {
     if (next !== LeadStatus.Rejected) return
 
@@ -299,11 +295,6 @@ export class OrdersService {
     return to as OrderStatus
   }
 
-  /**
-   * The lead follows its orders rather than being set alongside them, so the
-   * two can never disagree: a request under way means the lead is in work, and
-   * a confirmed booking means the deal is won.
-   */
   private async followOrder(leads: Repository<LeadEntity>, leadId: string, status: OrderStatus): Promise<void> {
     const lead = await leads.findOne({ where: { id: leadId } })
 

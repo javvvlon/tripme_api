@@ -4,9 +4,6 @@ import { ALLOWED_ATTACHMENTS, MAX_ATTACHMENT_BYTES } from '~/modules/orders/docu
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
- *
- * What the store will accept is decided before it reaches the bucket, so
- * these run without credentials.
  */
 const file = (mimetype: string, size = 1024) => ({
   buffer: Buffer.alloc(1),
@@ -19,7 +16,6 @@ const storage = () => new StorageService()
 
 describe('upload limits', () => {
   it('takes a pdf when the caller asked for documents', async () => {
-    /** Refusing this is what stopped every attachment and every offer. */
     await expect(
       storage().upload(file('application/pdf'), 'documents', {
         allowed: ALLOWED_ATTACHMENTS,

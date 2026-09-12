@@ -34,11 +34,6 @@ export class OrdersController {
     return this.documents.list(id)
   }
 
-  /**
-   * Writes the commercial offer or the invoice for this order. Which one is
-   * a path segment rather than a body field so the two cannot be confused by
-   * a stray payload.
-   */
   @Post('orders/:id/documents/:kind')
   @HttpCode(201)
   generate(

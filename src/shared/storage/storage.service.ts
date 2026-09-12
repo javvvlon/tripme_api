@@ -18,10 +18,6 @@ export interface IStoredFile {
   uploaded_at: string | null
 }
 
-/**
- * What a caller will accept. The bucket holds more than pictures now, and
- * the rules belong to whoever is storing the file rather than to the store.
- */
 export interface IUploadLimits {
   allowed?: readonly string[]
   maxBytes?: number
@@ -46,10 +42,6 @@ export class StorageService {
 
   private client: S3Client | null = null
 
-  /**
-   * The origin public URLs are built from. Derived from DATABASE_URL when
-   * unset — reads go through the CDN host, not the S3 endpoint.
-   */
   private get publicOrigin(): string | null {
     if (process.env.SUPABASE_URL) return process.env.SUPABASE_URL.replace(/\/$/, '')
 
@@ -75,10 +67,6 @@ export class StorageService {
       endpoint: this.endpoint,
       region: this.region,
       credentials: { accessKeyId: this.accessKeyId, secretAccessKey: this.secretAccessKey },
-      /**
-       * Supabase serves one bucket per path, not per subdomain. Without this
-       * the SDK addresses `tripme_content.<host>`, which does not resolve.
-       */
       forcePathStyle: true,
     })
 
@@ -101,10 +89,6 @@ export class StorageService {
       throw new BadRequestException(`File is larger than ${Math.round(maxBytes / 1024 / 1024)}MB`)
     }
 
-    /**
-     * Checked before the attempt, not inside the catch below, so that a
-     * missing key reads as a missing key rather than as storage being down.
-     */
     if (!this.configured) {
       throw new ServiceUnavailableException(
         'File storage is not configured — see SUPABASE_S3_ACCESS_KEY_ID in .env',
@@ -113,11 +97,6 @@ export class StorageService {
 
     const origin = this.publicOrigin!
 
-    /**
-     * A generated name, not the editor's. Two people uploading `banner.jpg`
-     * must not overwrite each other, and a filename someone typed is a path
-     * traversal waiting to happen.
-     */
     const path = `${folder}/${randomUUID()}${extension(file.originalname, file.mimetype)}`
 
     try {
@@ -126,7 +105,6 @@ export class StorageService {
         Key: path,
         Body: file.buffer,
         ContentType: file.mimetype,
-        // The name carries a UUID, so the bytes at a URL never change.
         CacheControl: 'public, max-age=31536000, immutable',
       }))
     }

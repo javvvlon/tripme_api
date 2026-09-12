@@ -54,10 +54,6 @@ export class OperatorsService {
     return rows.map(row => this.toPayload(row))
   }
 
-  /**
-   * The slugs search is allowed to reach. Anything the CMS has switched off is
-   * simply absent, so a disabled operator cannot be asked for even by name.
-   */
   async enabledSlugs(): Promise<string[]> {
     const rows = await this.operators.find({ where: { isEnabled: true }, select: { slug: true } })
 
@@ -88,11 +84,6 @@ export class OperatorsService {
     if (input.api_login !== undefined) operator.apiLogin = text(input.api_login, 200)
     if (input.note !== undefined) operator.note = text(input.note, 2000)
 
-    /**
-     * An empty string means "leave it alone" rather than "erase it": the CMS
-     * never receives the stored secret, so it cannot send it back unchanged.
-     * Clearing one is an explicit null.
-     */
     if (input.api_key !== undefined) {
       operator.apiKey = input.api_key === null ? '' : (text(input.api_key, 500) || operator.apiKey)
     }

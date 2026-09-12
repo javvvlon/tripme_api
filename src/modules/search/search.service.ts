@@ -20,19 +20,10 @@ export interface SearchPage {
 
 export interface SoonestDeparture {
   date: string | null
-  /** How wide a window had to be asked for before something came back. */
   span: number
   statuses: SupplierStatus[]
 }
 
-/**
- * Widths of the windows the probe asks for, in days.
- *
- * Suppliers answer one page at a time, so a window wide enough to be
- * truncated could hide the earliest day behind the hundredth row. Starting
- * narrow keeps the first — and usually only — answer complete, and widening
- * is what a route with nothing in the next week needs anyway.
- */
 const SOONEST_WINDOWS = [7, 21, 60] as const
 
 const addDays = (day: string, count: number): string => {
@@ -52,11 +43,6 @@ export class SearchService {
     private readonly operators: OperatorsService,
   ) {}
 
-  /**
-   * Only the operators the CMS has switched on. A supplier that is off is not
-   * merely hidden from the filter — it is never asked, so nothing of theirs
-   * can reach a result even if a stale request names it.
-   */
   private async live(): Promise<ISupplier[]> {
     const enabled = new Set(await this.operators.enabledSlugs())
 
@@ -127,14 +113,6 @@ export class SearchService {
     }
   }
 
-  /**
-   * The first day from `criteria.dateFrom` that anyone is actually selling.
-   *
-   * The operators' calendars say which days they fly, which is not the same
-   * as having something to sell: they leave days open that turn up nothing.
-   * Asking for a range and taking the earliest check-in answers that in one
-   * fan-out, where walking day by day costs one per empty day.
-   */
   async soonest(criteria: SearchCriteria, signal?: AbortSignal): Promise<SoonestDeparture> {
     let statuses: SupplierStatus[] = []
 

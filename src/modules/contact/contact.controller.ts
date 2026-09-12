@@ -1,6 +1,9 @@
-import { Body, Controller, HttpCode, Post } from '@nestjs/common'
+import { Body, Controller, HttpCode, Post, UseGuards } from '@nestjs/common'
+import { OptionalAuthGuard } from '~/modules/auth/guards/optional-auth.guard'
+import { CurrentUser } from '~/modules/auth/decorators'
 import { ContactService } from './contact.service'
 import type { IContactInput } from './contact.service'
+import type { IAccessTokenClaims } from '~/modules/auth/contracts/auth'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -11,7 +14,8 @@ export class ContactController {
 
   @Post()
   @HttpCode(200)
-  submit(@Body() body: IContactInput) {
-    return this.contact.submit(body)
+  @UseGuards(OptionalAuthGuard)
+  submit(@Body() body: IContactInput, @CurrentUser() claims?: IAccessTokenClaims) {
+    return this.contact.submit(body, claims?.sub ?? null)
   }
 }

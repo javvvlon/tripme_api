@@ -48,6 +48,28 @@ export class UserRepository {
     return User.fromRaw(await this.users.save(entity))
   }
 
+  async updateProfile(
+    id: string,
+    changes: { firstName?: string, lastName?: string, phoneNumber?: string },
+  ): Promise<void> {
+    await this.users.update({ id }, changes)
+  }
+
+  /** Loaded with the hash, which the ordinary lookups leave out on purpose. */
+  async findByIdWithPassword(id: string): Promise<User | null> {
+    const entity = await this.users
+      .createQueryBuilder('user')
+      .addSelect('user.passwordHash')
+      .where('user.id = :id', { id })
+      .getOne()
+
+    return entity ? User.fromRaw(entity) : null
+  }
+
+  async setPassword(id: string, passwordHash: string): Promise<void> {
+    await this.users.update({ id }, { passwordHash })
+  }
+
   async markVerified(id: string): Promise<void> {
     await this.users.update({ id }, { isVerified: true })
   }

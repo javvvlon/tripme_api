@@ -66,11 +66,6 @@ export function toCriteria(query: SearchQueryDto): SearchCriteria {
   }
 }
 
-/**
- * Criteria for "when could I go?", where the date is the question rather
- * than part of it. Defaults to today; filters play no part, since a day is
- * available or it is not.
- */
 export function toSoonestCriteria(query: SearchQueryDto, today: string): SearchCriteria {
   if (!query.from) throw new BadRequestException('from is required')
   if (!query.to) throw new BadRequestException('to is required')

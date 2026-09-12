@@ -1,8 +1,10 @@
 import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Query, UseGuards } from '@nestjs/common'
 import { AuthGuard } from '~/modules/auth/guards/auth.guard'
+import { OptionalAuthGuard } from '~/modules/auth/guards/optional-auth.guard'
 import { RolesGuard } from '~/modules/auth/guards/roles.guard'
-import { Roles } from '~/modules/auth/decorators'
+import { CurrentUser, Roles } from '~/modules/auth/decorators'
 import { UserRole } from '~/modules/auth/contracts/auth'
+import type { IAccessTokenClaims } from '~/modules/auth/contracts/auth'
 import { LEAD_STATUSES, LeadSource } from './lead.entity'
 import { LeadsService } from './leads.service'
 import type { ILeadInput, ILeadPatch } from './leads.service'
@@ -16,8 +18,9 @@ export class LeadsController {
 
   @Post()
   @HttpCode(201)
-  submit(@Body() body: ILeadInput) {
-    return this.leads.submit(body)
+  @UseGuards(OptionalAuthGuard)
+  submit(@Body() body: ILeadInput, @CurrentUser() claims?: IAccessTokenClaims) {
+    return this.leads.submit(body, LeadSource.Site, claims?.sub ?? null)
   }
 }
 

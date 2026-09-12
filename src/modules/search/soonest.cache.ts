@@ -14,14 +14,6 @@ interface IEntry {
   storedAt: number
 }
 
-/**
- * Remembers which day a route is selling from.
- *
- * Every visitor arriving from the same card asks the same question, and
- * answering it costs a fan-out across every operator. The promise is stored
- * rather than the result, so a hundred arrivals at once share one flight of
- * requests instead of starting a hundred.
- */
 @Injectable()
 export class SoonestCache {
   private readonly entries = new Map<string, IEntry>()
@@ -53,10 +45,6 @@ export class SoonestCache {
 
     this.entries.set(key, { answer, storedAt: now })
 
-    /**
-     * A question that failed must not be remembered as an answer, or the
-     * route stays broken for the whole window.
-     */
     answer.catch(() => {
       if (this.entries.get(key)?.answer === answer) this.entries.delete(key)
     })

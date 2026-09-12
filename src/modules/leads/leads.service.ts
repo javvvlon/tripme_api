@@ -128,17 +128,17 @@ export class LeadsService {
     private readonly leads: Repository<LeadEntity>,
   ) {}
 
-  /**
-   * Set by the orders module, which owns the rule that a lead with a paid
-   * order cannot be rejected. Kept as a hook so leads stay unaware of orders.
-   */
   private guard: ((leadId: string, next: string) => Promise<void>) | null = null
 
   registerStatusGuard(guard: (leadId: string, next: string) => Promise<void>): void {
     this.guard = guard
   }
 
-  async submit(input: ILeadInput, source = LeadSource.Site): Promise<{ uuid: string, order_id: number }> {
+  async submit(
+    input: ILeadInput,
+    source = LeadSource.Site,
+    userId: string | null = null,
+  ): Promise<{ uuid: string, order_id: number }> {
     const firstName = text(input.first_name, 120)
     const phone = text(input.phone, 40)
 
@@ -165,6 +165,7 @@ export class LeadsService {
         : null,
       budgetCurrency: text(input.budget_currency, 8),
       managerId: typeof input.manager_id === 'string' ? input.manager_id : null,
+      userId,
       hotelName: text(trip.hotel_name, 240),
       supplierName: text(trip.supplier_name, 120),
       checkIn: asDate(trip.check_in),

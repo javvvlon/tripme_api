@@ -12,6 +12,7 @@ import { UserRepository } from './repositories/user.repository'
 import { SessionRepository } from './repositories/session.repository'
 import { VerificationRepository } from './repositories/verification.repository'
 import { AuthGuard } from './guards/auth.guard'
+import { OptionalAuthGuard } from '~/modules/auth/guards/optional-auth.guard'
 import { RolesGuard } from './guards/roles.guard'
 
 /**
@@ -42,8 +43,9 @@ import { RolesGuard } from './guards/roles.guard'
     SessionRepository,
     VerificationRepository,
     AuthGuard,
+    OptionalAuthGuard,
     RolesGuard,
   ],
-  exports: [AuthGuard, RolesGuard, TokenService, UserRepository],
+  exports: [AuthGuard, OptionalAuthGuard, RolesGuard, TokenService, UserRepository, PasswordService],
 })
 export class AuthModule {}

@@ -49,12 +49,6 @@ const MARGIN = 48
 const WIDTH = 595.28
 const CONTENT = WIDTH - MARGIN * 2
 
-/**
- * Roboto rather than the brand face: the wordmark is heavy display type with
- * no regular weight, and a document set entirely in it is unreadable. It is
- * resolved through the package so it travels with the deploy rather than
- * depending on whatever fonts the host happens to have.
- */
 const fontFile = (weight: '400Regular' | '500Medium' | '700Bold'): string | null => {
   try {
     const entry = require.resolve('@expo-google-fonts/roboto/package.json')
@@ -75,11 +69,6 @@ const money = (amount: number | null, currency: string): string => {
   return `${grouped.toLocaleString('ru-RU', { maximumFractionDigits: 2 })} ${currency}`.trim()
 }
 
-/**
- * The day it was issued, where the agency is. `toISOString` is UTC, and a
- * document written at eight in the evening in Tashkent would be dated
- * yesterday on its own face.
- */
 const localDay = (at: Date): string => {
   const pad = (value: number) => String(value).padStart(2, '0')
 
@@ -101,12 +90,6 @@ const TITLES: Record<DocumentFlavour, string> = {
   invoice: 'Счёт на оплату',
 }
 
-/**
- * Draws one of the two documents an agent sends a client.
- *
- * Laid out by hand rather than from HTML: rendering a page would mean a
- * browser in the deploy, and these are two fixed forms that never reflow.
- */
 export function buildDocument(flavour: DocumentFlavour, data: IDocumentData): Promise<Buffer> {
   const regular = fontFile('400Regular')
   const medium = fontFile('500Medium')
@@ -244,7 +227,6 @@ function label(doc: PDFKit.PDFDocument, text: string): void {
   doc.y += 4
 }
 
-/** Two columns, ruled, so a long hotel name cannot collide with its label. */
 function table(doc: PDFKit.PDFDocument, rows: Array<[string, string]>): void {
   const labelWidth = 150
   const valueWidth = CONTENT - labelWidth

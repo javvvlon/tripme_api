@@ -19,7 +19,7 @@ import { DocumentsService } from './documents/documents.service'
   imports: [AuthModule, LeadsModule, TypeOrmModule.forFeature([OrderEntity, OrderEventEntity, OrderDocumentEntity, LeadEntity])],
   controllers: [OrdersController],
   providers: [OrdersService, DocumentsService],
-  exports: [OrdersService],
+  exports: [OrdersService, DocumentsService],
 })
 export class OrdersModule implements OnModuleInit {
   constructor(

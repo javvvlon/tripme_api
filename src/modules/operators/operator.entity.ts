@@ -34,10 +34,6 @@ export class OperatorEntity {
   @Column({ name: 'api_base_url', type: 'text', default: '' })
   apiBaseUrl!: string
 
-  /**
-   * Held until an integration exists. Never returned by the API — the CMS is
-   * told whether a secret is set, not what it is.
-   */
   @Column({ name: 'api_key', type: 'text', default: '', select: false })
   apiKey!: string
 

@@ -81,6 +81,11 @@ export class LeadEntity {
   @Column({ name: 'manager_id', type: 'uuid', nullable: true })
   managerId!: string | null
 
+  /** The signed-in customer who submitted it, if one did. */
+  @Index()
+  @Column({ name: 'user_id', type: 'uuid', nullable: true })
+  userId!: string | null
+
   @Column({ name: 'reject_reason', type: 'text', default: '' })
   rejectReason!: string
 

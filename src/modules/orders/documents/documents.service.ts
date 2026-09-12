@@ -27,11 +27,6 @@ export const ALLOWED_ATTACHMENTS = [
 
 const FOLDER = 'documents'
 
-/**
- * What the CMS reads. Shaped here rather than handed back as the entity:
- * every other endpoint speaks snake_case, and returning `createdAt` where
- * the reader expected `created_at` left it formatting an undefined date.
- */
 export interface IDocumentPayload {
   id: string
   order_id: string
@@ -42,12 +37,6 @@ export interface IDocumentPayload {
   created_at: string
 }
 
-/**
- * The entity as the CMS reads it. Everything the API returns speaks
- * snake_case; handing back the entity meant `createdAt` where the page
- * looked for `created_at`, and formatting that undefined threw inside the
- * template — which stops Vue re-rendering and freezes the section.
- */
 export function toDocumentPayload(row: OrderDocumentEntity): IDocumentPayload {
   return {
     id: row.id,
@@ -80,13 +69,6 @@ export class DocumentsService {
     return rows.map(row => toDocumentPayload(row))
   }
 
-  /**
-   * Puts a file an agent chose beside the order.
-   *
-   * The name is kept for the download but never used as the key: two agents
-   * attaching `passport.pdf` must not overwrite each other, and a filename
-   * someone typed is a path traversal waiting to happen.
-   */
   async attach(orderId: string, file: IUploadedFile, actorId: string | null): Promise<IDocumentPayload> {
     await this.orderOrFail(orderId)
 
@@ -118,15 +100,6 @@ export class DocumentsService {
     return toDocumentPayload(saved)
   }
 
-  /**
-   * Builds one of the two documents the system writes itself, stores it, and
-   * remembers it against the order.
-   *
-   * Generating a commercial offer also moves the lead to "КП отправлено" —
-   * the one status the system sets on its own, because producing the offer
-   * *is* the act that status describes. Nothing money-adjacent is automated:
-   * an invoice being issued says nothing about whether it was paid.
-   */
   async generate(
     orderId: string,
     flavour: DocumentFlavour,
@@ -199,11 +172,6 @@ export class DocumentsService {
 
     await this.documents.delete({ id })
 
-    /**
-     * The record is what the CMS reads, so it goes first. Losing the bytes
-     * afterwards leaves an orphan in the bucket; losing the record first
-     * would leave a row pointing at nothing.
-     */
     try {
       await this.storage.remove(document.url)
     }
@@ -212,11 +180,6 @@ export class DocumentsService {
     }
   }
 
-  /**
-   * The lead follows the offer it just had written for it, and only when
-   * that step is one it is allowed to take. A lead already won, or refused,
-   * is left exactly where it is.
-   */
   private async followOffer(lead: LeadEntity | null): Promise<void> {
     if (!lead) return
 
