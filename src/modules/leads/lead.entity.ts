@@ -13,7 +13,9 @@ export enum LeadStatus {
 
 export const LEAD_STATUSES = Object.values(LeadStatus)
 
-export const LEAD_CHANNELS = ['site', 'telegram', 'call', 'referral', 'instagram', 'walk_in', 'manual'] as const
+export const LEAD_CHANNELS = [
+  'site', 'contact', 'telegram', 'call', 'referral', 'instagram', 'walk_in', 'manual',
+] as const
 
 export const LEAD_TRANSITIONS: Record<LeadStatus, LeadStatus[]> = {
   [LeadStatus.New]: [LeadStatus.InProgress, LeadStatus.QuoteSent, LeadStatus.Rejected],

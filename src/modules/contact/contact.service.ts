@@ -1,40 +1,37 @@
-import { BadRequestException, Injectable } from '@nestjs/common'
-import { InjectRepository } from '@nestjs/typeorm'
-import { Repository } from 'typeorm'
-import { ContactMessageEntity } from './contact-message.entity'
+import { Injectable } from '@nestjs/common'
+import { LeadsService } from '~/modules/leads/leads.service'
 
 export interface IContactInput {
   first_name?: string
   last_name?: string
   phone?: string
   message?: string
+  locale?: string
 }
-
-const MAX_MESSAGE = 4000
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
+ *
+ * Someone writing in from the contact form wants the same thing as someone
+ * asking about a tour: to be called back. It files a lead, so it lands on
+ * the board an agent already watches.
+ *
+ * It used to write its own `contact_messages` row, and nothing anywhere
+ * read that table — every enquiry sent through the form was invisible.
  */
 @Injectable()
 export class ContactService {
-  constructor(
-    @InjectRepository(ContactMessageEntity)
-    private readonly messages: Repository<ContactMessageEntity>,
-  ) {}
+  constructor(private readonly leads: LeadsService) {}
 
   async submit(input: IContactInput): Promise<{ received: boolean }> {
-    const firstName = (input.first_name ?? '').trim()
-    const phone = (input.phone ?? '').trim()
-
-    if (!firstName) throw new BadRequestException('A first name is required')
-    if (!phone) throw new BadRequestException('A phone number is required')
-
-    await this.messages.save(this.messages.create({
-      firstName: firstName.slice(0, 120),
-      lastName: (input.last_name ?? '').trim().slice(0, 120),
-      phone: phone.slice(0, 40),
-      message: (input.message ?? '').trim().slice(0, MAX_MESSAGE),
-    }))
+    await this.leads.submit({
+      first_name: input.first_name,
+      last_name: input.last_name,
+      phone: input.phone,
+      comment: input.message,
+      locale: input.locale,
+      channel: 'contact',
+    })
 
     return { received: true }
   }

@@ -1,14 +1,13 @@
 import { Module } from '@nestjs/common'
-import { TypeOrmModule } from '@nestjs/typeorm'
+import { LeadsModule } from '~/modules/leads/leads.module'
 import { ContactController } from './contact.controller'
 import { ContactService } from './contact.service'
-import { ContactMessageEntity } from './contact-message.entity'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
  */
 @Module({
-  imports: [TypeOrmModule.forFeature([ContactMessageEntity])],
+  imports: [LeadsModule],
   controllers: [ContactController],
   providers: [ContactService],
 })
