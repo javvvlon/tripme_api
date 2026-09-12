@@ -7,7 +7,6 @@ export class MediaFolders1755900016000 implements MigrationInterface {
   name = 'MediaFolders1755900016000'
 
   public async up(queryRunner: QueryRunner): Promise<void> {
-    /** The table holds more than titles now, so it is named for what it is. */
     await queryRunner.query(`alter table if exists media_titles rename to media_files`)
 
     await queryRunner.query(`

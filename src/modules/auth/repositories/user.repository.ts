@@ -55,7 +55,6 @@ export class UserRepository {
     await this.users.update({ id }, changes)
   }
 
-  /** Loaded with the hash, which the ordinary lookups leave out on purpose. */
   async findByIdWithPassword(id: string): Promise<User | null> {
     const entity = await this.users
       .createQueryBuilder('user')

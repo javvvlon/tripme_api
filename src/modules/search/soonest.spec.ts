@@ -20,7 +20,6 @@ const criteria = (over: Partial<SearchCriteria> = {}): SearchCriteria => ({
   ...over,
 })
 
-/** A service whose fan-out is replaced by a fixed set of selling days. */
 const serviceSelling = (days: string[]) => {
   const service = new SearchService([], { enabledSlugs: async () => [] } as never)
   const asked: Array<{ from: string, to: string }> = []

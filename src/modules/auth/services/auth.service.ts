@@ -111,7 +111,7 @@ export class AuthService {
     const stored = user.get('passwordHash')
 
     if (!stored || !await this.passwords.verify(current, stored)) {
-      throw new UnauthorizedException('The current password is wrong')
+      throw new BadRequestException('The current password is wrong')
     }
 
     if (next.length < 8) throw new BadRequestException('A password needs at least 8 characters')

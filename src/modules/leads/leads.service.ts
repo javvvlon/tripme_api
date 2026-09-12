@@ -85,6 +85,7 @@ export interface ILeadPayload {
   budget_currency: string
   manager_id: string | null
   manager_name: string
+  user_id: string | null
   first_name: string
   last_name: string
   phone: string
@@ -298,6 +299,7 @@ export class LeadsService {
       budget_currency: row.budgetCurrency ?? '',
       manager_id: row.managerId,
       manager_name: '',
+      user_id: row.userId,
       first_name: row.firstName,
       last_name: row.lastName,
       phone: row.phone,
