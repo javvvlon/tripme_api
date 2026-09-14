@@ -19,6 +19,7 @@ import { LeadEntity } from '~/modules/leads/lead.entity'
 import { OrderEntity } from '~/modules/orders/order.entity'
 import { OrderEventEntity } from '~/modules/orders/order-event.entity'
 import { OrderDocumentEntity } from '~/modules/orders/order-document.entity'
+import { PointsSettingsEntity, PointsTierEntity, PointsTransactionEntity } from '~/modules/points/points.entities'
 import { OperatorEntity } from '~/modules/operators/operator.entity'
 import { MediaFileEntity } from '~/shared/storage/media-file.entity'
 import { MediaFolderEntity } from '~/shared/storage/media-folder.entity'
@@ -41,6 +42,7 @@ import { MediaTitles1755900015000 } from './migrations/1755900015000-MediaTitles
 import { MediaFolders1755900016000 } from './migrations/1755900016000-MediaFolders'
 import { OrderDocuments1755900017000 } from './migrations/1755900017000-OrderDocuments'
 import { LeadUser1755900018000 } from './migrations/1755900018000-LeadUser'
+import { Points1755900019000 } from './migrations/1755900019000-Points'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -63,6 +65,7 @@ export const databaseOptions = (): DataSourceOptions => {
       ContentItemTranslationEntity, ContentSectionEntity, ContentSectionTranslationEntity,
       ContentBannerEntity, ContentBannerTranslationEntity,
       PostEntity, PostTranslationEntity, ContactMessageEntity, LeadEntity, OrderEntity, OrderEventEntity, OrderDocumentEntity, OperatorEntity,
+      PointsTierEntity, PointsSettingsEntity, PointsTransactionEntity,
       MediaFileEntity, MediaFolderEntity,
     ],
     migrations: [
@@ -82,6 +85,7 @@ export const databaseOptions = (): DataSourceOptions => {
       MediaFolders1755900016000,
       OrderDocuments1755900017000,
       LeadUser1755900018000,
+      Points1755900019000,
     ],
     synchronize: false,
     migrationsRun: false,

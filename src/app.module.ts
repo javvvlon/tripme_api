@@ -10,6 +10,7 @@ import { LeadsModule } from '~/modules/leads/leads.module'
 import { OrdersModule } from '~/modules/orders/orders.module'
 import { OperatorsModule } from '~/modules/operators/operators.module'
 import { AccountModule } from '~/modules/account/account.module'
+import { PointsModule } from '~/modules/points/points.module'
 import { DatabaseModule } from '~/shared/database/database.module'
 import { StorageModule } from '~/shared/storage/storage.module'
 import { RevalidationModule } from '~/shared/revalidation/revalidation.module'
@@ -35,6 +36,7 @@ import { HealthModule } from '~/shared/health/health.module'
     OrdersModule,
     OperatorsModule,
     AccountModule,
+    PointsModule,
   ],
 })
 export class AppModule {}

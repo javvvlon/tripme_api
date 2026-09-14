@@ -3,6 +3,7 @@ import type { OnModuleInit } from '@nestjs/common'
 import { TypeOrmModule } from '@nestjs/typeorm'
 import { AuthModule } from '~/modules/auth/auth.module'
 import { LeadsModule } from '~/modules/leads/leads.module'
+import { PointsModule } from '~/modules/points/points.module'
 import { LeadsService } from '~/modules/leads/leads.service'
 import { LeadEntity } from '~/modules/leads/lead.entity'
 import { OrdersController } from './orders.controller'
@@ -16,7 +17,7 @@ import { DocumentsService } from './documents/documents.service'
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
  */
 @Module({
-  imports: [AuthModule, LeadsModule, TypeOrmModule.forFeature([OrderEntity, OrderEventEntity, OrderDocumentEntity, LeadEntity])],
+  imports: [AuthModule, LeadsModule, PointsModule, TypeOrmModule.forFeature([OrderEntity, OrderEventEntity, OrderDocumentEntity, LeadEntity])],
   controllers: [OrdersController],
   providers: [OrdersService, DocumentsService],
   exports: [OrdersService, DocumentsService],

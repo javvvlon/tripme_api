@@ -1,6 +1,7 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { DataSource, Repository } from 'typeorm'
+import { PointsService } from '~/modules/points/points.service'
 import { LEAD_TRANSITIONS, LeadEntity, LeadStatus } from '~/modules/leads/lead.entity'
 import { ORDER_STATUSES, ORDER_TRANSITIONS, OrderEntity, OrderStatus, SETTLED_STATUSES } from './order.entity'
 import { OrderEventEntity } from './order-event.entity'
@@ -102,6 +103,7 @@ export class OrdersService {
     @InjectRepository(LeadEntity)
     private readonly leads: Repository<LeadEntity>,
     private readonly dataSource: DataSource,
+    private readonly points: PointsService,
   ) {}
 
   async forLead(leadId: string): Promise<IOrderPayload[]> {
@@ -208,6 +210,8 @@ export class OrdersService {
 
       if (!order) throw new NotFoundException('Order not found')
 
+      let completed = false
+
       if (input.status !== undefined && input.status !== order.status) {
         const next = this.assertTransition(order.status, input.status)
 
@@ -221,6 +225,8 @@ export class OrdersService {
         order.status = next
 
         await this.followOrder(manager.getRepository(LeadEntity), order.leadId, next)
+
+        completed = next === OrderStatus.Completed
       }
 
       if (input.supplier_order_id !== undefined) order.supplierOrderId = text(input.supplier_order_id, 80)
@@ -248,6 +254,8 @@ export class OrdersService {
       order.updatedAt = new Date()
 
       await orders.save(order)
+
+      if (completed) await this.points.awardFor(order, manager)
 
       return this.toPayload(order)
     })
