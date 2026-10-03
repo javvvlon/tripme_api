@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common'
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { DataSource, Repository } from 'typeorm'
 import {
@@ -28,6 +28,38 @@ export interface IListItemInput {
   link?: string | null
   badge_type?: string | null
   translations: ITranslationInput[]
+}
+
+const COLUMNS = 12
+
+const normaliseGrid = (value: unknown): string => {
+  const grid = typeof value === 'string' ? value.trim() : ''
+  const parts = grid.split('_')
+
+  if (!grid || !parts.length) throw new BadRequestException('A layout needs a grid, such as 4_4_4')
+
+  let filled = 0
+
+  for (const part of parts) {
+    const spans = part.split('.').map(Number)
+
+    if (spans.some(span => !Number.isInteger(span) || span < 1 || span > COLUMNS)) {
+      throw new BadRequestException(`"${part}" is not a column of 1 to ${COLUMNS}`)
+    }
+
+    if (spans.some(span => span !== spans[0])) {
+      throw new BadRequestException(`"${part}" stacks cells of different widths`)
+    }
+
+    filled = filled + spans[0]! > COLUMNS ? spans[0]! : filled + spans[0]!
+  }
+
+  return grid
+}
+
+export interface ILayoutInput {
+  grid: string
+  name: string
 }
 
 export interface IListInput {
@@ -66,6 +98,25 @@ export class ContentAdminService {
 
   layoutsAll() {
     return this.layouts.find({ order: { grid: 'ASC' } })
+  }
+
+  async createLayout(input: ILayoutInput): Promise<ContentLayoutEntity> {
+    const grid = normaliseGrid(input.grid)
+    const taken = await this.layouts.findOne({ where: { grid } })
+
+    if (taken) throw new ConflictException('That layout already exists')
+
+    return this.layouts.save(this.layouts.create({ grid, name: input.name.trim().slice(0, 80) }))
+  }
+
+  async removeLayout(id: string): Promise<void> {
+    const used = await this.sections.countBy({ layoutId: id })
+
+    if (used) throw new ConflictException('That layout is used by a section')
+
+    const result = await this.layouts.delete({ id })
+
+    if (!result.affected) throw new NotFoundException('No such layout')
   }
 
   async listsIndex() {

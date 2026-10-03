@@ -101,6 +101,22 @@ export class ContentAdminController {
     }
   }
 
+  @Post('layouts')
+  async createLayout(@Body() body: Record<string, unknown>) {
+    const layout = await this.admin.createLayout({
+      grid: typeof body?.grid === 'string' ? body.grid : '',
+      name: str(body?.name, 'name'),
+    })
+
+    return { uuid: layout.id, grid: layout.grid, name: layout.name }
+  }
+
+  @Delete('layouts/:id')
+  @HttpCode(204)
+  async deleteLayout(@Param('id') id: string): Promise<void> {
+    await this.admin.removeLayout(id)
+  }
+
   @Get('lists')
   async lists() {
     return { items: await this.admin.listsIndex() }
