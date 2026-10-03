@@ -9,7 +9,7 @@ import { AuthGuard } from '~/modules/auth/guards/auth.guard'
 import { RolesGuard } from '~/modules/auth/guards/roles.guard'
 import { Roles } from '~/modules/auth/decorators'
 import { UserRole } from '~/modules/auth/contracts/auth'
-import { ContentAdminService } from './content.admin.service'
+import { SECTION_VARIANTS, ContentAdminService } from './content.admin.service'
 import { RevalidationService } from '~/shared/revalidation/revalidation.service'
 import type { IBannerInput, IListInput, ISectionInput } from './content.admin.service'
 
@@ -209,7 +209,8 @@ function parseBanner(body: Record<string, unknown>): IBannerInput {
 function parseSection(raw: unknown): ISectionInput {
   const section = raw as Record<string, unknown>
   const translations = Array.isArray(section.translations) ? section.translations : []
-  const variant = section.variant === 'posts' ? 'posts' : 'list'
+  const asked = typeof section.variant === 'string' ? section.variant : 'list'
+  const variant = SECTION_VARIANTS.includes(asked) ? asked : 'list'
 
   return {
     link: typeof section.link === 'string' ? section.link : null,

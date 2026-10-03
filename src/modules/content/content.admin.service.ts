@@ -252,7 +252,7 @@ export class ContentAdminService {
   }
 }
 
-const SECTION_VARIANTS = ['list', 'posts']
+export const SECTION_VARIANTS = ['list', 'posts', 'features', 'faq']
 
 const sectionVariant = (value: string | null | undefined): string =>
   SECTION_VARIANTS.includes(value ?? '') ? value! : 'list'
