@@ -1,6 +1,7 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Brackets, Repository } from 'typeorm'
+import { LEAD_PREFIX, numberFromReference, reference } from '~/shared/helpers/reference'
 import { LEAD_STATUSES, LEAD_TRANSITIONS, LeadEntity, LeadSource, LeadStatus } from './lead.entity'
 
 export interface ILeadTripInput {
@@ -30,6 +31,7 @@ export interface ILeadInput {
   phone?: string
   comment?: string
   locale?: string
+  consent?: boolean
   trip?: ILeadTripInput
 }
 
@@ -74,6 +76,9 @@ export interface ILeadPatch {
 export interface ILeadPayload {
   uuid: string
   order_id: number
+  ref: string
+  first_response_at: string | null
+  consent_at: string | null
   source: string
   status: string
   reject_reason: string
@@ -146,6 +151,10 @@ export class LeadsService {
     if (!firstName) throw new BadRequestException('A first name is required')
     if (!phone) throw new BadRequestException('A phone number is required')
 
+    if (source === LeadSource.Site && !userId && input.consent !== true) {
+      throw new BadRequestException('Consent to the processing of personal data is required')
+    }
+
     const trip = input.trip ?? {}
     const amount = Number(trip.price_amount)
 
@@ -178,6 +187,7 @@ export class LeadsService {
       routeFrom: text(trip.route_from, 120),
       routeTo: text(trip.route_to, 120),
       trip: trip as Record<string, unknown>,
+      consentAt: input.consent === true ? new Date() : null,
     })
 
     const saved = await this.leads.save(lead)
@@ -205,8 +215,12 @@ export class LeadsService {
     }
 
     const needle = (query.q ?? '').trim()
+    const byRef = numberFromReference(needle, LEAD_PREFIX)
 
-    if (needle) {
+    if (byRef !== null) {
+      builder.andWhere('lead.orderId = :number', { number: byRef })
+    }
+    else if (needle) {
       const like = `%${needle.toLowerCase()}%`
       const digits = needle.replace(/\D/g, '')
 
@@ -250,6 +264,8 @@ export class LeadsService {
 
       await this.guard?.(id, input.status)
 
+      if (lead.status === LeadStatus.New && !lead.firstResponseAt) lead.firstResponseAt = new Date()
+
       lead.status = input.status
     }
 
@@ -288,6 +304,9 @@ export class LeadsService {
     return {
       uuid: row.id,
       order_id: Number(row.orderId ?? 0),
+      ref: reference(LEAD_PREFIX, Number(row.orderId ?? 0), row.createdAt),
+      first_response_at: row.firstResponseAt ? row.firstResponseAt.toISOString() : null,
+      consent_at: row.consentAt ? row.consentAt.toISOString() : null,
       source: row.source,
       status: row.status,
       reject_reason: row.rejectReason ?? '',

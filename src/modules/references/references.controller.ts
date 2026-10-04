@@ -2,6 +2,7 @@ import { Controller, Get, Inject, Query } from '@nestjs/common'
 import { SUPPLIERS } from '~/modules/suppliers/base/tokens'
 import { CalendarService } from './calendar.service'
 import { RouteLookupService } from './route-lookup.service'
+import { RatesService } from './rates.service'
 import type { ISupplier } from '~/modules/suppliers/base/contracts'
 
 /**
@@ -15,7 +16,13 @@ export class ReferencesController {
     @Inject(SUPPLIERS) private readonly suppliers: ISupplier[],
     private readonly calendar: CalendarService,
     private readonly routes: RouteLookupService,
+    private readonly rates: RatesService,
   ) {}
+
+  @Get('rates')
+  async rates_() {
+    return this.rates.current()
+  }
 
   @Get('departures')
   async departures() {

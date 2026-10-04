@@ -15,6 +15,7 @@ export interface ICreateUser {
   lastName: string
   phoneNumber: string
   role: UserRole
+  consentAt?: Date | null
 }
 
 export const normaliseEmail = (email: string): string => email.trim().toLowerCase()

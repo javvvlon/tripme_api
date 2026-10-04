@@ -12,19 +12,30 @@ export enum OrderStatus {
   Issued = 'issued',
   Travelling = 'travelling',
   Completed = 'completed',
+  Cancelled = 'cancelled',
 }
 
 export const ORDER_STATUSES = Object.values(OrderStatus)
 
 export const ORDER_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
-  [OrderStatus.Draft]: [OrderStatus.Requested],
-  [OrderStatus.Requested]: [OrderStatus.Confirmed, OrderStatus.Draft],
-  [OrderStatus.Confirmed]: [OrderStatus.Paid, OrderStatus.Requested],
-  [OrderStatus.Paid]: [OrderStatus.Issued],
-  [OrderStatus.Issued]: [OrderStatus.Travelling],
+  [OrderStatus.Draft]: [OrderStatus.Requested, OrderStatus.Cancelled],
+  [OrderStatus.Requested]: [OrderStatus.Confirmed, OrderStatus.Draft, OrderStatus.Cancelled],
+  [OrderStatus.Confirmed]: [OrderStatus.Paid, OrderStatus.Requested, OrderStatus.Cancelled],
+  [OrderStatus.Paid]: [OrderStatus.Issued, OrderStatus.Cancelled],
+  [OrderStatus.Issued]: [OrderStatus.Travelling, OrderStatus.Cancelled],
   [OrderStatus.Travelling]: [OrderStatus.Completed],
   [OrderStatus.Completed]: [],
+  [OrderStatus.Cancelled]: [],
 }
+
+export const PASSPORT_CHECKED_STATUSES: OrderStatus[] = [
+  OrderStatus.Confirmed,
+  OrderStatus.Paid,
+  OrderStatus.Issued,
+  OrderStatus.Travelling,
+]
+
+export const PASSPORT_MARGIN_MONTHS = 6
 
 export const SETTLED_STATUSES: OrderStatus[] = [
   OrderStatus.Paid,
@@ -109,6 +120,9 @@ export class OrderEntity {
 
   @Column({ type: 'text', default: '' })
   note!: string
+
+  @Column({ name: 'cancel_reason', type: 'text', default: '' })
+  cancelReason!: string
 
   @Column({ name: 'created_at', type: 'timestamptz', default: () => 'now()' })
   createdAt!: Date

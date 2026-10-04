@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { In, IsNull, Not, Repository } from 'typeorm'
+import { In, IsNull, Not, Repository, Like } from 'typeorm'
 import { PostEntity } from './entities'
 
 export interface IPostTranslationPayload {
@@ -29,6 +29,8 @@ export interface IPostPayload {
   translations: IPostTranslationPayload[]
 }
 
+export const LEGAL_SLUG_PREFIX = 'legal-'
+
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
  */
@@ -40,7 +42,7 @@ export class PostsService {
   ) {}
   async published(limit = 12): Promise<IPostPayload[]> {
     const rows = await this.posts.find({
-      where: { isPublished: true, publishedAt: Not(IsNull()) },
+      where: { isPublished: true, publishedAt: Not(IsNull()), slug: Not(Like(`${LEGAL_SLUG_PREFIX}%`)) },
       relations: { translations: true, author: true },
       order: { publishedAt: 'DESC' },
       take: limit,

@@ -10,6 +10,7 @@ import {
   PointsSettingsEntity, PointsTierEntity, PointsTransactionEntity,
 } from './points.entities'
 import type { PointsCurrency, PointsRates } from './points.entities'
+import { ORDER_PREFIX, reference } from '~/shared/helpers/reference'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -41,6 +42,7 @@ export interface IPointsTransactionPayload {
   reason: string
   order_id: string | null
   order_no: number | null
+  order_ref: string | null
   note: string
   created_at: string
 }
@@ -177,11 +179,15 @@ export class PointsService {
     const orderIds = [...new Set(rows.map(row => row.orderId).filter((id): id is string => Boolean(id)))]
 
     const numbers = new Map<string, number>()
+    const refs = new Map<string, string>()
 
     if (orderIds.length) {
-      const found = await this.orders.find({ where: { id: In(orderIds) }, select: { id: true, orderNo: true } })
+      const found = await this.orders.find({ where: { id: In(orderIds) }, select: { id: true, orderNo: true, createdAt: true } })
 
-      for (const order of found) numbers.set(order.id, Number(order.orderNo))
+      for (const order of found) {
+        numbers.set(order.id, Number(order.orderNo))
+        refs.set(order.id, reference(ORDER_PREFIX, Number(order.orderNo), order.createdAt))
+      }
     }
 
     return rows.map(row => ({
@@ -190,6 +196,7 @@ export class PointsService {
       reason: row.reason,
       order_id: row.orderId,
       order_no: row.orderId ? numbers.get(row.orderId) ?? null : null,
+      order_ref: row.orderId ? refs.get(row.orderId) ?? null : null,
       note: row.note,
       created_at: row.createdAt.toISOString(),
     }))

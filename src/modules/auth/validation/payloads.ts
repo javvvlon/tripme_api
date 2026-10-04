@@ -36,7 +36,12 @@ export function parseSignup(body: Record<string, unknown>): ISignupData {
     throw new BadRequestException(`Password must be at least ${MIN_PASSWORD_LENGTH} characters`)
   }
 
+  if (body.consent !== true) {
+    throw new BadRequestException('Consent to the processing of personal data is required')
+  }
+
   return {
+    consent: true,
     email,
     password,
     phoneNumber,

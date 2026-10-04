@@ -122,6 +122,12 @@ export class LeadEntity {
   trip!: Record<string, unknown>
 
   @Index()
+  @Column({ name: 'first_response_at', type: 'timestamptz', nullable: true })
+  firstResponseAt!: Date | null
+
+  @Column({ name: 'consent_at', type: 'timestamptz', nullable: true })
+  consentAt!: Date | null
+
   @Column({ name: 'created_at', type: 'timestamptz', default: () => 'now()' })
   createdAt!: Date
 

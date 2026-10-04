@@ -56,7 +56,7 @@ describe('order status', () => {
   it('never walks payment backwards', () => {
     for (const settled of SETTLED_STATUSES) {
       for (const next of ORDER_TRANSITIONS[settled]) {
-        expect(SETTLED_STATUSES.includes(next) || next === OrderStatus.Completed).toBe(true)
+        expect(SETTLED_STATUSES.includes(next) || next === OrderStatus.Cancelled).toBe(true)
       }
     }
 
@@ -65,6 +65,12 @@ describe('order status', () => {
 
   it('closes the finished order', () => {
     expect(ORDER_TRANSITIONS[OrderStatus.Completed]).toHaveLength(0)
+  })
+
+  it('closes a cancelled order, and a trip under way cannot be cancelled', () => {
+    expect(ORDER_TRANSITIONS[OrderStatus.Cancelled]).toHaveLength(0)
+    expect(ORDER_TRANSITIONS[OrderStatus.Travelling]).not.toContain(OrderStatus.Cancelled)
+    expect(ORDER_TRANSITIONS[OrderStatus.Paid]).toContain(OrderStatus.Cancelled)
   })
 
   it('can reach the end from the beginning, and nothing is stranded', () => {

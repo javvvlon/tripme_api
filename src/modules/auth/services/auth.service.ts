@@ -50,6 +50,7 @@ export class AuthService {
       lastName: data.lastName.trim(),
       phoneNumber: data.phoneNumber.trim(),
       role: UserRole.Client,
+      consentAt: data.consent ? new Date() : null,
     })
 
     return this.tokens.issue(user, context)

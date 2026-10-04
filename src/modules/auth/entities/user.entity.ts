@@ -33,6 +33,9 @@ export class UserEntity {
   @Column({ name: 'is_verified', type: 'boolean', default: false })
   isVerified!: boolean
 
+  @Column({ name: 'consent_at', type: 'timestamptz', nullable: true })
+  consentAt!: Date | null
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date
 

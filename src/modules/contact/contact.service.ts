@@ -7,6 +7,7 @@ export interface IContactInput {
   phone?: string
   message?: string
   locale?: string
+  consent?: boolean
 }
 
 /**
@@ -24,6 +25,7 @@ export class ContactService {
       comment: input.message,
       locale: input.locale,
       channel: 'contact',
+      consent: input.consent,
     }, undefined, userId)
 
     return { received: true }

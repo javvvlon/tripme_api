@@ -3,7 +3,16 @@ import { InjectRepository } from '@nestjs/typeorm'
 import { DataSource, Repository } from 'typeorm'
 import { PointsService } from '~/modules/points/points.service'
 import { LEAD_TRANSITIONS, LeadEntity, LeadStatus } from '~/modules/leads/lead.entity'
-import { ORDER_STATUSES, ORDER_TRANSITIONS, OrderEntity, OrderStatus, SETTLED_STATUSES } from './order.entity'
+import { ORDER_PREFIX, numberFromReference, reference } from '~/shared/helpers/reference'
+import {
+  ORDER_STATUSES,
+  ORDER_TRANSITIONS,
+  OrderEntity,
+  OrderStatus,
+  PASSPORT_CHECKED_STATUSES,
+  PASSPORT_MARGIN_MONTHS,
+  SETTLED_STATUSES,
+} from './order.entity'
 import { OrderEventEntity } from './order-event.entity'
 
 export interface IOrderTripInput {
@@ -51,11 +60,13 @@ export interface IOrderPatchInput {
   passport_id?: string
   passport_expires_at?: string | null
   note?: string
+  cancel_reason?: string
 }
 
 export interface IOrderPayload {
   uuid: string
   order_no: number
+  ref: string
   lead_id: string
   status: string
   traveller_name: string
@@ -77,8 +88,44 @@ export interface IOrderPayload {
   price_currency: string
   trip: Record<string, unknown>
   note: string
+  cancel_reason: string
   created_at: string
   updated_at: string
+}
+
+const addDays = (day: string, count: number): string => {
+  const at = new Date(`${day}T00:00:00Z`)
+
+  at.setUTCDate(at.getUTCDate() + count)
+
+  return at.toISOString().slice(0, 10)
+}
+
+const addMonths = (day: string, count: number): string => {
+  const at = new Date(`${day}T00:00:00Z`)
+
+  at.setUTCMonth(at.getUTCMonth() + count)
+
+  return at.toISOString().slice(0, 10)
+}
+
+export function tripEnd(order: Pick<OrderEntity, 'returnDate' | 'checkIn' | 'nights'>): string | null {
+  if (order.returnDate) return order.returnDate
+  if (order.checkIn) return addDays(order.checkIn, order.nights || 0)
+
+  return null
+}
+
+export function passportProblem(
+  order: Pick<OrderEntity, 'returnDate' | 'checkIn' | 'nights' | 'passportExpiresAt'>,
+): 'expired' | 'short' | null {
+  const end = tripEnd(order)
+
+  if (!order.passportExpiresAt || !end) return null
+  if (order.passportExpiresAt <= end) return 'expired'
+  if (order.passportExpiresAt < addMonths(end, PASSPORT_MARGIN_MONTHS)) return 'short'
+
+  return null
 }
 
 const text = (value: unknown, limit = 160): string =>
@@ -121,7 +168,12 @@ export class OrdersService {
 
     const needle = (query.q ?? '').trim()
 
-    if (needle) {
+    const byRef = numberFromReference(needle, ORDER_PREFIX)
+
+    if (byRef !== null) {
+      builder.andWhere('o.orderNo = :number', { number: byRef })
+    }
+    else if (needle) {
       const like = `%${needle.toLowerCase()}%`
 
       builder.andWhere(
@@ -212,23 +264,6 @@ export class OrdersService {
 
       let completed = false
 
-      if (input.status !== undefined && input.status !== order.status) {
-        const next = this.assertTransition(order.status, input.status)
-
-        await manager.getRepository(OrderEventEntity).save({
-          orderId: order.id,
-          fromStatus: order.status,
-          toStatus: next,
-          actorId,
-        })
-
-        order.status = next
-
-        await this.followOrder(manager.getRepository(LeadEntity), order.leadId, next)
-
-        completed = next === OrderStatus.Completed
-      }
-
       if (input.supplier_order_id !== undefined) order.supplierOrderId = text(input.supplier_order_id, 80)
       if (input.passport_id !== undefined) order.passportId = text(input.passport_id, 40)
       if (input.passport_expires_at !== undefined) order.passportExpiresAt = asDate(input.passport_expires_at)
@@ -249,6 +284,27 @@ export class OrdersService {
 
       if (input.price_amount !== undefined) {
         order.priceAmount = input.price_amount === null ? null : String(input.price_amount)
+      }
+
+      if (input.status !== undefined && input.status !== order.status) {
+        const next = this.assertTransition(order.status, input.status)
+
+        this.assertMayEnter(order, next, input.cancel_reason)
+
+        await manager.getRepository(OrderEventEntity).save({
+          orderId: order.id,
+          fromStatus: order.status,
+          toStatus: next,
+          actorId,
+        })
+
+        order.status = next
+
+        if (next === OrderStatus.Cancelled) order.cancelReason = text(input.cancel_reason, 500)
+
+        await this.followOrder(manager.getRepository(LeadEntity), order.leadId, next)
+
+        completed = next === OrderStatus.Completed
       }
 
       order.updatedAt = new Date()
@@ -289,6 +345,24 @@ export class OrdersService {
     }
   }
 
+  private assertMayEnter(order: OrderEntity, next: OrderStatus, cancelReason?: string): void {
+    if (next === OrderStatus.Cancelled && !text(cancelReason, 500)) {
+      throw new BadRequestException('A cancelled order needs a reason')
+    }
+
+    if (!PASSPORT_CHECKED_STATUSES.includes(next)) return
+
+    const problem = passportProblem(order)
+
+    if (problem === 'expired') {
+      throw new ConflictException('The passport expires before the trip ends')
+    }
+
+    if (problem === 'short') {
+      throw new ConflictException(`The passport must stay valid ${PASSPORT_MARGIN_MONTHS} months after the trip ends`)
+    }
+  }
+
   private assertTransition(from: string, to: string): OrderStatus {
     if (!ORDER_STATUSES.includes(to as OrderStatus)) {
       throw new BadRequestException('Unknown order status')
@@ -318,6 +392,8 @@ export class OrdersService {
 
     if (!(LEAD_TRANSITIONS[lead.status as LeadStatus] ?? []).includes(wanted)) return
 
+    if (lead.status === LeadStatus.New && !lead.firstResponseAt) lead.firstResponseAt = new Date()
+
     lead.status = wanted
     lead.updatedAt = new Date()
 
@@ -328,6 +404,7 @@ export class OrdersService {
     return {
       uuid: row.id,
       order_no: Number(row.orderNo ?? 0),
+      ref: reference(ORDER_PREFIX, Number(row.orderNo ?? 0), row.createdAt),
       lead_id: row.leadId,
       status: row.status,
       traveller_name: row.travellerName ?? '',
@@ -349,6 +426,7 @@ export class OrdersService {
       price_currency: row.priceCurrency,
       trip: row.trip ?? {},
       note: row.note ?? '',
+      cancel_reason: row.cancelReason ?? '',
       created_at: row.createdAt.toISOString(),
       updated_at: row.updatedAt.toISOString(),
     }

@@ -7,6 +7,7 @@ import { OrderEventEntity } from '~/modules/orders/order-event.entity'
 import { UserEntity } from '~/modules/auth/entities'
 import { DocumentsService } from '~/modules/orders/documents/documents.service'
 import type { IDocumentPayload } from '~/modules/orders/documents/documents.service'
+import { ORDER_PREFIX, reference } from '~/shared/helpers/reference'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -14,6 +15,7 @@ import type { IDocumentPayload } from '~/modules/orders/documents/documents.serv
 export interface ICustomerOrder {
   uuid: string
   order_no: number
+  ref: string
   status: string
   country: string
   hotel_name: string
@@ -107,6 +109,7 @@ export class AccountService {
     return {
       uuid: row.id,
       order_no: Number(row.orderNo ?? 0),
+      ref: reference(ORDER_PREFIX, Number(row.orderNo ?? 0), row.createdAt),
       status: row.status,
       country: row.country ?? '',
       hotel_name: row.hotelName ?? '',

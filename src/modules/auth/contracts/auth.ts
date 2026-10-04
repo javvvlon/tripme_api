@@ -23,6 +23,7 @@ export interface ISignupData {
   firstName: string
   lastName: string
   phoneNumber: string
+  consent: boolean
 }
 
 export interface IUserRaw {

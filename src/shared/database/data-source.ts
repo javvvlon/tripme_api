@@ -43,6 +43,8 @@ import { MediaFolders1755900016000 } from './migrations/1755900016000-MediaFolde
 import { OrderDocuments1755900017000 } from './migrations/1755900017000-OrderDocuments'
 import { LeadUser1755900018000 } from './migrations/1755900018000-LeadUser'
 import { Points1755900019000 } from './migrations/1755900019000-Points'
+import { ComplianceFields1755900020000 } from './migrations/1755900020000-ComplianceFields'
+import { UserConsent1755900021000 } from './migrations/1755900021000-UserConsent'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -86,6 +88,8 @@ export const databaseOptions = (): DataSourceOptions => {
       OrderDocuments1755900017000,
       LeadUser1755900018000,
       Points1755900019000,
+      ComplianceFields1755900020000,
+      UserConsent1755900021000,
     ],
     synchronize: false,
     migrationsRun: false,
