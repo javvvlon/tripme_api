@@ -2,6 +2,7 @@ import { Inject, Injectable } from '@nestjs/common'
 import { SUPPLIERS } from '~/modules/suppliers/base/tokens'
 import type { ISupplier } from '~/modules/suppliers/base/contracts'
 import type { ReferenceItem, RouteAnswer } from '~/modules/suppliers/dictionary/dictionary.contracts'
+import { byHomeFirst, isAsianDeparture } from './departure-countries'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -15,7 +16,11 @@ export class RouteLookupService {
       this.suppliers.map(supplier => supplier.departures().catch(() => [] as ReferenceItem[])),
     )
 
-    return { items: merge(lists.flat()) }
+    const items = merge(lists.flat())
+      .filter(item => isAsianDeparture(item.slug))
+      .sort(byHomeFirst)
+
+    return { items }
   }
 
   async countriesFrom(from?: string): Promise<RouteAnswer> {
