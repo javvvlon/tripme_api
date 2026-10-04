@@ -1,4 +1,7 @@
-import { Controller, Get, Query } from '@nestjs/common'
+import { Controller, Get, Query, Sse } from '@nestjs/common'
+import { map } from 'rxjs'
+import type { MessageEvent } from '@nestjs/common'
+import type { Observable } from 'rxjs'
 import { SearchService } from './search.service'
 import { SoonestCache } from './soonest.cache'
 import { toCriteria, toSoonestCriteria } from './search.query'
@@ -21,6 +24,13 @@ export class SearchController {
     const criteria = toSoonestCriteria(query, today)
 
     return this.soonestCache.through(criteria, () => this.search.soonest(criteria))
+  }
+
+  @Sse('offers/stream')
+  stream(@Query() query: SearchQueryDto): Observable<MessageEvent> {
+    const criteria = toCriteria(query)
+
+    return this.search.stream(criteria).pipe(map(event => ({ data: event })))
   }
 
   @Get('offers')

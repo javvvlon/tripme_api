@@ -26,6 +26,24 @@ export interface SearchQueryDto {
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/
 
+export const MAX_RANGE_DAYS = 7
+
+const addDays = (day: string, count: number): string => {
+  const date = new Date(`${day}T00:00:00Z`)
+
+  date.setUTCDate(date.getUTCDate() + count)
+
+  return date.toISOString().slice(0, 10)
+}
+
+const clampRange = (from: string, to: string | undefined): string => {
+  if (!to || !ISO_DATE.test(to) || to <= from) return from
+
+  const latest = addDays(from, MAX_RANGE_DAYS)
+
+  return to > latest ? latest : to
+}
+
 const list = (value: string | undefined): string[] =>
   (value ?? '').split(',').map(v => v.trim()).filter(Boolean)
 
@@ -41,7 +59,7 @@ export function toCriteria(query: SearchQueryDto): SearchCriteria {
     throw new BadRequestException('date is required, as YYYY-MM-DD')
   }
 
-  const dateTo = query.dateTo && ISO_DATE.test(query.dateTo) ? query.dateTo : query.date
+  const dateTo = clampRange(query.date, query.dateTo)
   const nightsFrom = int(query.nights, 7)
 
   return {

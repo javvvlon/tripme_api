@@ -4,7 +4,10 @@ import { SUPPLIERS } from '~/modules/suppliers/base/tokens'
 import { OperatorsService } from '~/modules/operators/operators.service'
 import { SupplierState } from './contracts/search'
 import type { ISupplier } from '~/modules/suppliers/base/contracts'
+import { Observable } from 'rxjs'
+import { buildFacets } from './facets'
 import type { Offer } from './models/Offer'
+import type { SearchFacets } from './facets'
 import type { SearchCriteria, SupplierStatus } from './contracts/search'
 
 /**
@@ -18,6 +21,17 @@ export interface SearchPage {
   appliedLocally: string[]
 }
 
+interface SupplierRun {
+  status: SupplierStatus
+  offers: Offer[]
+  hasMore: boolean
+}
+
+export type SearchStreamEvent =
+  | { type: 'start', statuses: SupplierStatus[] }
+  | { type: 'offers', statuses: SupplierStatus[], items: unknown[], facets: SearchFacets }
+  | { type: 'done', statuses: SupplierStatus[], hasMore: boolean, appliedLocally: string[], total: number }
+
 export interface SoonestDeparture {
   date: string | null
   span: number
@@ -25,6 +39,18 @@ export interface SoonestDeparture {
 }
 
 const SOONEST_WINDOWS = [7, 21, 60] as const
+
+const cheapestPerId = (offers: Offer[]): Offer[] => {
+  const byId = new Map<string, Offer>()
+
+  for (const offer of offers) {
+    const seen = byId.get(offer.get('id'))
+
+    if (!seen || offer.sortPrice() < seen.sortPrice()) byId.set(offer.get('id'), offer)
+  }
+
+  return [...byId.values()]
+}
 
 const addDays = (day: string, count: number): string => {
   const date = new Date(`${day}T00:00:00Z`)
@@ -49,53 +75,65 @@ export class SearchService {
     return this.suppliers.filter(supplier => enabled.has(supplier.ref.id))
   }
 
-  async fetchPage(criteria: SearchCriteria, page: number, signal?: AbortSignal): Promise<SearchPage> {
+  private async suppliersFor(criteria: SearchCriteria): Promise<ISupplier[]> {
     const live = await this.live()
 
-    const suppliers = criteria.filters.suppliers?.length
+    return criteria.filters.suppliers?.length
       ? live.filter(s => criteria.filters.suppliers.includes(s.ref.id))
       : live
+  }
+
+  private async runSupplier(
+    supplier: ISupplier,
+    criteria: SearchCriteria,
+    page: number,
+    signal?: AbortSignal,
+  ): Promise<SupplierRun> {
+    const started = Date.now()
+
+    try {
+      const result = await supplier.fetchPage(criteria, page, signal)
+      const offers = cheapestPerId(result.offers)
+
+      return {
+        offers,
+        hasMore: result.hasMore,
+        status: {
+          supplier: supplier.ref,
+          state: SupplierState.Done,
+          offers: offers.length,
+          tookMs: Date.now() - started,
+        },
+      }
+    }
+    catch (error) {
+      const unsupported = isUnsupported(error)
+
+      if (!unsupported && !signal?.aborted) {
+        this.logger.error(`${supplier.ref.id} failed: ${String(error)}`)
+      }
+
+      return {
+        offers: [],
+        hasMore: false,
+        status: {
+          supplier: supplier.ref,
+          state: unsupported ? SupplierState.Unsupported : SupplierState.Failed,
+          offers: 0,
+          reason: unsupported
+            ? error.reason
+            : error instanceof Error ? error.message : 'unknown error',
+          tookMs: Date.now() - started,
+        },
+      }
+    }
+  }
+
+  async fetchPage(criteria: SearchCriteria, page: number, signal?: AbortSignal): Promise<SearchPage> {
+    const suppliers = await this.suppliersFor(criteria)
 
     const results = await Promise.all(
-      suppliers.map(async (supplier): Promise<{ status: SupplierStatus, offers: Offer[], hasMore: boolean }> => {
-        const started = Date.now()
-
-        try {
-          const result = await supplier.fetchPage(criteria, page, signal)
-
-          return {
-            offers: result.offers,
-            hasMore: result.hasMore,
-            status: {
-              supplier: supplier.ref,
-              state: SupplierState.Done,
-              offers: result.offers.length,
-              tookMs: Date.now() - started,
-            },
-          }
-        }
-        catch (error) {
-          const unsupported = isUnsupported(error)
-
-          if (!unsupported) {
-            this.logger.error(`${supplier.ref.id} failed: ${String(error)}`)
-          }
-
-          return {
-            offers: [],
-            hasMore: false,
-            status: {
-              supplier: supplier.ref,
-              state: unsupported ? SupplierState.Unsupported : SupplierState.Failed,
-              offers: 0,
-              reason: unsupported
-                ? error.reason
-                : error instanceof Error ? error.message : 'unknown error',
-              tookMs: Date.now() - started,
-            },
-          }
-        }
-      }),
+      suppliers.map(supplier => this.runSupplier(supplier, criteria, page, signal)),
     )
 
     const merged = results
@@ -111,6 +149,56 @@ export class SearchService {
       hasMore: results.some(r => r.hasMore),
       appliedLocally,
     }
+  }
+
+  stream(criteria: SearchCriteria): Observable<SearchStreamEvent> {
+    return new Observable<SearchStreamEvent>((subscriber) => {
+      const abort = new AbortController()
+
+      void (async () => {
+        const suppliers = await this.suppliersFor(criteria)
+
+        const statuses = new Map<string, SupplierStatus>(suppliers.map(supplier => [
+          supplier.ref.id,
+          { supplier: supplier.ref, state: SupplierState.Searching, offers: 0 },
+        ]))
+
+        const snapshot = () => [...statuses.values()]
+
+        subscriber.next({ type: 'start', statuses: snapshot() })
+
+        let all: Offer[] = []
+        let hasMore = false
+        let appliedLocally: string[] = []
+
+        await Promise.all(suppliers.map(async (supplier) => {
+          const run = await this.runSupplier(supplier, criteria, 1, abort.signal)
+
+          if (abort.signal.aborted) return
+
+          const local = this.applyLocalFilters(run.offers, criteria)
+
+          appliedLocally = local.appliedLocally
+          hasMore = hasMore || run.hasMore
+          all = [...all, ...local.offers].sort((a, b) => a.sortPrice() - b.sortPrice())
+          statuses.set(supplier.ref.id, { ...run.status, offers: local.offers.length })
+
+          subscriber.next({
+            type: 'offers',
+            statuses: snapshot(),
+            items: local.offers.map(offer => offer.toObject()),
+            facets: buildFacets(all, 100),
+          })
+        }))
+
+        if (abort.signal.aborted) return
+
+        subscriber.next({ type: 'done', statuses: snapshot(), hasMore, appliedLocally, total: all.length })
+        subscriber.complete()
+      })().catch(error => subscriber.error(error))
+
+      return () => abort.abort()
+    })
   }
 
   async soonest(criteria: SearchCriteria, signal?: AbortSignal): Promise<SoonestDeparture> {

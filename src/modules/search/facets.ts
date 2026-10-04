@@ -20,12 +20,45 @@ export interface SearchFacets {
   priceMin: number | null
   priceMax: number | null
   priceBuckets: Array<{ from: number, to: number, count: number }>
+  days: DayPrice[]
   currency: string | null
   partial: boolean
   total: number
 }
 
+export interface DayPrice {
+  date: string
+  price: { amount: number, currency: string }
+  count: number
+}
+
 const BUCKETS = 6
+
+export function cheapestByDay(offers: Offer[]): DayPrice[] {
+  const days = new Map<string, { offer: Offer, count: number }>()
+
+  for (const offer of offers) {
+    const date = offer.get('checkIn')
+    if (!date) continue
+
+    const entry = days.get(date)
+
+    if (!entry) days.set(date, { offer, count: 1 })
+    else {
+      entry.count += 1
+      if (offer.sortPrice() < entry.offer.sortPrice()) entry.offer = offer
+    }
+  }
+
+  return [...days.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([date, { offer, count }]) => {
+      const price = offer.get('price')
+      const { amount, currency } = price.converted ?? price.source
+
+      return { date, price: { amount, currency }, count }
+    })
+}
 
 function tally(
   offers: Offer[],
@@ -94,7 +127,8 @@ export function buildFacets(offers: Offer[], pageSize: number): SearchFacets {
       Number(a.value === Availability.Stopped) - Number(b.value === Availability.Stopped)),
 
     priceFrom: (() => {
-      const cheapest = [...offers].sort((a, b) => a.sortPrice() - b.sortPrice())[0]?.get('price').source
+      const price = [...offers].sort((a, b) => a.sortPrice() - b.sortPrice())[0]?.get('price')
+      const cheapest = price ? (price.converted ?? price.source) : null
 
       return cheapest ? { amount: cheapest.amount, currency: cheapest.currency } : null
     })(),
@@ -102,6 +136,7 @@ export function buildFacets(offers: Offer[], pageSize: number): SearchFacets {
     priceMin: min !== null ? Math.floor(min) : null,
     priceMax: max !== null ? Math.ceil(max) : null,
     priceBuckets: buckets,
+    days: cheapestByDay(offers),
     currency: (() => {
       const price = offers[0]?.get('price')
 
