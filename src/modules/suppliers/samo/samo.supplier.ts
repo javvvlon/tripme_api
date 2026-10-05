@@ -4,6 +4,8 @@ import { Unsupported, isUnsupported } from '~/modules/suppliers/base/contracts'
 import { SamoSearchIntention } from './samo.intention'
 import { parseSamoRows } from './samo.parser'
 import { mapSamoRow } from './samo.map'
+import { parseHotelCatalog } from './samo.catalog'
+import type { ISamoHotelPlace } from './samo.catalog'
 import { CURRENCY_CODES } from '~/modules/suppliers/dictionary/dictionary.seed'
 import { SupplierDictionary } from '~/modules/suppliers/dictionary/supplier-dictionary'
 import type { ISupplierTransport, SupplierCapabilities } from '~/modules/suppliers/base/contracts'
@@ -17,6 +19,9 @@ import type { SamoQuery, SamoRow } from './samo.contracts'
 const SAMO_USER_AGENT =
   'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 '
   + '(KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36'
+
+const CATALOG_TTL_MS = 12 * 60 * 60 * 1000
+const CATALOG_RETRY_MS = 10 * 60 * 1000
 
 export const SAMO_CAPABILITIES: SupplierCapabilities = {
     nativeFilters: ['hotels', 'priceMin', 'priceMax'],
@@ -35,6 +40,8 @@ export abstract class SamoSupplier extends BaseSupplier<SamoQuery, SamoRow> {
   readonly capabilities: SupplierCapabilities = SAMO_CAPABILITIES
 
   private cachedDictionary: SupplierDictionary | null = null
+
+  private readonly catalogs = new Map<string, { at: number, ttl: number, hotels: Promise<Map<string, ISamoHotelPlace>> }>()
 
   protected get dictionary(): SupplierDictionary {
     return (this.cachedDictionary ??= new SupplierDictionary(
@@ -131,6 +138,50 @@ export abstract class SamoSupplier extends BaseSupplier<SamoQuery, SamoRow> {
       'Accept': 'text/html,application/xhtml+xml',
       'Accept-Language': 'ru-RU,ru;q=0.9',
     }
+  }
+
+  protected override async prepare(rows: SamoRow[]): Promise<void> {
+    const first = rows[0]
+    if (!first?.townfrom || !first.state) return
+
+    const catalog = await this.hotelCatalog(first.townfrom, first.state, first.statefrom)
+
+    for (const row of rows) {
+      const place = catalog.get(row.hotel)
+
+      row.townKey = place?.town ?? ''
+      row.starKey = place?.stars ?? ''
+    }
+  }
+
+  private hotelCatalog(townFrom: string, state: string, stateFrom: string): Promise<Map<string, ISamoHotelPlace>> {
+    const key = `${townFrom}:${state}:${stateFrom}`
+    const cached = this.catalogs.get(key)
+
+    if (cached && Date.now() - cached.at < cached.ttl) return cached.hotels
+
+    const params = new URLSearchParams({ TOWNFROMINC: townFrom, STATEINC: state })
+    if (stateFrom) params.set('STATEFROM', stateFrom)
+
+    const entry = { at: Date.now(), ttl: CATALOG_TTL_MS, hotels: Promise.resolve(new Map<string, ISamoHotelPlace>()) }
+
+    entry.hotels = this.transport.fetch(`${this.baseUrl}?${params.toString()}`, { headers: this.pageHeaders })
+      .then(parseHotelCatalog)
+      .then((catalog) => {
+        if (!catalog.size) entry.ttl = CATALOG_RETRY_MS
+
+        return catalog
+      })
+      .catch((error: unknown) => {
+        this.logger.warn(`hotel catalog for ${key} unavailable: ${String(error)}`)
+        entry.ttl = CATALOG_RETRY_MS
+
+        return new Map<string, ISamoHotelPlace>()
+      })
+
+    this.catalogs.set(key, entry)
+
+    return entry.hotels
   }
 
   protected buildUrl(query: SamoQuery): string {

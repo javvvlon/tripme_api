@@ -42,4 +42,7 @@ export interface SamoRow {
   roomText: string
 
   flags: string
+
+  townKey?: string
+  starKey?: string
 }

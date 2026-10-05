@@ -40,10 +40,12 @@ export function buildBookingUrl(
     CURRENCY: row.currencySource,
     ADULT: String(adults),
     CHILD: String(children),
-    HOTELS: row.hotel,
-    HOTELS_ANY: '0',
-    hotelsearch: '0',
   })
+
+  if (row.townKey) params.set('TOWNS', row.townKey)
+  if (row.starKey) params.set('STARS', row.starKey)
+
+  params.set('HOTELS', row.hotel)
 
   return `${baseUrl}?${params.toString()}`
 }
