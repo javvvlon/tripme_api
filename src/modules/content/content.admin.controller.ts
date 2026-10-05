@@ -9,7 +9,9 @@ import { AuthGuard } from '~/modules/auth/guards/auth.guard'
 import { RolesGuard } from '~/modules/auth/guards/roles.guard'
 import { Roles } from '~/modules/auth/decorators'
 import { UserRole } from '~/modules/auth/contracts/auth'
-import { SECTION_VARIANTS, ContentAdminService } from './content.admin.service'
+import { ContentAdminService } from './content.admin.service'
+import { BLOCK_RULES, isSectionKind, isSectionSource } from './content.blocks'
+import type { SectionKind } from './content.blocks'
 import { RevalidationService } from '~/shared/revalidation/revalidation.service'
 import type { IBannerInput, IListInput, ISectionInput } from './content.admin.service'
 
@@ -180,6 +182,7 @@ function parseList(body: Record<string, unknown>): IListInput {
 
   return {
     name: str(body?.name, 'name'),
+    kind: kindOf(body?.kind),
     items: items.map((raw) => {
       const item = raw as Record<string, unknown>
       const translations = Array.isArray(item.translations) ? item.translations : []
@@ -222,22 +225,32 @@ function parseBanner(body: Record<string, unknown>): IBannerInput {
   }
 }
 
+function kindOf(value: unknown): SectionKind {
+  if (value === undefined || value === null) return 'cards'
+
+  if (!isSectionKind(value)) throw new BadRequestException(`"kind" must be one of ${Object.keys(BLOCK_RULES).join(', ')}`)
+
+  return value
+}
+
 function parseSection(raw: unknown): ISectionInput {
   const section = raw as Record<string, unknown>
   const translations = Array.isArray(section.translations) ? section.translations : []
-  const asked = typeof section.variant === 'string' ? section.variant : 'list'
-  const variant = SECTION_VARIANTS.includes(asked) ? asked : 'list'
+  const kind = kindOf(section.kind)
+  const source = section.source === undefined ? BLOCK_RULES[kind].sources[0]! : section.source
+
+  if (!isSectionSource(source)) throw new BadRequestException('"source" must be "list" or "posts"')
 
   return {
+    kind,
+    source,
     link: typeof section.link === 'string' ? section.link : null,
-    variant,
+    anchor: typeof section.anchor === 'string' ? section.anchor : null,
     post_ids: Array.isArray(section.post_ids)
       ? section.post_ids.filter((id): id is string => typeof id === 'string')
       : [],
-    list_id: variant === 'posts'
-      ? (typeof section.list_id === 'string' ? section.list_id : null)
-      : str(section.list_id, 'list_id'),
-    layout_id: str(section.layout_id, 'layout_id'),
+    list_id: typeof section.list_id === 'string' && section.list_id ? section.list_id : null,
+    layout_id: typeof section.layout_id === 'string' && section.layout_id ? section.layout_id : null,
     is_published: section.is_published !== false,
     translations: translations.map((t) => {
       const translation = t as Record<string, unknown>

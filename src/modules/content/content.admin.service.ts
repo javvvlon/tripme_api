@@ -1,6 +1,6 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { DataSource, Repository } from 'typeorm'
+import { DataSource, In, Repository } from 'typeorm'
 import {
   ContentBannerEntity,
   ContentItemEntity,
@@ -8,6 +8,8 @@ import {
   ContentListEntity,
   ContentSectionEntity,
 } from './entities'
+import { BLOCK_RULES, isBadgeType, isSectionKind, legacyVariant, normaliseAnchor, sectionProblem } from './content.blocks'
+import type { SectionKind, SectionSource } from './content.blocks'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -18,10 +20,6 @@ export interface ITranslationInput {
   description?: string | null
   badge_label?: string | null
 }
-
-export const BADGE_TYPES = ['primary', 'secondary', 'sale'] as const
-
-export type BadgeType = typeof BADGE_TYPES[number]
 
 export interface IListItemInput {
   image_url?: string | null
@@ -64,6 +62,7 @@ export interface ILayoutInput {
 
 export interface IListInput {
   name: string
+  kind: SectionKind
   items: IListItemInput[]
 }
 
@@ -77,11 +76,13 @@ export interface IBannerInput {
 }
 
 export interface ISectionInput {
+  kind: SectionKind
+  source: SectionSource
   link?: string | null
-  variant?: string
+  anchor?: string | null
   post_ids?: string[]
   list_id?: string | null
-  layout_id: string
+  layout_id?: string | null
   is_published?: boolean
   translations: Array<{ locale: string, title: string }>
 }
@@ -123,13 +124,14 @@ export class ContentAdminService {
     const rows = await this.lists
       .createQueryBuilder('list')
       .leftJoin('list.items', 'item')
-      .select(['list.id', 'list.name', 'list.updatedAt'])
+      .select(['list.id', 'list.name', 'list.kind', 'list.updatedAt'])
       .addSelect('count(item.id)', 'items_count')
       .groupBy('list.id')
       .orderBy('list.updated_at', 'DESC')
       .getRawMany<{
         list_id: string
         list_name: string
+        list_kind: string
         list_updated_at: Date
         items_count: string
       }>()
@@ -137,6 +139,7 @@ export class ContentAdminService {
     return rows.map(row => ({
       uuid: row.list_id,
       name: row.list_name,
+      kind: row.list_kind,
       items_count: Number(row.items_count),
       updated_at: row.list_updated_at,
     }))
@@ -153,6 +156,7 @@ export class ContentAdminService {
     return {
       uuid: list.id,
       name: list.name,
+      kind: list.kind,
       items: [...(list.items ?? [])]
         .sort((a, b) => a.position - b.position)
         .map(item => ({
@@ -172,19 +176,25 @@ export class ContentAdminService {
   }
 
   async createList(input: IListInput): Promise<{ uuid: string }> {
-    const saved = await this.lists.save({ name: input.name.trim() })
+    const saved = await this.lists.save({ name: input.name.trim(), kind: input.kind })
 
-    await this.replaceItems(saved.id, input.items)
+    await this.replaceItems(saved.id, input.kind, input.items)
 
     return { uuid: saved.id }
   }
 
   async updateList(id: string, input: IListInput): Promise<{ uuid: string }> {
-    const exists = await this.lists.existsBy({ id })
-    if (!exists) throw new NotFoundException('No such list')
+    const current = await this.lists.findOneBy({ id })
+    if (!current) throw new NotFoundException('No such list')
 
-    await this.lists.update({ id }, { name: input.name.trim() })
-    await this.replaceItems(id, input.items)
+    if (current.kind !== input.kind) {
+      const used = await this.sections.countBy({ listId: id })
+
+      if (used) throw new ConflictException('A list used on the page cannot change its type')
+    }
+
+    await this.lists.update({ id }, { name: input.name.trim(), kind: input.kind })
+    await this.replaceItems(id, input.kind, input.items)
 
     return { uuid: id }
   }
@@ -193,30 +203,32 @@ export class ContentAdminService {
     const used = await this.sections.countBy({ listId: id })
 
     if (used) {
-      throw new NotFoundException(`That list is used by ${used} section(s) — remove them first`)
+      throw new ConflictException(`That list is used by ${used} section(s) — remove them first`)
     }
 
     await this.lists.delete({ id })
   }
 
-  private async replaceItems(listId: string, items: IListItemInput[]): Promise<void> {
+  private async replaceItems(listId: string, kind: SectionKind, items: IListItemInput[]): Promise<void> {
+    const fields = BLOCK_RULES[kind].item
+
     await this.dataSource.transaction(async (manager) => {
       await manager.getRepository(ContentItemEntity).delete({ listId })
 
       for (const [index, item] of items.entries()) {
         await manager.getRepository(ContentItemEntity).save({
           listId,
-          imageUrl: blank(item.image_url),
-          link: blank(item.link),
+          imageUrl: fields.image ? blank(item.image_url) : null,
+          link: fields.link ? blank(item.link) : null,
           position: index + 1,
-          badgeType: badgeType(item.badge_type),
+          badgeType: fields.badge && isBadgeType(item.badge_type) ? item.badge_type : null,
           translations: item.translations
             .filter(t => t.title?.trim())
             .map(t => ({
               locale: t.locale,
               title: t.title.trim(),
               description: blank(t.description),
-              badgeLabel: blank(t.badge_label),
+              badgeLabel: fields.badge ? blank(t.badge_label) : null,
             })),
         })
       }
@@ -268,30 +280,31 @@ export class ContentAdminService {
     })
 
     return sections.map(section => ({
-      uuid: section.id,
-      link: section.link,
-      variant: section.variant,
-      post_ids: section.postIds ?? [],
-      list_id: section.listId,
-      layout_id: section.layoutId,
-      position: section.position,
+      ...sectionPayload(section),
       is_published: section.isPublished,
-      translations: (section.translations ?? []).map(t => ({ locale: t.locale, title: t.title })),
     }))
   }
 
   async replaceSections(page: string, input: ISectionInput[]): Promise<void> {
+    await this.checkSections(input)
+
     await this.dataSource.transaction(async (manager) => {
       await manager.getRepository(ContentSectionEntity).delete({ page })
 
       for (const [index, section] of input.entries()) {
+        const rule = BLOCK_RULES[section.kind]
+        const fromPosts = section.source === 'posts'
+
         await manager.getRepository(ContentSectionEntity).save({
           page,
-          link: blank(section.link),
-          variant: sectionVariant(section.variant),
-          postIds: sectionVariant(section.variant) === 'posts' ? (section.post_ids ?? []) : [],
-          listId: sectionVariant(section.variant) === 'posts' ? null : (section.list_id ?? null),
-          layoutId: section.layout_id,
+          kind: section.kind,
+          source: section.source,
+          variant: legacyVariant(section.kind, section.source),
+          link: rule.link ? blank(section.link) : null,
+          anchor: normaliseAnchor(section.anchor),
+          postIds: fromPosts ? (section.post_ids ?? []) : [],
+          listId: fromPosts ? null : (section.list_id ?? null),
+          layoutId: rule.layout ? (section.layout_id ?? null) : null,
           position: index + 1,
           isPublished: section.is_published ?? true,
           translations: section.translations
@@ -301,14 +314,32 @@ export class ContentAdminService {
       }
     })
   }
+
+  private async checkSections(input: ISectionInput[]): Promise<void> {
+    const listIds = [...new Set(input.map(section => section.list_id).filter((id): id is string => Boolean(id)))]
+    const lists = listIds.length ? await this.lists.findBy({ id: In(listIds) }) : []
+    const problem = sectionProblem(input, new Map(lists.map(list => [list.id, list.kind])))
+
+    if (problem) throw new BadRequestException(problem)
+  }
 }
 
-export const SECTION_VARIANTS = ['list', 'posts', 'features', 'faq']
+export const sectionPayload = (section: ContentSectionEntity) => {
+  const kind: SectionKind = isSectionKind(section.kind) ? section.kind : 'cards'
+  const source: SectionSource = section.source === 'posts' ? 'posts' : 'list'
 
-const sectionVariant = (value: string | null | undefined): string =>
-  SECTION_VARIANTS.includes(value ?? '') ? value! : 'list'
+  return {
+    uuid: section.id,
+    kind,
+    source,
+    link: BLOCK_RULES[kind].link ? section.link : null,
+    anchor: section.anchor,
+    post_ids: section.postIds ?? [],
+    list_id: section.listId,
+    layout_id: BLOCK_RULES[kind].layout ? section.layoutId : null,
+    position: section.position,
+    translations: (section.translations ?? []).map(t => ({ locale: t.locale, title: t.title })),
+  }
+}
 
 const blank = (value: string | null | undefined): string | null => value?.trim() || null
-
-const badgeType = (value: string | null | undefined): string | null =>
-  BADGE_TYPES.includes(value as BadgeType) ? value! : null

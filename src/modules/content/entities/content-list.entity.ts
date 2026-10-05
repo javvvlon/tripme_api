@@ -12,6 +12,9 @@ export class ContentListEntity {
   @Column({ type: 'text' })
   name!: string
 
+  @Column({ type: 'text', default: 'cards' })
+  kind!: string
+
   @OneToMany(() => ContentItemEntity, item => item.list, { cascade: true })
   items!: ContentItemEntity[]
 

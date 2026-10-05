@@ -2,6 +2,9 @@ import { Injectable } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 import { ContentBannerEntity, ContentSectionEntity } from './entities'
+import { sectionPayload } from './content.admin.service'
+import { BLOCK_RULES, isSectionKind } from './content.blocks'
+import type { SectionKind, SectionSource } from './content.blocks'
 import { PostsService } from '~/modules/posts/posts.service'
 import type { IPostPayload } from '~/modules/posts/posts.service'
 
@@ -19,18 +22,21 @@ export interface IHomeContentResponse {
   } | null
   sections: Array<{
     uuid: string
+    kind: SectionKind
+    source: SectionSource
     translations: Array<{ locale: string, title: string }>
     link: string | null
-    variant: string
+    anchor: string | null
     post_ids: string[]
     list_id: string | null
-    layout_id: string
+    layout_id: string | null
     position: number
   }>
   layouts: Array<{ uuid: string, grid: string, name: string | null }>
   lists: Array<{
     uuid: string
     name: string
+    kind: string
     items: Array<{
       uuid: string
       image_url: string | null
@@ -83,7 +89,9 @@ export class ContentService {
     const lists = new Map<string, IHomeContentResponse['lists'][number]>()
 
     for (const section of sections) {
-      if (section.layout && !layouts.has(section.layout.id)) {
+      const kind = isSectionKind(section.kind) ? section.kind : 'cards'
+
+      if (BLOCK_RULES[kind].layout && section.layout && !layouts.has(section.layout.id)) {
         layouts.set(section.layout.id, {
           uuid: section.layout.id,
           grid: section.layout.grid,
@@ -95,6 +103,7 @@ export class ContentService {
         lists.set(section.list.id, {
           uuid: section.list.id,
           name: section.list.name,
+          kind: section.list.kind,
           items: [...(section.list.items ?? [])]
             .sort((a, b) => a.position - b.position)
             .map(item => ({
@@ -126,16 +135,7 @@ export class ContentService {
           }
         : null,
       posts: [...posts, ...extra],
-      sections: sections.map(section => ({
-        uuid: section.id,
-        variant: section.variant,
-        post_ids: section.postIds ?? [],
-        translations: (section.translations ?? []).map(t => ({ locale: t.locale, title: t.title })),
-        link: section.link,
-        list_id: section.listId,
-        layout_id: section.layoutId,
-        position: section.position,
-      })),
+      sections: sections.map(section => sectionPayload(section)),
       layouts: [...layouts.values()],
       lists: [...lists.values()],
     }

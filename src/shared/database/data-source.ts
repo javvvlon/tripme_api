@@ -45,6 +45,7 @@ import { LeadUser1755900018000 } from './migrations/1755900018000-LeadUser'
 import { Points1755900019000 } from './migrations/1755900019000-Points'
 import { ComplianceFields1755900020000 } from './migrations/1755900020000-ComplianceFields'
 import { UserConsent1755900021000 } from './migrations/1755900021000-UserConsent'
+import { ContentBlocks1755900022000 } from './migrations/1755900022000-ContentBlocks'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -90,6 +91,7 @@ export const databaseOptions = (): DataSourceOptions => {
       Points1755900019000,
       ComplianceFields1755900020000,
       UserConsent1755900021000,
+      ContentBlocks1755900022000,
     ],
     synchronize: false,
     migrationsRun: false,

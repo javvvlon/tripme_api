@@ -18,8 +18,17 @@ export class ContentSectionEntity {
   @Column({ type: 'text', nullable: true })
   link!: string | null
 
+  @Column({ type: 'text', default: 'cards' })
+  kind!: string
+
+  @Column({ type: 'text', default: 'list' })
+  source!: string
+
   @Column({ type: 'text', default: 'list' })
   variant!: string
+
+  @Column({ type: 'text', nullable: true })
+  anchor!: string | null
 
   @Column({ name: 'list_id', type: 'uuid', nullable: true })
   listId!: string | null
@@ -31,12 +40,12 @@ export class ContentSectionEntity {
   @Column({ name: 'post_ids', type: 'uuid', array: true, default: () => `'{}'` })
   postIds!: string[]
 
-  @Column({ name: 'layout_id', type: 'uuid' })
-  layoutId!: string
+  @Column({ name: 'layout_id', type: 'uuid', nullable: true })
+  layoutId!: string | null
 
-  @ManyToOne(() => ContentLayoutEntity, { onDelete: 'RESTRICT' })
+  @ManyToOne(() => ContentLayoutEntity, { onDelete: 'RESTRICT', nullable: true })
   @JoinColumn({ name: 'layout_id' })
-  layout!: ContentLayoutEntity
+  layout!: ContentLayoutEntity | null
 
   @Column({ type: 'int', default: 0 })
   position!: number
