@@ -8,7 +8,7 @@ import {
   ContentListEntity,
   ContentSectionEntity,
 } from './entities'
-import { BLOCK_RULES, isBadgeType, isSectionKind, legacyVariant, normaliseAnchor, sectionProblem } from './content.blocks'
+import { BLOCK_RULES, isBadgeType, isSectionKind, normaliseAnchor, sectionProblem } from './content.blocks'
 import type { SectionKind, SectionSource } from './content.blocks'
 
 /**
@@ -299,7 +299,6 @@ export class ContentAdminService {
           page,
           kind: section.kind,
           source: section.source,
-          variant: legacyVariant(section.kind, section.source),
           link: rule.link ? blank(section.link) : null,
           anchor: normaliseAnchor(section.anchor),
           postIds: fromPosts ? (section.post_ids ?? []) : [],

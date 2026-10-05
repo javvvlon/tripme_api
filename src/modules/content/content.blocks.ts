@@ -56,9 +56,6 @@ export const isSectionSource = (value: unknown): value is SectionSource =>
 export const isBadgeType = (value: unknown): value is BadgeType =>
   BADGE_TYPES.includes(value as BadgeType)
 
-export const legacyVariant = (kind: SectionKind, source: SectionSource): string =>
-  kind === 'cards' ? source : kind
-
 export const normaliseAnchor = (value: string | null | undefined): string | null =>
   value
     ?.trim()

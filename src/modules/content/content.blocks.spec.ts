@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { legacyVariant, normaliseAnchor, sectionProblem } from './content.blocks'
+import { normaliseAnchor, sectionProblem } from './content.blocks'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -55,13 +55,5 @@ describe('normaliseAnchor', () => {
     expect(normaliseAnchor('  Горящие Hot deals! ')).toBe('hot-deals')
     expect(normaliseAnchor('   ')).toBeNull()
     expect(normaliseAnchor(null)).toBeNull()
-  })
-})
-
-describe('legacyVariant', () => {
-  it('maps back to what the previous release reads', () => {
-    expect(legacyVariant('cards', 'list')).toBe('list')
-    expect(legacyVariant('cards', 'posts')).toBe('posts')
-    expect(legacyVariant('faq', 'list')).toBe('faq')
   })
 })

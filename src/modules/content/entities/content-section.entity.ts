@@ -24,9 +24,6 @@ export class ContentSectionEntity {
   @Column({ type: 'text', default: 'list' })
   source!: string
 
-  @Column({ type: 'text', default: 'list' })
-  variant!: string
-
   @Column({ type: 'text', nullable: true })
   anchor!: string | null
 
