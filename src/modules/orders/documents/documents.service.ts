@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { Repository } from 'typeorm'
+import { In, Repository } from 'typeorm'
 import { StorageService } from '~/shared/storage/storage.service'
 import { LeadEntity, LEAD_TRANSITIONS, LeadStatus } from '~/modules/leads/lead.entity'
 import { OrderEntity } from '../order.entity'
@@ -163,6 +163,18 @@ export class DocumentsService {
     if (flavour === 'offer') await this.followOffer(lead)
 
     return toDocumentPayload(saved)
+  }
+
+  async filesOf(orderIds: string[]): Promise<string[]> {
+    if (!orderIds.length) return []
+
+    const rows = await this.documents.find({ where: { orderId: In(orderIds) }, select: { id: true, url: true } })
+
+    return rows.map(row => row.url).filter(Boolean)
+  }
+
+  async discardFiles(urls: string[]): Promise<void> {
+    await Promise.all(urls.map(url => this.storage.remove(url)))
   }
 
   async remove(id: string): Promise<void> {

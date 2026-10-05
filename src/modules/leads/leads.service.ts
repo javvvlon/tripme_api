@@ -140,6 +140,12 @@ export class LeadsService {
     this.guard = guard
   }
 
+  private release: ((leadId: string) => Promise<() => Promise<void>>) | null = null
+
+  registerRemovalHook(release: (leadId: string) => Promise<() => Promise<void>>): void {
+    this.release = release
+  }
+
   async submit(
     input: ILeadInput,
     source = LeadSource.Site,
@@ -293,9 +299,12 @@ export class LeadsService {
   }
 
   async remove(id: string): Promise<{ removed: boolean }> {
+    const cleanup = await this.release?.(id)
     const result = await this.leads.delete({ id })
 
     if (!result.affected) throw new NotFoundException('Lead not found')
+
+    await cleanup?.()
 
     return { removed: true }
   }

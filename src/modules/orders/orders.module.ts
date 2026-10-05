@@ -30,5 +30,6 @@ export class OrdersModule implements OnModuleInit {
 
   onModuleInit(): void {
     this.leads.registerStatusGuard((leadId, next) => this.orders.assertLeadMayBecome(leadId, next))
+    this.leads.registerRemovalHook(leadId => this.orders.releaseLead(leadId))
   }
 }

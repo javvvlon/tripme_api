@@ -14,6 +14,7 @@ import {
   SETTLED_STATUSES,
 } from './order.entity'
 import { OrderEventEntity } from './order-event.entity'
+import { DocumentsService } from './documents/documents.service'
 
 export interface IOrderTripInput {
   hotel_name?: string
@@ -151,6 +152,7 @@ export class OrdersService {
     private readonly leads: Repository<LeadEntity>,
     private readonly dataSource: DataSource,
     private readonly points: PointsService,
+    private readonly documentFiles: DocumentsService,
   ) {}
 
   async forLead(leadId: string): Promise<IOrderPayload[]> {
@@ -326,9 +328,19 @@ export class OrdersService {
       throw new ConflictException('An order that has been paid cannot be deleted')
     }
 
+    const files = await this.documentFiles.filesOf([id])
+
     await this.orders.delete({ id })
+    await this.documentFiles.discardFiles(files)
 
     return { removed: true }
+  }
+
+  async releaseLead(leadId: string): Promise<() => Promise<void>> {
+    const orders = await this.orders.find({ where: { leadId }, select: { id: true } })
+    const files = await this.documentFiles.filesOf(orders.map(order => order.id))
+
+    return () => this.documentFiles.discardFiles(files)
   }
 
   async assertLeadMayBecome(leadId: string, next: string): Promise<void> {
