@@ -1,17 +1,19 @@
 import { Injectable } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
-import { ContentBannerEntity, ContentSectionEntity } from './entities'
+import { ContentBannerEntity, ContentPageEntity, ContentSectionEntity } from './entities'
 import { sectionPayload } from './content.admin.service'
 import { BLOCK_RULES, isSectionKind } from './content.blocks'
-import type { SectionKind, SectionSource } from './content.blocks'
+import type { ContentPage, ISectionSettings, SectionKind, SectionSource } from './content.blocks'
 import { PostsService } from '~/modules/posts/posts.service'
 import type { IPostPayload } from '~/modules/posts/posts.service'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
  */
-export interface IHomeContentResponse {
+export interface IPageContentResponse {
+  page: ContentPage
+  seo: Record<string, { title?: string, description?: string }>
   banner: {
     translations: Array<{
       locale: string
@@ -24,7 +26,8 @@ export interface IHomeContentResponse {
     uuid: string
     kind: SectionKind
     source: SectionSource
-    translations: Array<{ locale: string, title: string }>
+    translations: Array<{ locale: string, title: string, subtitle: string | null }>
+    settings: ISectionSettings
     link: string | null
     anchor: string | null
     post_ids: string[]
@@ -56,6 +59,8 @@ export interface IHomeContentResponse {
 
 const POSTS_IN_SECTION = 12
 
+const POSTS_ON_BLOG = 500
+
 @Injectable()
 export class ContentService {
   constructor(
@@ -63,11 +68,13 @@ export class ContentService {
     private readonly sections: Repository<ContentSectionEntity>,
     @InjectRepository(ContentBannerEntity)
     private readonly banners: Repository<ContentBannerEntity>,
+    @InjectRepository(ContentPageEntity)
+    private readonly pages: Repository<ContentPageEntity>,
     private readonly postsService: PostsService,
   ) {}
 
-  async forPage(page = 'home'): Promise<IHomeContentResponse> {
-    const [banner, sections, posts] = await Promise.all([
+  async forPage(page: ContentPage = 'home'): Promise<IPageContentResponse> {
+    const [banner, sections, posts, meta] = await Promise.all([
       this.banners.findOne({ where: { page }, relations: { translations: true } }),
       this.sections.find({
         where: { page, isPublished: true },
@@ -78,15 +85,16 @@ export class ContentService {
         },
         order: { position: 'ASC' },
       }),
-      this.postsService.published(POSTS_IN_SECTION),
+      this.postsService.published(page === 'blog' ? POSTS_ON_BLOG : POSTS_IN_SECTION),
+      this.pages.findOne({ where: { page } }),
     ])
 
     const pinned = sections.flatMap(section => section.postIds ?? [])
     const missing = pinned.filter(id => !posts.some(post => post.uuid === id))
     const extra = await this.postsService.byIds([...new Set(missing)])
 
-    const layouts = new Map<string, IHomeContentResponse['layouts'][number]>()
-    const lists = new Map<string, IHomeContentResponse['lists'][number]>()
+    const layouts = new Map<string, IPageContentResponse['layouts'][number]>()
+    const lists = new Map<string, IPageContentResponse['lists'][number]>()
 
     for (const section of sections) {
       const kind = isSectionKind(section.kind) ? section.kind : 'cards'
@@ -124,6 +132,8 @@ export class ContentService {
     }
 
     return {
+      page,
+      seo: meta?.seo ?? {},
       banner: banner
         ? {
             translations: (banner.translations ?? []).map(t => ({

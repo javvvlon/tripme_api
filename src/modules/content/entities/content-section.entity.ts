@@ -27,6 +27,9 @@ export class ContentSectionEntity {
   @Column({ type: 'text', nullable: true })
   anchor!: string | null
 
+  @Column({ type: 'jsonb', default: () => `'{}'::jsonb` })
+  settings!: Record<string, unknown>
+
   @Column({ name: 'list_id', type: 'uuid', nullable: true })
   listId!: string | null
 

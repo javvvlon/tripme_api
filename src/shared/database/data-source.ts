@@ -5,6 +5,7 @@ import type { DataSourceOptions } from 'typeorm'
 import { UserEntity, SessionEntity, VerificationCodeEntity } from '~/modules/auth/entities'
 import {
   ContentBannerEntity,
+  ContentPageEntity,
   ContentBannerTranslationEntity,
   ContentItemEntity,
   ContentItemTranslationEntity,
@@ -47,6 +48,7 @@ import { ComplianceFields1755900020000 } from './migrations/1755900020000-Compli
 import { UserConsent1755900021000 } from './migrations/1755900021000-UserConsent'
 import { ContentBlocks1755900022000 } from './migrations/1755900022000-ContentBlocks'
 import { DropSectionVariant1755900023000 } from './migrations/1755900023000-DropSectionVariant'
+import { PageBuilder1755900025000 } from './migrations/1755900025000-PageBuilder'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -67,7 +69,7 @@ export const databaseOptions = (): DataSourceOptions => {
       UserEntity, SessionEntity, VerificationCodeEntity,
       ContentLayoutEntity, ContentListEntity, ContentItemEntity,
       ContentItemTranslationEntity, ContentSectionEntity, ContentSectionTranslationEntity,
-      ContentBannerEntity, ContentBannerTranslationEntity,
+      ContentBannerEntity, ContentBannerTranslationEntity, ContentPageEntity,
       PostEntity, PostTranslationEntity, ContactMessageEntity, LeadEntity, OrderEntity, OrderEventEntity, OrderDocumentEntity, OperatorEntity,
       PointsTierEntity, PointsSettingsEntity, PointsTransactionEntity,
       MediaFileEntity, MediaFolderEntity,
@@ -94,6 +96,7 @@ export const databaseOptions = (): DataSourceOptions => {
       UserConsent1755900021000,
       ContentBlocks1755900022000,
       DropSectionVariant1755900023000,
+      PageBuilder1755900025000,
     ],
     synchronize: false,
     migrationsRun: false,

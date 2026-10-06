@@ -22,4 +22,7 @@ export class ContentSectionTranslationEntity {
 
   @Column({ type: 'text' })
   title!: string
+
+  @Column({ type: 'text', nullable: true })
+  subtitle!: string | null
 }

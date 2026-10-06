@@ -4,12 +4,13 @@ import { DataSource, In, Repository } from 'typeorm'
 import {
   ContentBannerEntity,
   ContentItemEntity,
+  ContentPageEntity,
   ContentLayoutEntity,
   ContentListEntity,
   ContentSectionEntity,
 } from './entities'
-import { BLOCK_RULES, isBadgeType, isSectionKind, normaliseAnchor, sectionProblem } from './content.blocks'
-import type { SectionKind, SectionSource } from './content.blocks'
+import { BLOCK_RULES, isBadgeType, isSectionKind, normaliseAnchor, sectionProblem, sectionSettings } from './content.blocks'
+import type { ContentPage, ListKind, SectionKind, SectionSource } from './content.blocks'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -62,7 +63,7 @@ export interface ILayoutInput {
 
 export interface IListInput {
   name: string
-  kind: SectionKind
+  kind: ListKind
   items: IListItemInput[]
 }
 
@@ -84,7 +85,12 @@ export interface ISectionInput {
   list_id?: string | null
   layout_id?: string | null
   is_published?: boolean
-  translations: Array<{ locale: string, title: string }>
+  settings?: unknown
+  translations: Array<{ locale: string, title: string, subtitle?: string | null }>
+}
+
+export interface IPageMetaInput {
+  seo: Record<string, { title?: string, description?: string }>
 }
 
 @Injectable()
@@ -94,6 +100,7 @@ export class ContentAdminService {
     @InjectRepository(ContentLayoutEntity) private readonly layouts: Repository<ContentLayoutEntity>,
     @InjectRepository(ContentSectionEntity) private readonly sections: Repository<ContentSectionEntity>,
     @InjectRepository(ContentBannerEntity) private readonly banners: Repository<ContentBannerEntity>,
+    @InjectRepository(ContentPageEntity) private readonly pages: Repository<ContentPageEntity>,
     private readonly dataSource: DataSource,
   ) {}
 
@@ -209,7 +216,7 @@ export class ContentAdminService {
     await this.lists.delete({ id })
   }
 
-  private async replaceItems(listId: string, kind: SectionKind, items: IListItemInput[]): Promise<void> {
+  private async replaceItems(listId: string, kind: ListKind, items: IListItemInput[]): Promise<void> {
     const fields = BLOCK_RULES[kind].item
 
     await this.dataSource.transaction(async (manager) => {
@@ -285,8 +292,25 @@ export class ContentAdminService {
     }))
   }
 
-  async replaceSections(page: string, input: ISectionInput[]): Promise<void> {
-    await this.checkSections(input)
+  async meta(page: ContentPage) {
+    const row = await this.pages.findOne({ where: { page } })
+
+    return { page, seo: row?.seo ?? {} }
+  }
+
+  async saveMeta(page: ContentPage, input: IPageMetaInput) {
+    const seo = Object.fromEntries(Object.entries(input.seo ?? {}).map(([locale, value]) => [locale, {
+      title: (value?.title ?? '').trim().slice(0, 120),
+      description: (value?.description ?? '').trim().slice(0, 300),
+    }]))
+
+    await this.pages.save({ page, seo })
+
+    return this.meta(page)
+  }
+
+  async replaceSections(page: ContentPage, input: ISectionInput[]): Promise<void> {
+    await this.checkSections(input, page)
 
     await this.dataSource.transaction(async (manager) => {
       await manager.getRepository(ContentSectionEntity).delete({ page })
@@ -301,23 +325,24 @@ export class ContentAdminService {
           source: section.source,
           link: rule.link ? blank(section.link) : null,
           anchor: normaliseAnchor(section.anchor),
-          postIds: fromPosts ? (section.post_ids ?? []) : [],
-          listId: fromPosts ? null : (section.list_id ?? null),
+          settings: sectionSettings(section.kind, section.settings) as Record<string, unknown>,
+          postIds: postIdsFor(section.kind, fromPosts ? (section.post_ids ?? []) : []),
+          listId: section.source === 'list' ? (section.list_id ?? null) : null,
           layoutId: rule.layout ? (section.layout_id ?? null) : null,
           position: index + 1,
           isPublished: section.is_published ?? true,
           translations: section.translations
-            .filter(t => t.title?.trim())
-            .map(t => ({ locale: t.locale, title: t.title.trim() })),
+            .filter(t => t.title?.trim() || t.subtitle?.trim())
+            .map(t => ({ locale: t.locale, title: t.title?.trim() ?? '', subtitle: blank(t.subtitle) })),
         })
       }
     })
   }
 
-  private async checkSections(input: ISectionInput[]): Promise<void> {
+  private async checkSections(input: ISectionInput[], page: ContentPage): Promise<void> {
     const listIds = [...new Set(input.map(section => section.list_id).filter((id): id is string => Boolean(id)))]
     const lists = listIds.length ? await this.lists.findBy({ id: In(listIds) }) : []
-    const problem = sectionProblem(input, new Map(lists.map(list => [list.id, list.kind])))
+    const problem = sectionProblem(input, new Map(lists.map(list => [list.id, list.kind])), page)
 
     if (problem) throw new BadRequestException(problem)
   }
@@ -325,7 +350,9 @@ export class ContentAdminService {
 
 export const sectionPayload = (section: ContentSectionEntity) => {
   const kind: SectionKind = isSectionKind(section.kind) ? section.kind : 'cards'
-  const source: SectionSource = section.source === 'posts' ? 'posts' : 'list'
+  const source: SectionSource = BLOCK_RULES[kind].sources.includes(section.source as SectionSource)
+    ? section.source as SectionSource
+    : BLOCK_RULES[kind].sources[0]!
 
   return {
     uuid: section.id,
@@ -337,8 +364,16 @@ export const sectionPayload = (section: ContentSectionEntity) => {
     list_id: section.listId,
     layout_id: BLOCK_RULES[kind].layout ? section.layoutId : null,
     position: section.position,
-    translations: (section.translations ?? []).map(t => ({ locale: t.locale, title: t.title })),
+    settings: sectionSettings(kind, section.settings),
+    translations: (section.translations ?? []).map(t => ({ locale: t.locale, title: t.title, subtitle: t.subtitle })),
   }
 }
 
 const blank = (value: string | null | undefined): string | null => value?.trim() || null
+
+const postIdsFor = (kind: SectionKind, ids: string[]): string[] => {
+  if (kind === 'feed') return []
+  if (kind === 'featured') return ids.slice(0, 1)
+
+  return ids
+}
