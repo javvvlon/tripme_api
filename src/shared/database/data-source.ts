@@ -16,6 +16,7 @@ import {
 import { PostEntity, PostTranslationEntity } from '~/modules/posts/entities'
 import { ContactMessageEntity } from '~/modules/contact/contact-message.entity'
 import { LeadEntity } from '~/modules/leads/lead.entity'
+import { LeadEventEntity } from '~/modules/leads/lead-event.entity'
 import { OrderEntity } from '~/modules/orders/order.entity'
 import { OrderEventEntity } from '~/modules/orders/order-event.entity'
 import { OrderDocumentEntity } from '~/modules/orders/order-document.entity'
@@ -47,6 +48,7 @@ import { ComplianceFields1755900020000 } from './migrations/1755900020000-Compli
 import { UserConsent1755900021000 } from './migrations/1755900021000-UserConsent'
 import { ContentBlocks1755900022000 } from './migrations/1755900022000-ContentBlocks'
 import { DropSectionVariant1755900023000 } from './migrations/1755900023000-DropSectionVariant'
+import { LeadOwnership1755900024000 } from './migrations/1755900024000-LeadOwnership'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -68,7 +70,7 @@ export const databaseOptions = (): DataSourceOptions => {
       ContentLayoutEntity, ContentListEntity, ContentItemEntity,
       ContentItemTranslationEntity, ContentSectionEntity, ContentSectionTranslationEntity,
       ContentBannerEntity, ContentBannerTranslationEntity,
-      PostEntity, PostTranslationEntity, ContactMessageEntity, LeadEntity, OrderEntity, OrderEventEntity, OrderDocumentEntity, OperatorEntity,
+      PostEntity, PostTranslationEntity, ContactMessageEntity, LeadEntity, LeadEventEntity, OrderEntity, OrderEventEntity, OrderDocumentEntity, OperatorEntity,
       PointsTierEntity, PointsSettingsEntity, PointsTransactionEntity,
       MediaFileEntity, MediaFolderEntity,
     ],
@@ -94,6 +96,7 @@ export const databaseOptions = (): DataSourceOptions => {
       UserConsent1755900021000,
       ContentBlocks1755900022000,
       DropSectionVariant1755900023000,
+      LeadOwnership1755900024000,
     ],
     synchronize: false,
     migrationsRun: false,

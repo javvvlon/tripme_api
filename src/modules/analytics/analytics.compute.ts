@@ -319,6 +319,13 @@ export function buildAnalytics(input: IAnalyticsInput) {
       id: id || null,
       name: id ? input.managers.get(id) ?? '' : '',
       leads: leads.length,
+      statuses: {
+        new: leads.filter(lead => lead.status === 'new').length,
+        inProgress: leads.filter(lead => lead.status === 'in_progress').length,
+        quoteSent: leads.filter(lead => lead.status === 'quote_sent').length,
+        won: leads.filter(lead => lead.status === 'won').length,
+        rejected: leads.filter(lead => lead.status === 'rejected').length,
+      },
       responseMedianMinutes: median(minutes),
       conversion: ratio(leads.filter(leadPaid).length, leads.length),
       paidOrders: paid.length,
