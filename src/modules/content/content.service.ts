@@ -26,7 +26,14 @@ export interface IPageContentResponse {
     uuid: string
     kind: SectionKind
     source: SectionSource
-    translations: Array<{ locale: string, title: string, subtitle: string | null }>
+    translations: Array<{
+      locale: string
+      title: string
+      subtitle: string | null
+      eyebrow: string | null
+      body: string | null
+      cta_label: string | null
+    }>
     settings: ISectionSettings
     link: string | null
     anchor: string | null

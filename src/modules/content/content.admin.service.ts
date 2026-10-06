@@ -86,7 +86,14 @@ export interface ISectionInput {
   layout_id?: string | null
   is_published?: boolean
   settings?: unknown
-  translations: Array<{ locale: string, title: string, subtitle?: string | null }>
+  translations: Array<{
+    locale: string
+    title: string
+    subtitle?: string | null
+    eyebrow?: string | null
+    body?: string | null
+    cta_label?: string | null
+  }>
 }
 
 export interface IPageMetaInput {
@@ -332,8 +339,15 @@ export class ContentAdminService {
           position: index + 1,
           isPublished: section.is_published ?? true,
           translations: section.translations
-            .filter(t => t.title?.trim() || t.subtitle?.trim())
-            .map(t => ({ locale: t.locale, title: t.title?.trim() ?? '', subtitle: blank(t.subtitle) })),
+            .filter(t => [t.title, t.subtitle, t.eyebrow, t.body, t.cta_label].some(value => value?.trim()))
+            .map(t => ({
+              locale: t.locale,
+              title: t.title?.trim() ?? '',
+              subtitle: blank(t.subtitle),
+              eyebrow: blank(t.eyebrow),
+              body: blank(t.body),
+              ctaLabel: blank(t.cta_label),
+            })),
         })
       }
     })
@@ -365,7 +379,14 @@ export const sectionPayload = (section: ContentSectionEntity) => {
     layout_id: BLOCK_RULES[kind].layout ? section.layoutId : null,
     position: section.position,
     settings: sectionSettings(kind, section.settings),
-    translations: (section.translations ?? []).map(t => ({ locale: t.locale, title: t.title, subtitle: t.subtitle })),
+    translations: (section.translations ?? []).map(t => ({
+      locale: t.locale,
+      title: t.title,
+      subtitle: t.subtitle,
+      eyebrow: t.eyebrow,
+      body: t.body,
+      cta_label: t.ctaLabel,
+    })),
   }
 }
 

@@ -76,6 +76,37 @@ describe('page builder blocks', () => {
   })
 })
 
+describe('rich blocks', () => {
+  it('fits on both pages and needs no list', () => {
+    for (const page of ['home', 'blog'] as const) {
+      expect(sectionProblem([
+        { kind: 'banner', source: 'none', translations: [{ title: 'Мальдивы −20%' }] },
+        { kind: 'media', source: 'none', translations: [{ title: 'Как мы работаем' }] },
+        { kind: 'cta', source: 'none', translations: [{ title: 'Подберём тур' }] },
+        { kind: 'quote', source: 'none', translations: [{ title: '', body: 'Лучший отпуск' }] },
+        { kind: 'text', source: 'none', translations: [{ title: '', body: 'Текст' }] },
+        { kind: 'spotlight', source: 'posts' },
+      ], lists, page)).toBeNull()
+    }
+  })
+
+  it('asks for text where the text is the block', () => {
+    expect(sectionProblem([{ kind: 'quote', source: 'none', translations: [{ title: 'Анна', body: ' ' }] }], lists, 'home'))
+      .toBe('Section 1: needs text in at least one language')
+    expect(sectionProblem([{ kind: 'banner', source: 'none', translations: [{ title: ' ' }] }], lists, 'home'))
+      .toBe('Section 1: needs a heading in at least one language')
+  })
+
+  it('keeps only known looks', () => {
+    expect(sectionSettings('banner', { image_url: ' https://x/1.jpg ', style: 'wide', tone: 'neon' }))
+      .toEqual({ image_url: 'https://x/1.jpg', style: 'wide', tone: 'light' })
+    expect(sectionSettings('media', { image_side: 'right' })).toEqual({ image_url: null, image_side: 'right' })
+    expect(sectionSettings('cta', {})).toEqual({ tone: 'brand' })
+    expect(sectionSettings('spotlight', { list_size: 9 })).toEqual({ list_size: 4 })
+    expect(sectionSettings('text', { tone: 'dark' })).toEqual({})
+  })
+})
+
 describe('normaliseAnchor', () => {
   it('keeps a url-safe slug', () => {
     expect(normaliseAnchor('  Горящие Hot deals! ')).toBe('hot-deals')

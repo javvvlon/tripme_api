@@ -49,6 +49,7 @@ import { UserConsent1755900021000 } from './migrations/1755900021000-UserConsent
 import { ContentBlocks1755900022000 } from './migrations/1755900022000-ContentBlocks'
 import { DropSectionVariant1755900023000 } from './migrations/1755900023000-DropSectionVariant'
 import { PageBuilder1755900025000 } from './migrations/1755900025000-PageBuilder'
+import { RichBlocks1755900026000 } from './migrations/1755900026000-RichBlocks'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -97,6 +98,7 @@ export const databaseOptions = (): DataSourceOptions => {
       ContentBlocks1755900022000,
       DropSectionVariant1755900023000,
       PageBuilder1755900025000,
+      RichBlocks1755900026000,
     ],
     synchronize: false,
     migrationsRun: false,

@@ -289,6 +289,9 @@ function parseSection(raw: unknown): ISectionInput {
         locale: str(translation.locale, 'locale'),
         title: typeof translation.title === 'string' ? translation.title : '',
         subtitle: typeof translation.subtitle === 'string' ? translation.subtitle : null,
+        eyebrow: typeof translation.eyebrow === 'string' ? translation.eyebrow : null,
+        body: typeof translation.body === 'string' ? translation.body : null,
+        cta_label: typeof translation.cta_label === 'string' ? translation.cta_label : null,
       }
     }),
   }
