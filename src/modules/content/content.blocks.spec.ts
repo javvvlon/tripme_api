@@ -107,6 +107,21 @@ describe('rich blocks', () => {
   })
 })
 
+describe('home blocks', () => {
+  it('keeps the search hero on the home page, once', () => {
+    expect(sectionProblem([{ kind: 'search', source: 'none' }, { kind: 'contact', source: 'none' }], lists, 'home')).toBeNull()
+    expect(sectionProblem([{ kind: 'search', source: 'none' }], lists, 'blog'))
+      .toBe('Section 1: "search" does not belong on the blog page')
+    expect(sectionProblem([{ kind: 'search', source: 'none' }, { kind: 'search', source: 'none' }], lists, 'home'))
+      .toBe('Section 2: a page can hold only one "search" block')
+  })
+
+  it('keeps only the photo of a search hero', () => {
+    expect(sectionSettings('search', { image_url: ' https://x/h.jpg ', tone: 'dark' })).toEqual({ image_url: 'https://x/h.jpg' })
+    expect(sectionSettings('contact', { image_url: 'https://x/h.jpg' })).toEqual({})
+  })
+})
+
 describe('normaliseAnchor', () => {
   it('keeps a url-safe slug', () => {
     expect(normaliseAnchor('  Горящие Hot deals! ')).toBe('hot-deals')

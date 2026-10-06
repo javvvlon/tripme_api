@@ -50,6 +50,7 @@ import { ContentBlocks1755900022000 } from './migrations/1755900022000-ContentBl
 import { DropSectionVariant1755900023000 } from './migrations/1755900023000-DropSectionVariant'
 import { PageBuilder1755900025000 } from './migrations/1755900025000-PageBuilder'
 import { RichBlocks1755900026000 } from './migrations/1755900026000-RichBlocks'
+import { HomeBlocks1755900027000 } from './migrations/1755900027000-HomeBlocks'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -99,6 +100,7 @@ export const databaseOptions = (): DataSourceOptions => {
       DropSectionVariant1755900023000,
       PageBuilder1755900025000,
       RichBlocks1755900026000,
+      HomeBlocks1755900027000,
     ],
     synchronize: false,
     migrationsRun: false,

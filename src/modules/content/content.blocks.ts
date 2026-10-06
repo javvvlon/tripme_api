@@ -9,7 +9,7 @@ export const LIST_KINDS = ['cards', 'features', 'faq'] as const
 
 export type ListKind = typeof LIST_KINDS[number]
 
-export const SECTION_KINDS = ['hero', 'featured', 'cards', 'features', 'faq', 'feed', 'banner', 'media', 'cta', 'quote', 'text', 'spotlight'] as const
+export const SECTION_KINDS = ['hero', 'featured', 'cards', 'features', 'faq', 'feed', 'banner', 'media', 'cta', 'quote', 'text', 'spotlight', 'search', 'contact'] as const
 
 export type SectionKind = typeof SECTION_KINDS[number]
 
@@ -122,7 +122,11 @@ export const BLOCK_RULES: Record<SectionKind, IBlockRule> = {
     bodyRequired: false,
     item: NO_ITEMS,
   },
+  search: { ...STANDALONE, pages: ['home'], link: false, titleRequired: false, bodyRequired: false },
+  contact: { ...STANDALONE, pages: BOTH, link: false, titleRequired: false, bodyRequired: false },
 }
+
+export const SINGLE_KINDS: SectionKind[] = ['search', 'contact']
 
 export interface ISectionSettings {
   image_url?: string | null
@@ -143,7 +147,7 @@ const imageOf = (input: Record<string, unknown>): string | null =>
 export function sectionSettings(kind: SectionKind, raw: unknown): ISectionSettings {
   const input = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>
 
-  if (kind === 'hero' || kind === 'quote') return { image_url: imageOf(input) }
+  if (kind === 'hero' || kind === 'quote' || kind === 'search') return { image_url: imageOf(input) }
 
   if (kind === 'banner') {
     return { image_url: imageOf(input), style: oneOf(BANNER_STYLES, input.style), tone: oneOf(BLOCK_TONES, input.tone) }
@@ -207,12 +211,19 @@ export function sectionProblem(
   page: ContentPage = 'home',
 ): string | null {
   const anchors = new Set<string>()
+  const singles = new Set<SectionKind>()
 
   for (const [index, section] of sections.entries()) {
     const rule = BLOCK_RULES[section.kind]
     const at = `Section ${index + 1}`
 
     if (!rule.pages.includes(page)) return `${at}: "${section.kind}" does not belong on the ${page} page`
+
+    if (SINGLE_KINDS.includes(section.kind)) {
+      if (singles.has(section.kind)) return `${at}: a page can hold only one "${section.kind}" block`
+
+      singles.add(section.kind)
+    }
 
     if (!rule.sources.includes(section.source)) return `${at}: "${section.kind}" cannot show "${section.source}"`
 
