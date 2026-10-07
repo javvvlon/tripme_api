@@ -1,10 +1,11 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, UseGuards } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common'
 import { AuthGuard } from '~/modules/auth/guards/auth.guard'
 import { RolesGuard } from '~/modules/auth/guards/roles.guard'
 import { CurrentUser, Roles } from '~/modules/auth/decorators'
 import { UserRole } from '~/modules/auth/contracts/auth'
 import type { IAccessTokenClaims } from '~/modules/auth/contracts/auth'
 import { RevalidationService } from '~/shared/revalidation/revalidation.service'
+import { pageRequest } from '~/shared/helpers/pagination'
 import { PostsAdminService } from './posts.admin.service'
 import type { IPostCreateInput, IPostInput } from './posts.admin.service'
 
@@ -21,8 +22,17 @@ export class PostsAdminController {
   ) {}
 
   @Get()
-  list() {
-    return this.admin.list()
+  list(
+    @Query('q') q?: string,
+    @Query('filter') filter?: string,
+    @Query('sort') sort?: string,
+    @Query('dir') dir?: string,
+    @Query('page') page?: string,
+    @Query('per_page') perPage?: string,
+  ) {
+    const request = pageRequest(page, perPage)
+
+    return request ? this.admin.page({ q, filter, sort, dir }, request) : this.admin.list()
   }
 
   @Get(':id')

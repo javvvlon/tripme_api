@@ -1,6 +1,8 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Brackets, Repository } from 'typeorm'
+import { pageOf } from '~/shared/helpers/pagination'
+import type { IPage, IPageRequest } from '~/shared/helpers/pagination'
 import { LEAD_PREFIX, numberFromReference, reference } from '~/shared/helpers/reference'
 import { LEAD_STATUSES, LEAD_TRANSITIONS, LeadEntity, LeadSource, LeadStatus } from './lead.entity'
 
@@ -211,6 +213,22 @@ export class LeadsService {
   }
 
   async list(query: ILeadQuery = {}): Promise<ILeadPayload[]> {
+    const rows = await this.filtered(query).take(500).getMany()
+
+    return rows.map(row => this.toPayload(row))
+  }
+
+  async page(query: ILeadQuery, request: IPageRequest): Promise<IPage<ILeadPayload, { all: number, fresh: number }>> {
+    const [rows, total] = await this.filtered(query).skip(request.skip).take(request.perPage).getManyAndCount()
+    const [all, fresh] = await Promise.all([
+      this.leads.count(),
+      this.leads.count({ where: { status: 'new' } }),
+    ])
+
+    return pageOf(rows.map(row => this.toPayload(row)), total, request, { all, fresh })
+  }
+
+  private filtered(query: ILeadQuery) {
     const column = LEAD_SORTS[query.sort as LeadSort] ?? LEAD_SORTS.order
     const direction = query.dir === 'asc' ? 'ASC' : 'DESC'
 
@@ -244,12 +262,9 @@ export class LeadsService {
       }))
     }
 
-    const rows = await builder
+    return builder
       .orderBy(column, direction, 'NULLS LAST')
-      .take(500)
-      .getMany()
-
-    return rows.map(row => this.toPayload(row))
+      .addOrderBy('lead.orderId', 'DESC')
   }
 
   async patch(id: string, input: ILeadPatch): Promise<ILeadPayload> {

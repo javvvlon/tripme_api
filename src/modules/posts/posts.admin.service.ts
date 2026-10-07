@@ -1,6 +1,8 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { Not, Repository } from 'typeorm'
+import { Brackets, In, Not, Repository } from 'typeorm'
+import { pageOf } from '~/shared/helpers/pagination'
+import type { IPage, IPageRequest } from '~/shared/helpers/pagination'
 import { PostEntity, PostTranslationEntity } from './entities'
 import type { IPostPayload } from './posts.service'
 import { PostsService } from './posts.service'
@@ -34,6 +36,26 @@ export interface IPostAdminPayload extends IPostPayload {
 
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 
+const TITLE_SORT = `lower(coalesce((select t.title from post_translations t where t.post_id = p.id and t.title <> ''
+  order by case t.locale when 'ru' then 0 when 'uz' then 1 else 2 end limit 1), ''))`
+
+export const POST_SORTS = {
+  title: { expression: TITLE_SORT, flip: false },
+  author: { expression: `lower(coalesce(a.first_name, '') || ' ' || coalesce(a.last_name, ''))`, flip: false },
+  status: { expression: 'p.is_published', flip: true },
+  published: { expression: 'p.published_at', flip: false },
+  updated: { expression: 'p.updated_at', flip: false },
+} as const
+
+export type PostSort = keyof typeof POST_SORTS
+
+export interface IPostQuery {
+  q?: string
+  filter?: string
+  sort?: string
+  dir?: string
+}
+
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
  */
@@ -54,6 +76,54 @@ export class PostsAdminService {
     })
 
     return rows.map(row => this.toAdminPayload(row))
+  }
+
+  async page(query: IPostQuery, request: IPageRequest): Promise<IPage<IPostAdminPayload, { all: number, published: number }>> {
+    const filtered = () => {
+      const builder = this.posts.createQueryBuilder('p').leftJoin('p.author', 'a')
+
+      if (query.filter === 'published') builder.andWhere('p.is_published = true')
+      if (query.filter === 'draft') builder.andWhere('p.is_published = false')
+
+      const needle = (query.q ?? '').trim().toLowerCase()
+
+      if (needle) {
+        builder.andWhere(new Brackets((where) => {
+          where
+            .where('p.slug like :like')
+            .orWhere(`exists (select 1 from post_translations t where t.post_id = p.id and lower(t.title) like :like)`)
+            .orWhere(`lower(coalesce(a.first_name, '') || ' ' || coalesce(a.last_name, '')) like :like`)
+        }), { like: `%${needle}%` })
+      }
+
+      return builder
+    }
+
+    const sort = POST_SORTS[query.sort as PostSort] ?? POST_SORTS.updated
+    const ascending = query.dir === 'asc'
+    const direction = (sort.flip ? !ascending : ascending) ? 'ASC' : 'DESC'
+
+    const [ids, total, all, published] = await Promise.all([
+      filtered()
+        .select('p.id', 'id')
+        .addSelect(sort.expression, 'sort_key')
+        .orderBy('sort_key', direction, 'NULLS LAST')
+        .addOrderBy('p.updated_at', 'DESC')
+        .offset(request.skip)
+        .limit(request.perPage)
+        .getRawMany<{ id: string }>(),
+      filtered().getCount(),
+      this.posts.count(),
+      this.posts.count({ where: { isPublished: true } }),
+    ])
+
+    const rows = ids.length
+      ? await this.posts.find({ where: { id: In(ids.map(row => row.id)) }, relations: { translations: true, author: true } })
+      : []
+    const byId = new Map(rows.map(row => [row.id, row]))
+    const ordered = ids.map(row => byId.get(row.id)).filter((row): row is PostEntity => Boolean(row))
+
+    return pageOf(ordered.map(row => this.toAdminPayload(row)), total, request, { all, published })
   }
 
   async one(id: string): Promise<IPostAdminPayload> {

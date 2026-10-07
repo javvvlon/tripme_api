@@ -8,6 +8,7 @@ import type { IAccessTokenClaims } from '~/modules/auth/contracts/auth'
 import { LEAD_STATUSES, LeadSource } from './lead.entity'
 import { LeadsService } from './leads.service'
 import type { ILeadInput, ILeadPatch } from './leads.service'
+import { pageRequest } from '~/shared/helpers/pagination'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -41,8 +42,12 @@ export class LeadsAdminController {
     @Query('q') q?: string,
     @Query('sort') sort?: string,
     @Query('dir') dir?: string,
+    @Query('page') page?: string,
+    @Query('per_page') perPage?: string,
   ) {
-    return this.leads.list({ status, q, sort, dir })
+    const request = pageRequest(page, perPage)
+
+    return request ? this.leads.page({ status, q, sort, dir }, request) : this.leads.list({ status, q, sort, dir })
   }
 
   @Get(':id')

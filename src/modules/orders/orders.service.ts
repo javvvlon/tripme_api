@@ -15,6 +15,8 @@ import {
 } from './order.entity'
 import { OrderEventEntity } from './order-event.entity'
 import { DocumentsService } from './documents/documents.service'
+import { pageOf } from '~/shared/helpers/pagination'
+import type { IPage, IPageRequest } from '~/shared/helpers/pagination'
 
 export interface IOrderTripInput {
   hotel_name?: string
@@ -138,6 +140,11 @@ const count = (value: unknown): number =>
 const asDate = (value: unknown): string | null =>
   /^\d{4}-\d{2}-\d{2}$/.test(String(value ?? '')) ? String(value) : null
 
+export interface IOrderQuery {
+  q?: string
+  status?: string
+}
+
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
  */
@@ -161,7 +168,23 @@ export class OrdersService {
     return rows.map(row => this.toPayload(row))
   }
 
-  async list(query: { q?: string, status?: string } = {}): Promise<IOrderPayload[]> {
+  async list(query: IOrderQuery = {}): Promise<IOrderPayload[]> {
+    const rows = await this.filtered(query).take(500).getMany()
+
+    return rows.map(row => this.toPayload(row))
+  }
+
+  async page(query: IOrderQuery, request: IPageRequest): Promise<IPage<IOrderPayload, { all: number, live: number }>> {
+    const [rows, total] = await this.filtered(query).skip(request.skip).take(request.perPage).getManyAndCount()
+    const [all, done] = await Promise.all([
+      this.orders.count(),
+      this.orders.count({ where: { status: OrderStatus.Completed } }),
+    ])
+
+    return pageOf(rows.map(row => this.toPayload(row)), total, request, { all, live: all - done })
+  }
+
+  private filtered(query: IOrderQuery) {
     const builder = this.orders.createQueryBuilder('o')
 
     if (query.status && ORDER_STATUSES.includes(query.status as OrderStatus)) {
@@ -186,10 +209,9 @@ export class OrdersService {
       )
     }
 
-    const rows = await builder.orderBy('o.orderNo', 'DESC').take(500).getMany()
-
-    return rows.map(row => this.toPayload(row))
+    return builder.orderBy('o.orderNo', 'DESC')
   }
+
 
   async one(id: string): Promise<IOrderPayload> {
     const order = await this.orders.findOne({ where: { id } })

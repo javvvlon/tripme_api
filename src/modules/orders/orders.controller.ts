@@ -16,6 +16,7 @@ import { GENERATED_KINDS } from './order-document.entity'
 import type { IUploadedFile } from '~/shared/storage/storage.service'
 import type { DocumentFlavour } from './documents/pdf.builder'
 import type { IOrderCreateInput, IOrderPatchInput } from './orders.service'
+import { pageRequest } from '~/shared/helpers/pagination'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -68,8 +69,15 @@ export class OrdersController {
   }
 
   @Get('orders')
-  list(@Query('q') q?: string, @Query('status') status?: string) {
-    return this.orders.list({ q, status })
+  list(
+    @Query('q') q?: string,
+    @Query('status') status?: string,
+    @Query('page') page?: string,
+    @Query('per_page') perPage?: string,
+  ) {
+    const request = pageRequest(page, perPage)
+
+    return request ? this.orders.page({ q, status }, request) : this.orders.list({ q, status })
   }
 
   @Get('orders/statuses')
