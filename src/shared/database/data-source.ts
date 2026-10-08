@@ -21,6 +21,8 @@ import { LeadEventEntity } from '~/modules/leads/lead-event.entity'
 import { OrderEntity } from '~/modules/orders/order.entity'
 import { OrderEventEntity } from '~/modules/orders/order-event.entity'
 import { OrderDocumentEntity } from '~/modules/orders/order-document.entity'
+import { OrderItemEntity } from '~/modules/orders/items/order-item.entity'
+import { PaymentEntity } from '~/modules/finance/payment.entity'
 import { PointsSettingsEntity, PointsTierEntity, PointsTransactionEntity } from '~/modules/points/points.entities'
 import { OperatorEntity } from '~/modules/operators/operator.entity'
 import { MediaFileEntity } from '~/shared/storage/media-file.entity'
@@ -54,6 +56,9 @@ import { RichBlocks1755900026000 } from './migrations/1755900026000-RichBlocks'
 import { HomeBlocks1755900027000 } from './migrations/1755900027000-HomeBlocks'
 import { PrestigeOperator1755900028000 } from './migrations/1755900028000-PrestigeOperator'
 import { LeadOwnership1755900029000 } from './migrations/1755900029000-LeadOwnership'
+import { OrderItems1755900030000 } from './migrations/1755900030000-OrderItems'
+import { Payments1755900031000 } from './migrations/1755900031000-Payments'
+import { ConfirmationRule1755900032000 } from './migrations/1755900032000-ConfirmationRule'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -75,7 +80,7 @@ export const databaseOptions = (): DataSourceOptions => {
       ContentLayoutEntity, ContentListEntity, ContentItemEntity,
       ContentItemTranslationEntity, ContentSectionEntity, ContentSectionTranslationEntity,
       ContentBannerEntity, ContentBannerTranslationEntity, ContentPageEntity,
-      PostEntity, PostTranslationEntity, ContactMessageEntity, LeadEntity, LeadEventEntity, OrderEntity, OrderEventEntity, OrderDocumentEntity, OperatorEntity,
+      PostEntity, PostTranslationEntity, ContactMessageEntity, LeadEntity, LeadEventEntity, OrderEntity, OrderEventEntity, OrderDocumentEntity, OrderItemEntity, PaymentEntity, OperatorEntity,
       PointsTierEntity, PointsSettingsEntity, PointsTransactionEntity,
       MediaFileEntity, MediaFolderEntity,
     ],
@@ -106,6 +111,9 @@ export const databaseOptions = (): DataSourceOptions => {
       HomeBlocks1755900027000,
       PrestigeOperator1755900028000,
       LeadOwnership1755900029000,
+      OrderItems1755900030000,
+      Payments1755900031000,
+      ConfirmationRule1755900032000,
     ],
     synchronize: false,
     migrationsRun: false,

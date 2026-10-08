@@ -1,5 +1,7 @@
 import { existsSync } from 'node:fs'
 import PDFDocument from 'pdfkit'
+import { formatAmount } from './document-lines'
+import type { IDocumentMoney } from './document-lines'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -33,6 +35,7 @@ export interface IDocumentData {
   client: IParty
   trip: IDocumentTrip
   totals: IDocumentTotals
+  money?: IDocumentMoney
   note: string
   supplierOrderId: string
 }
@@ -119,6 +122,7 @@ export function buildDocument(flavour: DocumentFlavour, data: IDocumentData): Pr
   header(doc, flavour, data)
   parties(doc, data)
   trip(doc, data)
+  services(doc, data)
   totals(doc, flavour, data)
   footer(doc, flavour)
 
@@ -184,21 +188,83 @@ function travellers(from: IDocumentTrip): string {
   return parts.join(', ')
 }
 
+function services(doc: PDFKit.PDFDocument, data: IDocumentData): void {
+  const lines = data.money?.lines ?? []
+
+  if (!lines.length) return
+
+  doc.y += 6
+  label(doc, 'Услуги')
+
+  const priceWidth = 96
+  const uzsWidth = 116
+  const nameWidth = CONTENT - priceWidth - uzsWidth - 16
+
+  for (const line of lines) {
+    const top = doc.y + 8
+    const title = `${line.kind}: ${line.title}`
+    const titleHeight = doc.font('medium').fontSize(10).heightOfString(title, { width: nameWidth })
+
+    doc.fillColor(INK).font('medium').fontSize(10).text(title, MARGIN, top, { width: nameWidth })
+
+    if (line.when) {
+      doc.fillColor(MUTED).font('body').fontSize(8.5).text(line.when, MARGIN, top + titleHeight + 2, { width: nameWidth })
+    }
+
+    doc.fillColor(INK).font('body').fontSize(10)
+      .text(line.price, MARGIN + nameWidth + 8, top, { width: priceWidth, align: 'right' })
+    doc.fillColor(MUTED).font('body').fontSize(10)
+      .text(line.uzs === null ? '—' : formatAmount(line.uzs, 'сум'), MARGIN + nameWidth + priceWidth + 16, top, { width: uzsWidth, align: 'right' })
+
+    doc.y = top + titleHeight + (line.when ? 14 : 4) + 6
+    doc.moveTo(MARGIN, doc.y).lineTo(WIDTH - MARGIN, doc.y).strokeColor(LINE).stroke()
+  }
+
+  doc.y += 6
+}
+
 function totals(doc: PDFKit.PDFDocument, flavour: DocumentFlavour, data: IDocumentData): void {
   doc.y += 10
 
   const top = doc.y
-  const height = 52
+  const summary = data.money
+  const rows: Array<[string, string]> = summary
+    ? flavour === 'invoice'
+      ? [
+          ['Итого', formatAmount(summary.totalUzs, 'сум')],
+          ['Оплачено', formatAmount(summary.receivedUzs, 'сум')],
+        ]
+      : []
+    : []
+
+  const headline = summary
+    ? flavour === 'invoice' ? formatAmount(summary.balanceUzs, 'сум') : formatAmount(summary.totalUzs, 'сум')
+    : money(data.totals.amount, data.totals.currency)
+
+  const height = 52 + rows.length * 16
 
   doc.roundedRect(MARGIN, top, CONTENT, height, 8).fill(SOFT)
 
+  rows.forEach(([name, value], index) => {
+    doc.fillColor(MUTED).font('body').fontSize(10).text(name, MARGIN + 16, top + 12 + index * 16)
+    doc.fillColor(INK).font('medium').fontSize(10).text(value, MARGIN + 16, top + 12 + index * 16, { width: CONTENT - 32, align: 'right' })
+  })
+
+  const headTop = top + 12 + rows.length * 16
+
   doc.fillColor(MUTED).font('body').fontSize(10)
-    .text(flavour === 'invoice' ? 'К оплате' : 'Стоимость тура', MARGIN + 16, top + 12)
+    .text(flavour === 'invoice' ? 'К оплате' : summary ? 'Итого' : 'Стоимость тура', MARGIN + 16, headTop)
 
   doc.fillColor(INK).font('bold').fontSize(18)
-    .text(money(data.totals.amount, data.totals.currency), MARGIN + 16, top + 26)
+    .text(headline, MARGIN + 16, headTop + 14)
 
   doc.y = top + height + 18
+
+  if (summary?.missingRates) {
+    doc.fillColor(MUTED).font('body').fontSize(8.5)
+      .text('Часть услуг без курса к суму — итог уточнит менеджер.', MARGIN, doc.y - 10, { width: CONTENT })
+    doc.y += 6
+  }
 
   if (!data.note) return
 

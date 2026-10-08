@@ -8,6 +8,7 @@ import { OrderEntity } from '../order.entity'
 import { DocumentKind, OrderDocumentEntity } from '../order-document.entity'
 import { buildDocument } from './pdf.builder'
 import type { DocumentFlavour } from './pdf.builder'
+import type { IDocumentMoney } from './document-lines'
 import type { IUploadedFile } from '~/shared/storage/storage.service'
 
 /**
@@ -70,7 +71,12 @@ export class DocumentsService {
     return rows.map(row => toDocumentPayload(row))
   }
 
-  async attach(orderId: string, file: IUploadedFile, actorId: string | null): Promise<IDocumentPayload> {
+  async attach(
+    orderId: string,
+    file: IUploadedFile,
+    actorId: string | null,
+    kind: DocumentKind = DocumentKind.Attachment,
+  ): Promise<IDocumentPayload> {
     await this.orderOrFail(orderId)
 
     if (!ALLOWED_ATTACHMENTS.includes(file.mimetype)) {
@@ -90,7 +96,7 @@ export class DocumentsService {
 
     const saved = await this.documents.save(this.documents.create({
       orderId,
-      kind: DocumentKind.Attachment,
+      kind,
       name: file.originalname.slice(0, 240) || 'file',
       path: stored.path,
       url: stored.url,
@@ -105,6 +111,7 @@ export class DocumentsService {
     orderId: string,
     flavour: DocumentFlavour,
     actorId: string | null,
+    money?: IDocumentMoney,
   ): Promise<IDocumentPayload> {
     const order = await this.orderOrFail(orderId)
     const lead = await this.leads.findOne({ where: { id: order.leadId } })
@@ -137,6 +144,7 @@ export class DocumentsService {
         amount: order.priceAmount === null ? null : Number(order.priceAmount),
         currency: order.priceCurrency || 'USD',
       },
+      money,
       note: order.note,
       supplierOrderId: order.supplierOrderId,
     })

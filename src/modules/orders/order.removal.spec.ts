@@ -27,7 +27,7 @@ const ordersWith = (status: OrderStatus, calls: string[]) => ({
 const boss = { id: 'boss', role: UserRole.Manager }
 
 const service = (orders: unknown, documents: ReturnType<typeof files>) =>
-  new OrdersService(orders as never, {} as never, {} as never, {} as never, {} as never, documents as never, {} as never)
+  new OrdersService(orders as never, {} as never, {} as never, {} as never, {} as never, documents as never, {} as never, {} as never)
 
 const leadsWith = (lead: unknown, remove: () => Promise<{ affected: number }>) =>
   new LeadsService({ findOne: vi.fn(async () => lead), delete: vi.fn(remove) } as never, {} as never, {} as never)
@@ -44,7 +44,7 @@ describe('removing orders and leads', () => {
 
   it('keeps the files when the order may not be deleted', async () => {
     const documents = files()
-    const orders = ordersWith(OrderStatus.Paid, documents.calls)
+    const orders = ordersWith(OrderStatus.Issued, documents.calls)
 
     await expect(service(orders, documents).remove('o1', boss)).rejects.toThrow()
     expect(documents.discardFiles).not.toHaveBeenCalled()

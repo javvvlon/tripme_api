@@ -7,6 +7,8 @@ export enum DocumentKind {
   Offer = 'offer',
   Invoice = 'invoice',
   Attachment = 'attachment',
+  Contract = 'contract',
+  Voucher = 'voucher',
 }
 
 export const DOCUMENT_KINDS = Object.values(DocumentKind)

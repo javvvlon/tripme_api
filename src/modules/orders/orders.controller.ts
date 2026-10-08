@@ -12,10 +12,11 @@ import type { IAccessTokenClaims } from '~/modules/auth/contracts/auth'
 import { ORDER_STATUSES, ORDER_TRANSITIONS } from './order.entity'
 import { OrdersService } from './orders.service'
 import { DocumentsService, MAX_ATTACHMENT_BYTES } from './documents/documents.service'
-import { GENERATED_KINDS } from './order-document.entity'
+import { DocumentKind, GENERATED_KINDS } from './order-document.entity'
 import type { IUploadedFile } from '~/shared/storage/storage.service'
 import type { DocumentFlavour } from './documents/pdf.builder'
 import type { IOrderCreateInput, IOrderPatchInput } from './orders.service'
+import type { IOrderItemInput } from './items/item-rules'
 import { viewerOf } from '~/modules/leads/lead.access'
 import { pageRequest } from '~/shared/helpers/pagination'
 
@@ -51,7 +52,7 @@ export class OrdersController {
 
     await this.orders.assertVisible(id, viewerOf(claims))
 
-    return this.documents.generate(id, kind as DocumentFlavour, claims?.sub ?? null)
+    return this.documents.generate(id, kind as DocumentFlavour, claims?.sub ?? null, await this.orders.documentMoney(id))
   }
 
   @Post('orders/:id/attachments')
@@ -69,11 +70,85 @@ export class OrdersController {
     return this.documents.attach(id, file, claims?.sub ?? null)
   }
 
+  @Post('orders/:id/contract')
+  @HttpCode(201)
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: MAX_ATTACHMENT_BYTES } }))
+  async contract(
+    @Param('id') id: string,
+    @CurrentUser() claims: IAccessTokenClaims,
+    @UploadedFile() file?: IUploadedFile,
+  ) {
+    if (!file) throw new BadRequestException('No file was sent')
+
+    const viewer = viewerOf(claims)
+
+    await this.orders.assertVisible(id, viewer)
+
+    const document = await this.documents.attach(id, file, claims?.sub ?? null, DocumentKind.Contract)
+
+    await this.orders.markContract(id, document.id)
+    await this.orders.advance(id, viewer.id)
+
+    return this.orders.one(id, viewer)
+  }
+
+  @Post('orders/:id/items/:itemId/confirm')
+  @HttpCode(201)
+  confirmItem(
+    @Param('id') id: string,
+    @Param('itemId') itemId: string,
+    @Body() body: { supplier_ref?: string },
+    @CurrentUser() claims: IAccessTokenClaims,
+  ) {
+    return this.orders.confirmItem(id, itemId, body?.supplier_ref, viewerOf(claims))
+  }
+
+  @Post('orders/:id/items')
+  @HttpCode(201)
+  addItem(@Param('id') id: string, @Body() body: IOrderItemInput, @CurrentUser() claims: IAccessTokenClaims) {
+    return this.orders.addItem(id, body, viewerOf(claims))
+  }
+
+  @Patch('orders/:id/items/:itemId')
+  updateItem(
+    @Param('id') id: string,
+    @Param('itemId') itemId: string,
+    @Body() body: IOrderItemInput,
+    @CurrentUser() claims: IAccessTokenClaims,
+  ) {
+    return this.orders.updateItem(id, itemId, body, viewerOf(claims))
+  }
+
+  @Delete('orders/:id/items/:itemId')
+  removeItem(@Param('id') id: string, @Param('itemId') itemId: string, @CurrentUser() claims: IAccessTokenClaims) {
+    return this.orders.removeItem(id, itemId, viewerOf(claims))
+  }
+
+  @Post('orders/:id/items/:itemId/issue')
+  @HttpCode(201)
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: MAX_ATTACHMENT_BYTES } }))
+  async issueItem(
+    @Param('id') id: string,
+    @Param('itemId') itemId: string,
+    @CurrentUser() claims: IAccessTokenClaims,
+    @UploadedFile() file?: IUploadedFile,
+  ) {
+    const viewer = viewerOf(claims)
+
+    await this.orders.assertItemIssuable(id, itemId, viewer)
+
+    const document = file ? await this.documents.attach(id, file, claims?.sub ?? null, DocumentKind.Voucher) : null
+
+    return this.orders.issueItem(id, itemId, document?.id ?? null, viewer)
+  }
+
   @Delete('documents/:id')
   @HttpCode(204)
   async removeDocument(@Param('id') id: string, @CurrentUser() claims: IAccessTokenClaims): Promise<void> {
     await this.orders.assertVisible(await this.documents.orderIdOf(id), viewerOf(claims))
+    await this.orders.assertDocumentRemovable(id)
     await this.documents.remove(id)
+    await this.orders.documentRemoved(id)
   }
 
   @Get('orders')

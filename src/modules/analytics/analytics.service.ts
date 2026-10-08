@@ -6,6 +6,7 @@ import { OrderEntity } from '~/modules/orders/order.entity'
 import { OrderEventEntity } from '~/modules/orders/order-event.entity'
 import { UserEntity } from '~/modules/auth/entities'
 import { RatesService } from '~/modules/references/rates.service'
+import { FinanceService } from '~/modules/finance/finance.service'
 import { TASHKENT_OFFSET, buildAnalytics } from './analytics.compute'
 import type { AnalyticsReport, IAnalyticsLead, IAnalyticsOrder } from './analytics.compute'
 
@@ -34,6 +35,7 @@ export class AnalyticsService {
     @InjectRepository(OrderEventEntity) private readonly events: Repository<OrderEventEntity>,
     @InjectRepository(UserEntity) private readonly users: Repository<UserEntity>,
     private readonly rates: RatesService,
+    private readonly finance: FinanceService,
   ) {}
 
   async report(scope: IAnalyticsScope): Promise<AnalyticsReport> {
@@ -54,9 +56,20 @@ export class AnalyticsService {
     ])
 
     const orderIds = orderRows.map(row => row.id)
-    const eventRows = orderIds.length
-      ? await this.events.find({ where: { orderId: In(orderIds), toStatus: In(TRACKED_EVENTS) } })
-      : []
+    const [statusEvents, firstPayments] = orderIds.length
+      ? await Promise.all([
+          this.events.find({ where: { orderId: In(orderIds), toStatus: In(TRACKED_EVENTS) } }),
+          this.finance.firstClientPayments(orderIds),
+        ])
+      : [[], new Map<string, Date>()]
+
+    const paidByEvent = new Set(statusEvents.filter(row => row.toStatus === 'paid').map(row => row.orderId))
+    const paidEvents = orderRows
+      .filter(row => !paidByEvent.has(row.id))
+      .map(row => ({ orderId: row.id, at: firstPayments.get(row.id) ?? (row.legacyPaid ? row.updatedAt : null) }))
+      .filter((row): row is { orderId: string, at: Date } => row.at !== null)
+      .map(row => ({ orderId: row.orderId, toStatus: 'paid', createdAt: row.at }))
+    const eventRows = [...statusEvents.map(row => ({ orderId: row.orderId, toStatus: row.toStatus, createdAt: row.createdAt })), ...paidEvents]
 
     const managerIds = [...new Set([...leadRows, ...orderRows].map(row => row.managerId).filter((id): id is string => Boolean(id)))]
     const people = managerIds.length
@@ -107,7 +120,7 @@ export class AnalyticsService {
       now: new Date(),
       leads,
       orders,
-      events: eventRows.map(row => ({ orderId: row.orderId, toStatus: row.toStatus, createdAt: row.createdAt })),
+      events: eventRows,
       rates: rates.rates,
       managers: new Map(people.map(person => [person.id, [person.firstName, person.lastName].filter(Boolean).join(' ')])),
     })

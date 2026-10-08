@@ -8,7 +8,6 @@ export enum OrderStatus {
   Draft = 'draft',
   Requested = 'requested',
   Confirmed = 'confirmed',
-  Paid = 'paid',
   Issued = 'issued',
   Travelling = 'travelling',
   Completed = 'completed',
@@ -20,8 +19,7 @@ export const ORDER_STATUSES = Object.values(OrderStatus)
 export const ORDER_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
   [OrderStatus.Draft]: [OrderStatus.Requested, OrderStatus.Cancelled],
   [OrderStatus.Requested]: [OrderStatus.Confirmed, OrderStatus.Draft, OrderStatus.Cancelled],
-  [OrderStatus.Confirmed]: [OrderStatus.Paid, OrderStatus.Requested, OrderStatus.Cancelled],
-  [OrderStatus.Paid]: [OrderStatus.Issued, OrderStatus.Cancelled],
+  [OrderStatus.Confirmed]: [OrderStatus.Issued, OrderStatus.Requested, OrderStatus.Cancelled],
   [OrderStatus.Issued]: [OrderStatus.Travelling, OrderStatus.Cancelled],
   [OrderStatus.Travelling]: [OrderStatus.Completed],
   [OrderStatus.Completed]: [],
@@ -30,15 +28,20 @@ export const ORDER_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
 
 export const PASSPORT_CHECKED_STATUSES: OrderStatus[] = [
   OrderStatus.Confirmed,
-  OrderStatus.Paid,
   OrderStatus.Issued,
   OrderStatus.Travelling,
 ]
 
 export const PASSPORT_MARGIN_MONTHS = 6
 
+export const COMMITTED_STATUSES: OrderStatus[] = [
+  OrderStatus.Confirmed,
+  OrderStatus.Issued,
+  OrderStatus.Travelling,
+  OrderStatus.Completed,
+]
+
 export const SETTLED_STATUSES: OrderStatus[] = [
-  OrderStatus.Paid,
   OrderStatus.Issued,
   OrderStatus.Travelling,
   OrderStatus.Completed,
@@ -120,6 +123,18 @@ export class OrderEntity {
 
   @Column({ type: 'text', default: '' })
   note!: string
+
+  @Column({ name: 'deposit_percent', type: 'int', nullable: true })
+  depositPercent!: number | null
+
+  @Column({ name: 'contract_signed_at', type: 'timestamptz', nullable: true })
+  contractSignedAt!: Date | null
+
+  @Column({ name: 'contract_document_id', type: 'uuid', nullable: true })
+  contractDocumentId!: string | null
+
+  @Column({ name: 'legacy_paid', type: 'boolean', default: false })
+  legacyPaid!: boolean
 
   @Column({ name: 'cancel_reason', type: 'text', default: '' })
   cancelReason!: string

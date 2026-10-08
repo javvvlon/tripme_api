@@ -226,7 +226,7 @@ export class LeadsService {
       comment: text(input.comment, MAX_COMMENT),
       locale: text(input.locale, 8) || 'ru',
       channel: text(input.channel, 24) || (source === LeadSource.Manual ? 'manual' : 'site'),
-      destination: text(input.destination, 120) || text(trip.route_to, 120),
+      destination: text(input.destination, 120) || text(trip.route_to_label, 120) || text(trip.route_to, 120),
       plannedDates: text(input.planned_dates, 120),
       partySize: count(input.party_size) || count(trip.adults) + count(trip.children),
       budgetAmount: Number.isFinite(Number(input.budget_amount)) && Number(input.budget_amount) > 0
@@ -388,7 +388,7 @@ export class LeadsService {
 
         Object.assign(lead, tripColumns(input.trip))
 
-        if (!lead.destination) lead.destination = lead.routeTo
+        if (!lead.destination) lead.destination = text(input.trip.route_to_label, 120) || lead.routeTo
         if (!lead.partySize) lead.partySize = lead.adults + lead.children
       }
 

@@ -8,6 +8,7 @@ import { PostsModule } from '~/modules/posts/posts.module'
 import { ContactModule } from '~/modules/contact/contact.module'
 import { LeadsModule } from '~/modules/leads/leads.module'
 import { OrdersModule } from '~/modules/orders/orders.module'
+import { FinanceModule } from '~/modules/finance/finance.module'
 import { OperatorsModule } from '~/modules/operators/operators.module'
 import { AccountModule } from '~/modules/account/account.module'
 import { PointsModule } from '~/modules/points/points.module'
@@ -35,6 +36,7 @@ import { HealthModule } from '~/shared/health/health.module'
     ContactModule,
     LeadsModule,
     OrdersModule,
+    FinanceModule,
     OperatorsModule,
     AccountModule,
     PointsModule,

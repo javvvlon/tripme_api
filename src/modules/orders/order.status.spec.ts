@@ -29,7 +29,6 @@ describe('order status', () => {
       OrderStatus.Draft,
       OrderStatus.Requested,
       OrderStatus.Confirmed,
-      OrderStatus.Paid,
       OrderStatus.Issued,
       OrderStatus.Travelling,
       OrderStatus.Completed,
@@ -43,7 +42,7 @@ describe('order status', () => {
   })
 
   it('refuses to skip a step', () => {
-    expect(ORDER_TRANSITIONS[OrderStatus.Draft]).not.toContain(OrderStatus.Paid)
+    expect(ORDER_TRANSITIONS[OrderStatus.Draft]).not.toContain(OrderStatus.Confirmed)
     expect(ORDER_TRANSITIONS[OrderStatus.Requested]).not.toContain(OrderStatus.Issued)
     expect(ORDER_TRANSITIONS[OrderStatus.Confirmed]).not.toContain(OrderStatus.Completed)
   })
@@ -60,7 +59,7 @@ describe('order status', () => {
       }
     }
 
-    expect(ORDER_TRANSITIONS[OrderStatus.Paid]).not.toContain(OrderStatus.Confirmed)
+    expect(ORDER_TRANSITIONS[OrderStatus.Issued]).not.toContain(OrderStatus.Confirmed)
   })
 
   it('closes the finished order', () => {
@@ -70,7 +69,8 @@ describe('order status', () => {
   it('closes a cancelled order, and a trip under way cannot be cancelled', () => {
     expect(ORDER_TRANSITIONS[OrderStatus.Cancelled]).toHaveLength(0)
     expect(ORDER_TRANSITIONS[OrderStatus.Travelling]).not.toContain(OrderStatus.Cancelled)
-    expect(ORDER_TRANSITIONS[OrderStatus.Paid]).toContain(OrderStatus.Cancelled)
+    expect(ORDER_TRANSITIONS[OrderStatus.Issued]).toContain(OrderStatus.Cancelled)
+    expect(ORDER_TRANSITIONS[OrderStatus.Confirmed]).toContain(OrderStatus.Cancelled)
   })
 
   it('can reach the end from the beginning, and nothing is stranded', () => {
