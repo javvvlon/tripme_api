@@ -73,6 +73,7 @@ export interface ILeadPatch {
   last_name?: string
   phone?: string
   comment?: string
+  trip?: ILeadTripInput
 }
 
 export interface ILeadPayload {
@@ -126,6 +127,24 @@ const asDate = (value: unknown): string | null =>
 const count = (value: unknown): number =>
   Number.isFinite(Number(value)) ? Math.max(0, Math.trunc(Number(value))) : 0
 
+const tripColumns = (trip: ILeadTripInput): Partial<LeadEntity> => {
+  const amount = Number(trip.price_amount)
+
+  return {
+    hotelName: text(trip.hotel_name, 240),
+    supplierName: text(trip.supplier_name, 120),
+    checkIn: asDate(trip.check_in),
+    nights: count(trip.nights),
+    adults: count(trip.adults),
+    children: count(trip.children),
+    priceAmount: Number.isFinite(amount) && amount > 0 ? String(amount) : null,
+    priceCurrency: text(trip.price_currency, 8),
+    routeFrom: text(trip.route_from, 120),
+    routeTo: text(trip.route_to, 120),
+    trip: trip as Record<string, unknown>,
+  }
+}
+
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
  */
@@ -164,7 +183,6 @@ export class LeadsService {
     }
 
     const trip = input.trip ?? {}
-    const amount = Number(trip.price_amount)
 
     const lead = this.leads.create({
       status: LeadStatus.New,
@@ -184,17 +202,7 @@ export class LeadsService {
       budgetCurrency: text(input.budget_currency, 8),
       managerId: typeof input.manager_id === 'string' ? input.manager_id : null,
       userId,
-      hotelName: text(trip.hotel_name, 240),
-      supplierName: text(trip.supplier_name, 120),
-      checkIn: asDate(trip.check_in),
-      nights: count(trip.nights),
-      adults: count(trip.adults),
-      children: count(trip.children),
-      priceAmount: Number.isFinite(amount) && amount > 0 ? String(amount) : null,
-      priceCurrency: text(trip.price_currency, 8),
-      routeFrom: text(trip.route_from, 120),
-      routeTo: text(trip.route_to, 120),
-      trip: trip as Record<string, unknown>,
+      ...tripColumns(trip),
       consentAt: input.consent === true ? new Date() : null,
     })
 
@@ -304,6 +312,15 @@ export class LeadsService {
 
     if (input.budget_amount !== undefined) {
       lead.budgetAmount = input.budget_amount === null ? null : String(input.budget_amount)
+    }
+
+    if (input.trip && typeof input.trip === 'object') {
+      if (!text(input.trip.hotel_name, 240)) throw new BadRequestException('A tour needs a hotel')
+
+      Object.assign(lead, tripColumns(input.trip))
+
+      if (!lead.destination) lead.destination = lead.routeTo
+      if (!lead.partySize) lead.partySize = lead.adults + lead.children
     }
 
     lead.updatedAt = new Date()
