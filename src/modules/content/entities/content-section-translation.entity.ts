@@ -22,4 +22,16 @@ export class ContentSectionTranslationEntity {
 
   @Column({ type: 'text' })
   title!: string
+
+  @Column({ type: 'text', nullable: true })
+  subtitle!: string | null
+
+  @Column({ type: 'text', nullable: true })
+  eyebrow!: string | null
+
+  @Column({ type: 'text', nullable: true })
+  body!: string | null
+
+  @Column({ name: 'cta_label', type: 'text', nullable: true })
+  ctaLabel!: string | null
 }

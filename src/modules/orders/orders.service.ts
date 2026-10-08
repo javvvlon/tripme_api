@@ -20,6 +20,8 @@ import {
 } from './order.entity'
 import { OrderEventEntity } from './order-event.entity'
 import { DocumentsService } from './documents/documents.service'
+import { pageOf } from '~/shared/helpers/pagination'
+import type { IPage, IPageRequest } from '~/shared/helpers/pagination'
 
 export interface IOrderTripInput {
   hotel_name?: string
@@ -143,6 +145,12 @@ const count = (value: unknown): number =>
 const asDate = (value: unknown): string | null =>
   /^\d{4}-\d{2}-\d{2}$/.test(String(value ?? '')) ? String(value) : null
 
+export interface IOrderQuery {
+  q?: string
+  status?: string
+  manager?: string
+}
+
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
  */
@@ -172,7 +180,28 @@ export class OrdersService {
     return this.payloads(rows)
   }
 
-  async list(query: { q?: string, status?: string, manager?: string }, viewer: IViewer): Promise<IOrderPayload[]> {
+  async list(query: IOrderQuery, viewer: IViewer): Promise<IOrderPayload[]> {
+    const rows = await this.filtered(query, viewer).take(500).getMany()
+
+    return this.payloads(rows)
+  }
+
+  async page(
+    query: IOrderQuery,
+    request: IPageRequest,
+    viewer: IViewer,
+  ): Promise<IPage<IOrderPayload, { all: number, live: number }>> {
+    const [rows, total] = await this.filtered(query, viewer).skip(request.skip).take(request.perPage).getManyAndCount()
+    const [all, done, items] = await Promise.all([
+      this.filtered({}, viewer).getCount(),
+      this.filtered({ status: OrderStatus.Completed }, viewer).getCount(),
+      this.payloads(rows),
+    ])
+
+    return pageOf(items, total, request, { all, live: all - done })
+  }
+
+  private filtered(query: IOrderQuery, viewer: IViewer) {
     const builder = this.orders.createQueryBuilder('o')
 
     if (!seesEveryone(viewer)) {
@@ -209,9 +238,7 @@ export class OrdersService {
       )
     }
 
-    const rows = await builder.orderBy('o.orderNo', 'DESC').take(500).getMany()
-
-    return this.payloads(rows)
+    return builder.orderBy('o.orderNo', 'DESC')
   }
 
   async one(id: string, viewer: IViewer): Promise<IOrderPayload> {

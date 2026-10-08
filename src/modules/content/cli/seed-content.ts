@@ -47,8 +47,8 @@ async function main(): Promise<void> {
     const dataSource = app.get(DataSource)
     const sections = dataSource.getRepository(ContentSectionEntity)
 
-    if (await sections.count() && !force) {
-      logger.warn('content_sections is not empty — pass --force to replace it')
+    if (await sections.count({ where: { page: 'home' } }) && !force) {
+      logger.warn('the home page already has sections — pass --force to replace them')
       process.exit(1)
     }
 
@@ -57,7 +57,9 @@ async function main(): Promise<void> {
     ) as ISeed
 
     await dataSource.transaction(async (manager) => {
-      for (const entity of [ContentSectionEntity, ContentListEntity, ContentLayoutEntity]) {
+      await manager.createQueryBuilder().delete().from(ContentSectionEntity).where('page = :page', { page: 'home' }).execute()
+
+      for (const entity of [ContentListEntity, ContentLayoutEntity]) {
         await manager.createQueryBuilder().delete().from(entity).execute()
       }
 
@@ -108,7 +110,7 @@ async function main(): Promise<void> {
       layouts: await dataSource.getRepository(ContentLayoutEntity).count(),
       lists: await dataSource.getRepository(ContentListEntity).count(),
       items: await dataSource.getRepository(ContentItemEntity).count(),
-      sections: await sections.count(),
+      sections: await sections.count({ where: { page: 'home' } }),
     }
 
     logger.log(`seeded ${JSON.stringify(counts)}`)

@@ -1,5 +1,5 @@
 import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Put, Query, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common'
-import { BadRequestException } from '@nestjs/common'
+import { BadRequestException, NotFoundException } from '@nestjs/common'
 import { FileInterceptor } from '@nestjs/platform-express'
 import { StorageService } from '~/shared/storage/storage.service'
 import { MediaService } from '~/shared/storage/media.service'
@@ -10,8 +10,8 @@ import { RolesGuard } from '~/modules/auth/guards/roles.guard'
 import { Roles } from '~/modules/auth/decorators'
 import { UserRole } from '~/modules/auth/contracts/auth'
 import { ContentAdminService } from './content.admin.service'
-import { BLOCK_RULES, isSectionKind, isSectionSource } from './content.blocks'
-import type { SectionKind } from './content.blocks'
+import { BLOCK_RULES, LIST_KINDS, isListKind, isPage, isSectionKind, isSectionSource } from './content.blocks'
+import type { ContentPage, ListKind, SectionKind } from './content.blocks'
 import { RevalidationService } from '~/shared/revalidation/revalidation.service'
 import type { IBannerInput, IListInput, ISectionInput } from './content.admin.service'
 
@@ -152,21 +152,42 @@ export class ContentAdminController {
     await this.revalidation.revalidate()
   }
 
-  @Get('sections')
-  async sections() {
-    return { items: await this.admin.sectionsFor('home') }
+  @Get('pages/:page/sections')
+  async sections(@Param('page') page: string) {
+    return { items: await this.admin.sectionsFor(pageOf(page)) }
   }
 
-  @Put('sections')
+  @Put('pages/:page/sections')
   @HttpCode(204)
-  async saveSections(@Body() body: Record<string, unknown>): Promise<void> {
+  async saveSections(@Param('page') page: string, @Body() body: Record<string, unknown>): Promise<void> {
     const items = Array.isArray(body?.items) ? body.items : null
 
     if (!items) throw new BadRequestException('"items" must be a list of sections')
 
-    await this.admin.replaceSections('home', items.map(parseSection))
+    await this.admin.replaceSections(pageOf(page), items.map(parseSection))
     await this.revalidation.revalidate()
   }
+
+  @Get('pages/:page/meta')
+  async meta(@Param('page') page: string) {
+    return this.admin.meta(pageOf(page))
+  }
+
+  @Put('pages/:page/meta')
+  async saveMeta(@Param('page') page: string, @Body() body: Record<string, unknown>) {
+    const seo = body?.seo && typeof body.seo === 'object' ? body.seo as Record<string, { title?: string, description?: string }> : {}
+    const saved = await this.admin.saveMeta(pageOf(page), { seo })
+
+    await this.revalidation.revalidate()
+
+    return saved
+  }
+}
+
+function pageOf(value: string): ContentPage {
+  if (!isPage(value)) throw new NotFoundException('No such page')
+
+  return value
 }
 
 function str(value: unknown, field: string): string {
@@ -182,7 +203,7 @@ function parseList(body: Record<string, unknown>): IListInput {
 
   return {
     name: str(body?.name, 'name'),
-    kind: kindOf(body?.kind),
+    kind: listKindOf(body?.kind),
     items: items.map((raw) => {
       const item = raw as Record<string, unknown>
       const translations = Array.isArray(item.translations) ? item.translations : []
@@ -233,6 +254,14 @@ function kindOf(value: unknown): SectionKind {
   return value
 }
 
+function listKindOf(value: unknown): ListKind {
+  if (value === undefined || value === null) return 'cards'
+
+  if (!isListKind(value)) throw new BadRequestException(`"kind" must be one of ${LIST_KINDS.join(', ')}`)
+
+  return value
+}
+
 function parseSection(raw: unknown): ISectionInput {
   const section = raw as Record<string, unknown>
   const translations = Array.isArray(section.translations) ? section.translations : []
@@ -252,12 +281,17 @@ function parseSection(raw: unknown): ISectionInput {
     list_id: typeof section.list_id === 'string' && section.list_id ? section.list_id : null,
     layout_id: typeof section.layout_id === 'string' && section.layout_id ? section.layout_id : null,
     is_published: section.is_published !== false,
+    settings: section.settings,
     translations: translations.map((t) => {
       const translation = t as Record<string, unknown>
 
       return {
         locale: str(translation.locale, 'locale'),
         title: typeof translation.title === 'string' ? translation.title : '',
+        subtitle: typeof translation.subtitle === 'string' ? translation.subtitle : null,
+        eyebrow: typeof translation.eyebrow === 'string' ? translation.eyebrow : null,
+        body: typeof translation.body === 'string' ? translation.body : null,
+        cta_label: typeof translation.cta_label === 'string' ? translation.cta_label : null,
       }
     }),
   }

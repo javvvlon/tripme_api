@@ -17,6 +17,7 @@ import type { IUploadedFile } from '~/shared/storage/storage.service'
 import type { DocumentFlavour } from './documents/pdf.builder'
 import type { IOrderCreateInput, IOrderPatchInput } from './orders.service'
 import { viewerOf } from '~/modules/leads/lead.access'
+import { pageRequest } from '~/shared/helpers/pagination'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -81,8 +82,14 @@ export class OrdersController {
     @Query('q') q?: string,
     @Query('status') status?: string,
     @Query('manager') manager?: string,
+    @Query('page') page?: string,
+    @Query('per_page') perPage?: string,
   ) {
-    return this.orders.list({ q, status, manager }, viewerOf(claims))
+    const query = { q, status, manager }
+    const viewer = viewerOf(claims)
+    const request = pageRequest(page, perPage)
+
+    return request ? this.orders.page(query, request, viewer) : this.orders.list(query, viewer)
   }
 
   @Get('orders/statuses')

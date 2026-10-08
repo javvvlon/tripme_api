@@ -3,8 +3,8 @@ import type { MigrationInterface, QueryRunner } from 'typeorm'
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
  */
-export class LeadOwnership1755900024000 implements MigrationInterface {
-  name = 'LeadOwnership1755900024000'
+export class LeadOwnership1755900029000 implements MigrationInterface {
+  name = 'LeadOwnership1755900029000'
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`

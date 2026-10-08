@@ -9,6 +9,7 @@ import { LEAD_STATUSES, LeadSource } from './lead.entity'
 import { LeadsService } from './leads.service'
 import { viewerOf } from './lead.access'
 import type { ILeadInput, ILeadPatch } from './leads.service'
+import { pageRequest } from '~/shared/helpers/pagination'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -49,8 +50,14 @@ export class LeadsAdminController {
     @Query('sort') sort?: string,
     @Query('dir') dir?: string,
     @Query('manager') manager?: string,
+    @Query('page') page?: string,
+    @Query('per_page') perPage?: string,
   ) {
-    return this.leads.list({ status, q, sort, dir, manager }, viewerOf(claims))
+    const query = { status, q, sort, dir, manager }
+    const viewer = viewerOf(claims)
+    const request = pageRequest(page, perPage)
+
+    return request ? this.leads.page(query, request, viewer) : this.leads.list(query, viewer)
   }
 
   @Get(':id')

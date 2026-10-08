@@ -2,6 +2,8 @@ import { BadRequestException, ConflictException, ForbiddenException, Injectable,
 import { InjectRepository } from '@nestjs/typeorm'
 import { Brackets, In, Repository } from 'typeorm'
 import type { EntityManager } from 'typeorm'
+import { pageOf } from '~/shared/helpers/pagination'
+import type { IPage, IPageRequest } from '~/shared/helpers/pagination'
 import { LEAD_PREFIX, numberFromReference, reference } from '~/shared/helpers/reference'
 import { UserEntity } from '~/modules/auth/entities'
 import { LEAD_STATUSES, LEAD_TRANSITIONS, LeadEntity, LeadSource, LeadStatus } from './lead.entity'
@@ -94,6 +96,7 @@ export interface ILeadPatch {
   last_name?: string
   phone?: string
   comment?: string
+  trip?: ILeadTripInput | null
 }
 
 export interface ILeadPayload {
@@ -152,6 +155,24 @@ const asDate = (value: unknown): string | null =>
 const count = (value: unknown): number =>
   Number.isFinite(Number(value)) ? Math.max(0, Math.trunc(Number(value))) : 0
 
+const tripColumns = (trip: ILeadTripInput): Partial<LeadEntity> => {
+  const amount = Number(trip.price_amount)
+
+  return {
+    hotelName: text(trip.hotel_name, 240),
+    supplierName: text(trip.supplier_name, 120),
+    checkIn: asDate(trip.check_in),
+    nights: count(trip.nights),
+    adults: count(trip.adults),
+    children: count(trip.children),
+    priceAmount: Number.isFinite(amount) && amount > 0 ? String(amount) : null,
+    priceCurrency: text(trip.price_currency, 8),
+    routeFrom: text(trip.route_from, 120),
+    routeTo: text(trip.route_to, 120),
+    trip: trip as Record<string, unknown>,
+  }
+}
+
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
  */
@@ -195,7 +216,6 @@ export class LeadsService {
     }
 
     const trip = input.trip ?? {}
-    const amount = Number(trip.price_amount)
 
     const lead = this.leads.create({
       status: LeadStatus.New,
@@ -215,17 +235,7 @@ export class LeadsService {
       budgetCurrency: text(input.budget_currency, 8),
       managerId: source === LeadSource.Manual ? actorId : null,
       userId,
-      hotelName: text(trip.hotel_name, 240),
-      supplierName: text(trip.supplier_name, 120),
-      checkIn: asDate(trip.check_in),
-      nights: count(trip.nights),
-      adults: count(trip.adults),
-      children: count(trip.children),
-      priceAmount: Number.isFinite(amount) && amount > 0 ? String(amount) : null,
-      priceCurrency: text(trip.price_currency, 8),
-      routeFrom: text(trip.route_from, 120),
-      routeTo: text(trip.route_to, 120),
-      trip: trip as Record<string, unknown>,
+      ...tripColumns(trip),
       consentAt: input.consent === true ? new Date() : null,
     })
 
@@ -248,6 +258,28 @@ export class LeadsService {
   }
 
   async list(query: ILeadQuery, viewer: IViewer): Promise<ILeadPayload[]> {
+    const rows = await this.filtered(query, viewer).take(500).getMany()
+    const names = await this.namesOf(rows.map(row => row.managerId))
+
+    return rows.map(row => this.toPayload(row, names))
+  }
+
+  async page(
+    query: ILeadQuery,
+    request: IPageRequest,
+    viewer: IViewer,
+  ): Promise<IPage<ILeadPayload, { all: number, fresh: number }>> {
+    const [rows, total] = await this.filtered(query, viewer).skip(request.skip).take(request.perPage).getManyAndCount()
+    const [all, fresh, names] = await Promise.all([
+      this.filtered({}, viewer).getCount(),
+      this.filtered({ status: LeadStatus.New }, viewer).getCount(),
+      this.namesOf(rows.map(row => row.managerId)),
+    ])
+
+    return pageOf(rows.map(row => this.toPayload(row, names)), total, request, { all, fresh })
+  }
+
+  private filtered(query: ILeadQuery, viewer: IViewer) {
     const column = LEAD_SORTS[query.sort as LeadSort] ?? LEAD_SORTS.order
     const direction = query.dir === 'asc' ? 'ASC' : 'DESC'
 
@@ -295,14 +327,9 @@ export class LeadsService {
       }))
     }
 
-    const rows = await builder
+    return builder
       .orderBy(column, direction, 'NULLS LAST')
-      .take(500)
-      .getMany()
-
-    const names = await this.namesOf(rows.map(row => row.managerId))
-
-    return rows.map(row => this.toPayload(row, names))
+      .addOrderBy('lead.orderId', 'DESC')
   }
 
   async patch(id: string, input: ILeadPatch, viewer: IViewer): Promise<ILeadPayload> {
@@ -352,6 +379,17 @@ export class LeadsService {
 
       if (input.budget_amount !== undefined) {
         lead.budgetAmount = input.budget_amount === null ? null : String(input.budget_amount)
+      }
+
+      if (input.trip === null) Object.assign(lead, tripColumns({}))
+
+      if (input.trip && typeof input.trip === 'object') {
+        if (!text(input.trip.hotel_name, 240)) throw new BadRequestException('A tour needs a hotel')
+
+        Object.assign(lead, tripColumns(input.trip))
+
+        if (!lead.destination) lead.destination = lead.routeTo
+        if (!lead.partySize) lead.partySize = lead.adults + lead.children
       }
 
       lead.updatedAt = new Date()
