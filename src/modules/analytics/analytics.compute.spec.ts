@@ -56,6 +56,25 @@ describe('analytics', () => {
     expect(report.period.previous).toEqual({ from: '2026-09-24', to: '2026-09-30' })
   })
 
+  it('splits each person\'s leads by status and keeps the unassigned apart', () => {
+    const report = buildAnalytics(input({
+      managers: new Map([['m1', 'Dilshod K'], ['m2', 'Aziza R']]),
+      leads: [
+        lead({ id: 'a', status: 'won' }),
+        lead({ id: 'b', status: 'in_progress' }),
+        lead({ id: 'c', status: 'rejected' }),
+        lead({ id: 'd', status: 'quote_sent', managerId: 'm2' }),
+        lead({ id: 'e', status: 'new', managerId: null }),
+      ],
+    }))
+
+    const byName = Object.fromEntries(report.managers.map(row => [row.name || '-', row.statuses]))
+
+    expect(byName['Dilshod K']).toEqual({ new: 0, inProgress: 1, quoteSent: 0, won: 1, rejected: 1 })
+    expect(byName['Aziza R']).toEqual({ new: 0, inProgress: 0, quoteSent: 1, won: 0, rejected: 0 })
+    expect(byName['-']).toEqual({ new: 1, inProgress: 0, quoteSent: 0, won: 0, rejected: 0 })
+  })
+
   it('walks the funnel from lead to completed trip', () => {
     const report = buildAnalytics(input({
       leads: [

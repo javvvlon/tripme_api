@@ -1,8 +1,13 @@
-import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common'
+import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { DataSource, Repository } from 'typeorm'
+import type { EntityManager } from 'typeorm'
 import { PointsService } from '~/modules/points/points.service'
 import { LEAD_TRANSITIONS, LeadEntity, LeadStatus } from '~/modules/leads/lead.entity'
+import { LeadsService } from '~/modules/leads/leads.service'
+import { LeadEventKind } from '~/modules/leads/lead-event.entity'
+import { canSeeLead, canSeeOrder, seesEveryone } from '~/modules/leads/lead.access'
+import type { IViewer } from '~/modules/leads/lead.access'
 import { ORDER_PREFIX, numberFromReference, reference } from '~/shared/helpers/reference'
 import {
   ORDER_STATUSES,
@@ -36,7 +41,6 @@ export interface IOrderCreateInput {
   country?: string
   deal_date?: string
   return_date?: string
-  manager_id?: string | null
   branch?: string
   note?: string
   passport_id?: string
@@ -77,6 +81,7 @@ export interface IOrderPayload {
   deal_date: string | null
   return_date: string | null
   manager_id: string | null
+  manager_name: string
   branch: string
   supplier_order_id: string
   passport_id: string
@@ -143,6 +148,7 @@ const asDate = (value: unknown): string | null =>
 export interface IOrderQuery {
   q?: string
   status?: string
+  manager?: string
 }
 
 /**
@@ -160,32 +166,55 @@ export class OrdersService {
     private readonly dataSource: DataSource,
     private readonly points: PointsService,
     private readonly documentFiles: DocumentsService,
+    private readonly leadsService: LeadsService,
   ) {}
 
-  async forLead(leadId: string): Promise<IOrderPayload[]> {
-    const rows = await this.orders.find({ where: { leadId }, order: { createdAt: 'ASC' } })
+  async forLead(leadId: string, viewer: IViewer): Promise<IOrderPayload[]> {
+    const lead = await this.leads.findOne({ where: { id: leadId } })
 
-    return rows.map(row => this.toPayload(row))
+    if (!lead || !canSeeLead(viewer, lead)) throw new NotFoundException('Lead not found')
+
+    const rows = (await this.orders.find({ where: { leadId }, order: { createdAt: 'ASC' } }))
+      .filter(row => canSeeOrder(viewer, row, lead))
+
+    return this.payloads(rows)
   }
 
-  async list(query: IOrderQuery = {}): Promise<IOrderPayload[]> {
-    const rows = await this.filtered(query).take(500).getMany()
+  async list(query: IOrderQuery, viewer: IViewer): Promise<IOrderPayload[]> {
+    const rows = await this.filtered(query, viewer).take(500).getMany()
 
-    return rows.map(row => this.toPayload(row))
+    return this.payloads(rows)
   }
 
-  async page(query: IOrderQuery, request: IPageRequest): Promise<IPage<IOrderPayload, { all: number, live: number }>> {
-    const [rows, total] = await this.filtered(query).skip(request.skip).take(request.perPage).getManyAndCount()
-    const [all, done] = await Promise.all([
-      this.orders.count(),
-      this.orders.count({ where: { status: OrderStatus.Completed } }),
+  async page(
+    query: IOrderQuery,
+    request: IPageRequest,
+    viewer: IViewer,
+  ): Promise<IPage<IOrderPayload, { all: number, live: number }>> {
+    const [rows, total] = await this.filtered(query, viewer).skip(request.skip).take(request.perPage).getManyAndCount()
+    const [all, done, items] = await Promise.all([
+      this.filtered({}, viewer).getCount(),
+      this.filtered({ status: OrderStatus.Completed }, viewer).getCount(),
+      this.payloads(rows),
     ])
 
-    return pageOf(rows.map(row => this.toPayload(row)), total, request, { all, live: all - done })
+    return pageOf(items, total, request, { all, live: all - done })
   }
 
-  private filtered(query: IOrderQuery) {
+  private filtered(query: IOrderQuery, viewer: IViewer) {
     const builder = this.orders.createQueryBuilder('o')
+
+    if (!seesEveryone(viewer)) {
+      builder
+        .leftJoin(LeadEntity, 'lead', 'lead.id = o.leadId')
+        .andWhere('(o.managerId = :viewer or (o.managerId is null and lead.managerId = :viewer))', { viewer: viewer.id })
+    }
+
+    if (query.manager === 'me') builder.andWhere('o.managerId = :me', { me: viewer.id })
+    else if (query.manager === 'none') builder.andWhere('o.managerId is null')
+    else if (query.manager && /^[0-9a-f-]{36}$/i.test(query.manager)) {
+      builder.andWhere('o.managerId = :manager', { manager: query.manager })
+    }
 
     if (query.status && ORDER_STATUSES.includes(query.status as OrderStatus)) {
       builder.andWhere('o.status = :status', { status: query.status })
@@ -212,30 +241,35 @@ export class OrdersService {
     return builder.orderBy('o.orderNo', 'DESC')
   }
 
+  async one(id: string, viewer: IViewer): Promise<IOrderPayload> {
+    const order = await this.visible(id, viewer)
 
-  async one(id: string): Promise<IOrderPayload> {
-    const order = await this.orders.findOne({ where: { id } })
-
-    if (!order) throw new NotFoundException('Order not found')
-
-    return this.toPayload(order)
+    return (await this.payloads([order]))[0]!
   }
 
-  async history(id: string) {
+  async assertVisible(id: string, viewer: IViewer): Promise<void> {
+    await this.visible(id, viewer)
+  }
+
+  async history(id: string, viewer: IViewer) {
+    await this.visible(id, viewer)
+
     const rows = await this.events.find({ where: { orderId: id }, order: { createdAt: 'ASC' } })
+    const names = await this.leadsService.namesOf(rows.map(row => row.actorId))
 
     return rows.map(row => ({
       from: row.fromStatus,
       to: row.toStatus,
       actor_id: row.actorId,
+      actor_name: row.actorId ? names.get(row.actorId) ?? null : null,
       at: row.createdAt.toISOString(),
     }))
   }
 
-  async create(leadId: string, input: IOrderCreateInput, actorId: string | null): Promise<IOrderPayload> {
+  async create(leadId: string, input: IOrderCreateInput, viewer: IViewer): Promise<IOrderPayload> {
     const lead = await this.leads.findOne({ where: { id: leadId } })
 
-    if (!lead) throw new NotFoundException('Lead not found')
+    if (!lead || !canSeeLead(viewer, lead)) throw new NotFoundException('Lead not found')
 
     if (lead.status === LeadStatus.Rejected) {
       throw new ConflictException('A rejected lead cannot take new orders')
@@ -254,7 +288,7 @@ export class OrdersService {
       country: text(input.country, 120) || text(trip.route_to, 120),
       dealDate: asDate(input.deal_date),
       returnDate: asDate(input.return_date),
-      managerId: typeof input.manager_id === 'string' ? input.manager_id : null,
+      managerId: null,
       branch: text(input.branch, 120),
       hotelName: text(trip.hotel_name, 240),
       supplierName: text(trip.supplier_name, 120),
@@ -267,20 +301,32 @@ export class OrdersService {
       trip: trip as Record<string, unknown>,
     })
 
-    const saved = await this.orders.save(order)
+    const saved = await this.dataSource.transaction(async (manager) => {
+      await this.leadsService.claimForOrder(manager, lead, viewer)
 
-    await this.events.save(this.events.create({
-      orderId: saved.id,
-      fromStatus: null,
-      toStatus: OrderStatus.Draft,
-      actorId,
-    }))
+      order.managerId = lead.managerId
 
-    return this.one(saved.id)
+      const stored = await manager.getRepository(OrderEntity).save(order)
+
+      await manager.getRepository(OrderEventEntity).save({
+        orderId: stored.id,
+        fromStatus: null,
+        toStatus: OrderStatus.Draft,
+        actorId: viewer.id,
+      })
+
+      return stored
+    })
+
+    return this.one(saved.id, viewer)
   }
 
-  async patch(id: string, input: IOrderPatchInput, actorId: string | null): Promise<IOrderPayload> {
-    return this.dataSource.transaction(async (manager) => {
+  async patch(id: string, input: IOrderPatchInput, viewer: IViewer): Promise<IOrderPayload> {
+    await this.visible(id, viewer)
+
+    const actorId = viewer.id
+
+    const saved = await this.dataSource.transaction(async (manager) => {
       const orders = manager.getRepository(OrderEntity)
       const order = await orders.findOne({ where: { id } })
 
@@ -303,7 +349,22 @@ export class OrdersService {
       if (input.adults !== undefined) order.adults = count(input.adults)
       if (input.children !== undefined) order.children = count(input.children)
       if (input.price_currency !== undefined) order.priceCurrency = text(input.price_currency, 8)
-      if (input.manager_id !== undefined) order.managerId = input.manager_id || null
+      if (input.manager_id !== undefined && (input.manager_id || null) !== order.managerId) {
+        if (!seesEveryone(viewer)) throw new ForbiddenException('Only a manager can reassign an order')
+
+        const target = input.manager_id || null
+
+        if (target) await this.leadsService.assertStaff(target)
+
+        await this.leadsService.record(manager, order.leadId, LeadEventKind.OrderAssigned, {
+          from: order.managerId,
+          to: target,
+          subject: reference(ORDER_PREFIX, Number(order.orderNo ?? 0), order.createdAt),
+          actorId,
+        })
+
+        order.managerId = target
+      }
       if (input.branch !== undefined) order.branch = text(input.branch, 120)
 
       if (input.price_amount !== undefined) {
@@ -326,7 +387,7 @@ export class OrdersService {
 
         if (next === OrderStatus.Cancelled) order.cancelReason = text(input.cancel_reason, 500)
 
-        await this.followOrder(manager.getRepository(LeadEntity), order.leadId, next)
+        await this.followOrder(manager, order.leadId, next, actorId)
 
         completed = next === OrderStatus.Completed
       }
@@ -337,14 +398,14 @@ export class OrdersService {
 
       if (completed) await this.points.awardFor(order, manager)
 
-      return this.toPayload(order)
+      return order
     })
+
+    return (await this.payloads([saved]))[0]!
   }
 
-  async remove(id: string): Promise<{ removed: boolean }> {
-    const order = await this.orders.findOne({ where: { id } })
-
-    if (!order) throw new NotFoundException('Order not found')
+  async remove(id: string, viewer: IViewer): Promise<{ removed: boolean }> {
+    const order = await this.visible(id, viewer)
 
     if (SETTLED_STATUSES.includes(order.status as OrderStatus)) {
       throw new ConflictException('An order that has been paid cannot be deleted')
@@ -411,7 +472,8 @@ export class OrdersService {
     return to as OrderStatus
   }
 
-  private async followOrder(leads: Repository<LeadEntity>, leadId: string, status: OrderStatus): Promise<void> {
+  private async followOrder(manager: EntityManager, leadId: string, status: OrderStatus, actorId: string): Promise<void> {
+    const leads = manager.getRepository(LeadEntity)
     const lead = await leads.findOne({ where: { id: leadId } })
 
     if (!lead) return
@@ -428,13 +490,35 @@ export class OrdersService {
 
     if (lead.status === LeadStatus.New && !lead.firstResponseAt) lead.firstResponseAt = new Date()
 
+    await this.leadsService.record(manager, lead.id, LeadEventKind.Status, { from: lead.status, to: wanted, actorId })
+
     lead.status = wanted
     lead.updatedAt = new Date()
 
     await leads.save(lead)
   }
 
-  private toPayload(row: OrderEntity): IOrderPayload {
+  private async visible(id: string, viewer: IViewer): Promise<OrderEntity> {
+    const order = await this.orders.findOne({ where: { id } })
+
+    if (!order) throw new NotFoundException('Order not found')
+
+    if (seesEveryone(viewer) || order.managerId === viewer.id) return order
+
+    const lead = order.managerId ? null : await this.leads.findOne({ where: { id: order.leadId } })
+
+    if (!canSeeOrder(viewer, order, lead)) throw new NotFoundException('Order not found')
+
+    return order
+  }
+
+  private async payloads(rows: OrderEntity[]): Promise<IOrderPayload[]> {
+    const names = await this.leadsService.namesOf(rows.map(row => row.managerId))
+
+    return rows.map(row => this.toPayload(row, names))
+  }
+
+  private toPayload(row: OrderEntity, names: Map<string, string>): IOrderPayload {
     return {
       uuid: row.id,
       order_no: Number(row.orderNo ?? 0),
@@ -446,6 +530,7 @@ export class OrdersService {
       deal_date: row.dealDate,
       return_date: row.returnDate,
       manager_id: row.managerId,
+      manager_name: row.managerId ? names.get(row.managerId) ?? '' : '',
       branch: row.branch ?? '',
       supplier_order_id: row.supplierOrderId ?? '',
       passport_id: row.passportId ?? '',

@@ -7,6 +7,7 @@ import { UserRole } from '~/modules/auth/contracts/auth'
 import type { IAccessTokenClaims } from '~/modules/auth/contracts/auth'
 import { LEAD_STATUSES, LeadSource } from './lead.entity'
 import { LeadsService } from './leads.service'
+import { viewerOf } from './lead.access'
 import type { ILeadInput, ILeadPatch } from './leads.service'
 import { pageRequest } from '~/shared/helpers/pagination'
 
@@ -36,38 +37,58 @@ export class LeadsAdminController {
     return { items: LEAD_STATUSES }
   }
 
+  @Get('staff')
+  staff() {
+    return this.leads.staff()
+  }
+
   @Get()
   list(
+    @CurrentUser() claims: IAccessTokenClaims,
     @Query('status') status?: string,
     @Query('q') q?: string,
     @Query('sort') sort?: string,
     @Query('dir') dir?: string,
+    @Query('manager') manager?: string,
     @Query('page') page?: string,
     @Query('per_page') perPage?: string,
   ) {
+    const query = { status, q, sort, dir, manager }
+    const viewer = viewerOf(claims)
     const request = pageRequest(page, perPage)
 
-    return request ? this.leads.page({ status, q, sort, dir }, request) : this.leads.list({ status, q, sort, dir })
+    return request ? this.leads.page(query, request, viewer) : this.leads.list(query, viewer)
   }
 
   @Get(':id')
-  one(@Param('id') id: string) {
-    return this.leads.one(id)
+  one(@Param('id') id: string, @CurrentUser() claims: IAccessTokenClaims) {
+    return this.leads.one(id, viewerOf(claims))
+  }
+
+  @Get(':id/history')
+  history(@Param('id') id: string, @CurrentUser() claims: IAccessTokenClaims) {
+    return this.leads.history(id, viewerOf(claims))
   }
 
   @Post()
   @HttpCode(201)
-  create(@Body() body: ILeadInput) {
-    return this.leads.submit(body, LeadSource.Manual)
+  create(@Body() body: ILeadInput, @CurrentUser() claims: IAccessTokenClaims) {
+    return this.leads.submit(body, LeadSource.Manual, null, claims.sub)
+  }
+
+  @Post(':id/take')
+  @HttpCode(200)
+  take(@Param('id') id: string, @CurrentUser() claims: IAccessTokenClaims) {
+    return this.leads.take(id, viewerOf(claims))
   }
 
   @Patch(':id')
-  patch(@Param('id') id: string, @Body() body: ILeadPatch) {
-    return this.leads.patch(id, body)
+  patch(@Param('id') id: string, @Body() body: ILeadPatch, @CurrentUser() claims: IAccessTokenClaims) {
+    return this.leads.patch(id, body, viewerOf(claims))
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.leads.remove(id)
+  remove(@Param('id') id: string, @CurrentUser() claims: IAccessTokenClaims) {
+    return this.leads.remove(id, viewerOf(claims))
   }
 }

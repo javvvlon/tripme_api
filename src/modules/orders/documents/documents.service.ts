@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm'
 import { In, Repository } from 'typeorm'
 import { StorageService } from '~/shared/storage/storage.service'
 import { LeadEntity, LEAD_TRANSITIONS, LeadStatus } from '~/modules/leads/lead.entity'
+import { LeadEventEntity, LeadEventKind } from '~/modules/leads/lead-event.entity'
 import { OrderEntity } from '../order.entity'
 import { DocumentKind, OrderDocumentEntity } from '../order-document.entity'
 import { buildDocument } from './pdf.builder'
@@ -160,7 +161,7 @@ export class DocumentsService {
       createdBy: actorId,
     }))
 
-    if (flavour === 'offer') await this.followOffer(lead)
+    if (flavour === 'offer') await this.followOffer(lead, actorId)
 
     return toDocumentPayload(saved)
   }
@@ -175,6 +176,14 @@ export class DocumentsService {
 
   async discardFiles(urls: string[]): Promise<void> {
     await Promise.all(urls.map(url => this.storage.remove(url)))
+  }
+
+  async orderIdOf(id: string): Promise<string> {
+    const document = await this.documents.findOne({ where: { id }, select: { id: true, orderId: true } })
+
+    if (!document) throw new NotFoundException('Document not found')
+
+    return document.orderId
   }
 
   async remove(id: string): Promise<void> {
@@ -192,12 +201,20 @@ export class DocumentsService {
     }
   }
 
-  private async followOffer(lead: LeadEntity | null): Promise<void> {
+  private async followOffer(lead: LeadEntity | null, actorId: string | null): Promise<void> {
     if (!lead) return
 
     const allowed = LEAD_TRANSITIONS[lead.status as LeadStatus] ?? []
 
     if (!allowed.includes(LeadStatus.QuoteSent)) return
+
+    await this.leads.manager.getRepository(LeadEventEntity).save({
+      leadId: lead.id,
+      kind: LeadEventKind.Status,
+      fromValue: lead.status,
+      toValue: LeadStatus.QuoteSent,
+      actorId,
+    })
 
     lead.status = LeadStatus.QuoteSent
     lead.updatedAt = new Date()

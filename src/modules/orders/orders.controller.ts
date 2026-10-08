@@ -16,6 +16,7 @@ import { GENERATED_KINDS } from './order-document.entity'
 import type { IUploadedFile } from '~/shared/storage/storage.service'
 import type { DocumentFlavour } from './documents/pdf.builder'
 import type { IOrderCreateInput, IOrderPatchInput } from './orders.service'
+import { viewerOf } from '~/modules/leads/lead.access'
 import { pageRequest } from '~/shared/helpers/pagination'
 
 /**
@@ -31,13 +32,15 @@ export class OrdersController {
   ) {}
 
   @Get('orders/:id/documents')
-  documentsFor(@Param('id') id: string) {
+  async documentsFor(@Param('id') id: string, @CurrentUser() claims: IAccessTokenClaims) {
+    await this.orders.assertVisible(id, viewerOf(claims))
+
     return this.documents.list(id)
   }
 
   @Post('orders/:id/documents/:kind')
   @HttpCode(201)
-  generate(
+  async generate(
     @Param('id') id: string,
     @Param('kind') kind: string,
     @CurrentUser() claims: IAccessTokenClaims,
@@ -46,38 +49,47 @@ export class OrdersController {
       throw new BadRequestException('A document is either an offer or an invoice')
     }
 
+    await this.orders.assertVisible(id, viewerOf(claims))
+
     return this.documents.generate(id, kind as DocumentFlavour, claims?.sub ?? null)
   }
 
   @Post('orders/:id/attachments')
   @HttpCode(201)
   @UseInterceptors(FileInterceptor('file', { limits: { fileSize: MAX_ATTACHMENT_BYTES } }))
-  attach(
+  async attach(
     @Param('id') id: string,
     @CurrentUser() claims: IAccessTokenClaims,
     @UploadedFile() file?: IUploadedFile,
   ) {
     if (!file) throw new BadRequestException('No file was sent')
 
+    await this.orders.assertVisible(id, viewerOf(claims))
+
     return this.documents.attach(id, file, claims?.sub ?? null)
   }
 
   @Delete('documents/:id')
   @HttpCode(204)
-  removeDocument(@Param('id') id: string): Promise<void> {
-    return this.documents.remove(id)
+  async removeDocument(@Param('id') id: string, @CurrentUser() claims: IAccessTokenClaims): Promise<void> {
+    await this.orders.assertVisible(await this.documents.orderIdOf(id), viewerOf(claims))
+    await this.documents.remove(id)
   }
 
   @Get('orders')
   list(
+    @CurrentUser() claims: IAccessTokenClaims,
     @Query('q') q?: string,
     @Query('status') status?: string,
+    @Query('manager') manager?: string,
     @Query('page') page?: string,
     @Query('per_page') perPage?: string,
   ) {
+    const query = { q, status, manager }
+    const viewer = viewerOf(claims)
     const request = pageRequest(page, perPage)
 
-    return request ? this.orders.page({ q, status }, request) : this.orders.list({ q, status })
+    return request ? this.orders.page(query, request, viewer) : this.orders.list(query, viewer)
   }
 
   @Get('orders/statuses')
@@ -86,8 +98,8 @@ export class OrdersController {
   }
 
   @Get('leads/:id/orders')
-  forLead(@Param('id') id: string) {
-    return this.orders.forLead(id)
+  forLead(@Param('id') id: string, @CurrentUser() claims: IAccessTokenClaims) {
+    return this.orders.forLead(id, viewerOf(claims))
   }
 
   @Post('leads/:id/orders')
@@ -97,17 +109,17 @@ export class OrdersController {
     @Body() body: IOrderCreateInput,
     @CurrentUser() claims: IAccessTokenClaims,
   ) {
-    return this.orders.create(id, body, claims?.sub ?? null)
+    return this.orders.create(id, body, viewerOf(claims))
   }
 
   @Get('orders/:id')
-  one(@Param('id') id: string) {
-    return this.orders.one(id)
+  one(@Param('id') id: string, @CurrentUser() claims: IAccessTokenClaims) {
+    return this.orders.one(id, viewerOf(claims))
   }
 
   @Get('orders/:id/history')
-  history(@Param('id') id: string) {
-    return this.orders.history(id)
+  history(@Param('id') id: string, @CurrentUser() claims: IAccessTokenClaims) {
+    return this.orders.history(id, viewerOf(claims))
   }
 
   @Patch('orders/:id')
@@ -116,11 +128,11 @@ export class OrdersController {
     @Body() body: IOrderPatchInput,
     @CurrentUser() claims: IAccessTokenClaims,
   ) {
-    return this.orders.patch(id, body, claims?.sub ?? null)
+    return this.orders.patch(id, body, viewerOf(claims))
   }
 
   @Delete('orders/:id')
-  remove(@Param('id') id: string) {
-    return this.orders.remove(id)
+  remove(@Param('id') id: string, @CurrentUser() claims: IAccessTokenClaims) {
+    return this.orders.remove(id, viewerOf(claims))
   }
 }

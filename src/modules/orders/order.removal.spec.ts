@@ -3,6 +3,7 @@ import { NotFoundException } from '@nestjs/common'
 import { OrdersService } from './orders.service'
 import { OrderStatus } from './order.entity'
 import { LeadsService } from '~/modules/leads/leads.service'
+import { UserRole } from '~/modules/auth/contracts/auth'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -23,15 +24,20 @@ const ordersWith = (status: OrderStatus, calls: string[]) => ({
   delete: vi.fn(async () => { calls.push('delete'); return { affected: 1 } }),
 })
 
+const boss = { id: 'boss', role: UserRole.Manager }
+
 const service = (orders: unknown, documents: ReturnType<typeof files>) =>
-  new OrdersService(orders as never, {} as never, {} as never, {} as never, {} as never, documents as never)
+  new OrdersService(orders as never, {} as never, {} as never, {} as never, {} as never, documents as never, {} as never)
+
+const leadsWith = (lead: unknown, remove: () => Promise<{ affected: number }>) =>
+  new LeadsService({ findOne: vi.fn(async () => lead), delete: vi.fn(remove) } as never, {} as never, {} as never)
 
 describe('removing orders and leads', () => {
   it('deletes the files of an order after the order itself', async () => {
     const documents = files()
     const orders = ordersWith(OrderStatus.Draft, documents.calls)
 
-    await service(orders, documents).remove('o1')
+    await service(orders, documents).remove('o1', boss)
 
     expect(documents.calls).toEqual(['delete', 'discard:https://store/documents/o1.pdf'])
   })
@@ -40,19 +46,22 @@ describe('removing orders and leads', () => {
     const documents = files()
     const orders = ordersWith(OrderStatus.Paid, documents.calls)
 
-    await expect(service(orders, documents).remove('o1')).rejects.toThrow()
+    await expect(service(orders, documents).remove('o1', boss)).rejects.toThrow()
     expect(documents.discardFiles).not.toHaveBeenCalled()
   })
 
   it('deletes the files of every order of a removed lead, and only after the lead', async () => {
     const documents = files()
     const orders = ordersWith(OrderStatus.Draft, documents.calls)
-    const leadsRepo = { delete: vi.fn(async () => { documents.calls.push('delete-lead'); return { affected: 1 } }) }
-    const leads = new LeadsService(leadsRepo as never)
+    const leads = leadsWith({ id: 'l1', managerId: null, status: 'new' }, async () => {
+      documents.calls.push('delete-lead')
+
+      return { affected: 1 }
+    })
 
     leads.registerRemovalHook(id => service(orders, documents).releaseLead(id))
 
-    await leads.remove('l1')
+    await leads.remove('l1', boss)
 
     expect(documents.calls).toEqual([
       'delete-lead',
@@ -63,11 +72,11 @@ describe('removing orders and leads', () => {
   it('touches no files when the lead does not exist', async () => {
     const documents = files()
     const orders = ordersWith(OrderStatus.Draft, documents.calls)
-    const leads = new LeadsService({ delete: vi.fn(async () => ({ affected: 0 })) } as never)
+    const leads = leadsWith(null, async () => ({ affected: 0 }))
 
     leads.registerRemovalHook(id => service(orders, documents).releaseLead(id))
 
-    await expect(leads.remove('missing')).rejects.toBeInstanceOf(NotFoundException)
+    await expect(leads.remove('missing', boss)).rejects.toBeInstanceOf(NotFoundException)
     expect(documents.discardFiles).not.toHaveBeenCalled()
   })
 })

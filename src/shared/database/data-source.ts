@@ -17,6 +17,7 @@ import {
 import { PostEntity, PostTranslationEntity } from '~/modules/posts/entities'
 import { ContactMessageEntity } from '~/modules/contact/contact-message.entity'
 import { LeadEntity } from '~/modules/leads/lead.entity'
+import { LeadEventEntity } from '~/modules/leads/lead-event.entity'
 import { OrderEntity } from '~/modules/orders/order.entity'
 import { OrderEventEntity } from '~/modules/orders/order-event.entity'
 import { OrderDocumentEntity } from '~/modules/orders/order-document.entity'
@@ -52,6 +53,7 @@ import { PageBuilder1755900025000 } from './migrations/1755900025000-PageBuilder
 import { RichBlocks1755900026000 } from './migrations/1755900026000-RichBlocks'
 import { HomeBlocks1755900027000 } from './migrations/1755900027000-HomeBlocks'
 import { PrestigeOperator1755900028000 } from './migrations/1755900028000-PrestigeOperator'
+import { LeadOwnership1755900029000 } from './migrations/1755900029000-LeadOwnership'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -73,7 +75,7 @@ export const databaseOptions = (): DataSourceOptions => {
       ContentLayoutEntity, ContentListEntity, ContentItemEntity,
       ContentItemTranslationEntity, ContentSectionEntity, ContentSectionTranslationEntity,
       ContentBannerEntity, ContentBannerTranslationEntity, ContentPageEntity,
-      PostEntity, PostTranslationEntity, ContactMessageEntity, LeadEntity, OrderEntity, OrderEventEntity, OrderDocumentEntity, OperatorEntity,
+      PostEntity, PostTranslationEntity, ContactMessageEntity, LeadEntity, LeadEventEntity, OrderEntity, OrderEventEntity, OrderDocumentEntity, OperatorEntity,
       PointsTierEntity, PointsSettingsEntity, PointsTransactionEntity,
       MediaFileEntity, MediaFolderEntity,
     ],
@@ -103,6 +105,7 @@ export const databaseOptions = (): DataSourceOptions => {
       RichBlocks1755900026000,
       HomeBlocks1755900027000,
       PrestigeOperator1755900028000,
+      LeadOwnership1755900029000,
     ],
     synchronize: false,
     migrationsRun: false,
