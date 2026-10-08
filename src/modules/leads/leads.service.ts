@@ -73,7 +73,7 @@ export interface ILeadPatch {
   last_name?: string
   phone?: string
   comment?: string
-  trip?: ILeadTripInput
+  trip?: ILeadTripInput | null
 }
 
 export interface ILeadPayload {
@@ -313,6 +313,8 @@ export class LeadsService {
     if (input.budget_amount !== undefined) {
       lead.budgetAmount = input.budget_amount === null ? null : String(input.budget_amount)
     }
+
+    if (input.trip === null) Object.assign(lead, tripColumns({}))
 
     if (input.trip && typeof input.trip === 'object') {
       if (!text(input.trip.hotel_name, 240)) throw new BadRequestException('A tour needs a hotel')
