@@ -9,6 +9,7 @@ import { ContactModule } from '~/modules/contact/contact.module'
 import { LeadsModule } from '~/modules/leads/leads.module'
 import { OrdersModule } from '~/modules/orders/orders.module'
 import { FinanceModule } from '~/modules/finance/finance.module'
+import { EsimModule } from '~/modules/esim/esim.module'
 import { OperatorsModule } from '~/modules/operators/operators.module'
 import { AccountModule } from '~/modules/account/account.module'
 import { PointsModule } from '~/modules/points/points.module'
@@ -37,6 +38,7 @@ import { HealthModule } from '~/shared/health/health.module'
     LeadsModule,
     OrdersModule,
     FinanceModule,
+    EsimModule,
     OperatorsModule,
     AccountModule,
     PointsModule,

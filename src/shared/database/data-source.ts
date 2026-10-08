@@ -23,6 +23,7 @@ import { OrderEventEntity } from '~/modules/orders/order-event.entity'
 import { OrderDocumentEntity } from '~/modules/orders/order-document.entity'
 import { OrderItemEntity } from '~/modules/orders/items/order-item.entity'
 import { PaymentEntity } from '~/modules/finance/payment.entity'
+import { EsimPurchaseEntity } from '~/modules/esim/purchase.entity'
 import { PointsSettingsEntity, PointsTierEntity, PointsTransactionEntity } from '~/modules/points/points.entities'
 import { OperatorEntity } from '~/modules/operators/operator.entity'
 import { MediaFileEntity } from '~/shared/storage/media-file.entity'
@@ -59,6 +60,7 @@ import { LeadOwnership1755900029000 } from './migrations/1755900029000-LeadOwner
 import { OrderItems1755900030000 } from './migrations/1755900030000-OrderItems'
 import { Payments1755900031000 } from './migrations/1755900031000-Payments'
 import { ConfirmationRule1755900032000 } from './migrations/1755900032000-ConfirmationRule'
+import { EsimPurchases1755900033000 } from './migrations/1755900033000-EsimPurchases'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -80,7 +82,7 @@ export const databaseOptions = (): DataSourceOptions => {
       ContentLayoutEntity, ContentListEntity, ContentItemEntity,
       ContentItemTranslationEntity, ContentSectionEntity, ContentSectionTranslationEntity,
       ContentBannerEntity, ContentBannerTranslationEntity, ContentPageEntity,
-      PostEntity, PostTranslationEntity, ContactMessageEntity, LeadEntity, LeadEventEntity, OrderEntity, OrderEventEntity, OrderDocumentEntity, OrderItemEntity, PaymentEntity, OperatorEntity,
+      PostEntity, PostTranslationEntity, ContactMessageEntity, LeadEntity, LeadEventEntity, OrderEntity, OrderEventEntity, OrderDocumentEntity, OrderItemEntity, PaymentEntity, EsimPurchaseEntity, OperatorEntity,
       PointsTierEntity, PointsSettingsEntity, PointsTransactionEntity,
       MediaFileEntity, MediaFolderEntity,
     ],
@@ -113,7 +115,7 @@ export const databaseOptions = (): DataSourceOptions => {
       LeadOwnership1755900029000,
       OrderItems1755900030000,
       Payments1755900031000,
-      ConfirmationRule1755900032000,
+      ConfirmationRule1755900032000, EsimPurchases1755900033000,
     ],
     synchronize: false,
     migrationsRun: false,
