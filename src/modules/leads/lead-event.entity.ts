@@ -9,6 +9,8 @@ export enum LeadEventKind {
   Assigned = 'assigned',
   Status = 'status',
   OrderAssigned = 'order_assigned',
+  Archived = 'archived',
+  Restored = 'restored',
 }
 
 @Entity('lead_events')

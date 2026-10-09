@@ -159,8 +159,9 @@ export class OrdersController {
     @Query('manager') manager?: string,
     @Query('page') page?: string,
     @Query('per_page') perPage?: string,
+    @Query('archived') archived?: string,
   ) {
-    const query = { q, status, manager }
+    const query = { q, status, manager, archived }
     const viewer = viewerOf(claims)
     const request = pageRequest(page, perPage)
 
@@ -206,8 +207,15 @@ export class OrdersController {
     return this.orders.patch(id, body, viewerOf(claims))
   }
 
-  @Delete('orders/:id')
-  remove(@Param('id') id: string, @CurrentUser() claims: IAccessTokenClaims) {
-    return this.orders.remove(id, viewerOf(claims))
+  @Post('orders/:id/archive')
+  @HttpCode(200)
+  archive(@Param('id') id: string, @CurrentUser() claims: IAccessTokenClaims) {
+    return this.orders.archive(id, viewerOf(claims))
+  }
+
+  @Post('orders/:id/restore')
+  @HttpCode(200)
+  restore(@Param('id') id: string, @CurrentUser() claims: IAccessTokenClaims) {
+    return this.orders.restore(id, viewerOf(claims))
   }
 }

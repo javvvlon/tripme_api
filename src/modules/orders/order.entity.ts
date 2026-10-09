@@ -142,6 +142,12 @@ export class OrderEntity {
   @Column({ name: 'created_at', type: 'timestamptz', default: () => 'now()' })
   createdAt!: Date
 
+  @Column({ name: 'archived_at', type: 'timestamptz', nullable: true })
+  archivedAt!: Date | null
+
+  @Column({ name: 'archived_by', type: 'uuid', nullable: true })
+  archivedBy!: string | null
+
   @Column({ name: 'updated_at', type: 'timestamptz', default: () => 'now()' })
   updatedAt!: Date
 }

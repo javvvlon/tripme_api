@@ -27,7 +27,6 @@ export class FinanceModule implements OnModuleInit {
 
   onModuleInit(): void {
     this.orders.registerMoney(orders => this.finance.moneyOf(orders))
-    this.orders.registerRemovalGuard(orderId => this.finance.assertNoPayments(orderId))
     this.orders.registerDocumentGuard(documentId => this.finance.assertNotReceipt(documentId))
   }
 }

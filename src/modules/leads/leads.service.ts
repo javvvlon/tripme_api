@@ -62,6 +62,7 @@ export interface ILeadQuery {
   sort?: string
   dir?: string
   manager?: string
+  archived?: string
 }
 
 export interface IStaffMember {
@@ -101,6 +102,7 @@ export interface ILeadPatch {
 
 export interface ILeadPayload {
   uuid: string
+  archived_at: string | null
   order_id: number
   ref: string
   first_response_at: string | null
@@ -193,11 +195,6 @@ export class LeadsService {
     this.guard = guard
   }
 
-  private release: ((leadId: string) => Promise<() => Promise<void>>) | null = null
-
-  registerRemovalHook(release: (leadId: string) => Promise<() => Promise<void>>): void {
-    this.release = release
-  }
 
   async submit(
     input: ILeadInput,
@@ -285,6 +282,8 @@ export class LeadsService {
     const direction = query.dir === 'asc' ? 'ASC' : 'DESC'
 
     const builder = this.leads.createQueryBuilder('lead')
+
+    builder.andWhere(query.archived === '1' ? 'lead.archivedAt is not null' : 'lead.archivedAt is null')
 
     if (!seesEveryone(viewer)) {
       builder.andWhere(new Brackets((where) => {
@@ -534,17 +533,33 @@ export class LeadsService {
     lead.managerId = target
   }
 
-  async remove(id: string, viewer: IViewer): Promise<{ removed: boolean }> {
+  async archive(id: string, viewer: IViewer): Promise<ILeadPayload> {
+    return this.setArchived(id, viewer, true)
+  }
+
+  async restore(id: string, viewer: IViewer): Promise<ILeadPayload> {
+    return this.setArchived(id, viewer, false)
+  }
+
+  private async setArchived(id: string, viewer: IViewer, archived: boolean): Promise<ILeadPayload> {
     await this.visible(id, viewer)
 
-    const cleanup = await this.release?.(id)
-    const result = await this.leads.delete({ id })
+    await this.leads.manager.transaction(async (manager) => {
+      const leads = manager.getRepository(LeadEntity)
+      const lead = await leads.findOne({ where: { id } })
 
-    if (!result.affected) throw new NotFoundException('Lead not found')
+      if (!lead) throw new NotFoundException('Lead not found')
+      if (Boolean(lead.archivedAt) === archived) return
 
-    await cleanup?.()
+      lead.archivedAt = archived ? new Date() : null
+      lead.archivedBy = archived ? viewer.id : null
+      lead.updatedAt = new Date()
 
-    return { removed: true }
+      await leads.save(lead)
+      await this.record(manager, id, archived ? LeadEventKind.Archived : LeadEventKind.Restored, { actorId: viewer.id })
+    })
+
+    return this.one(id, viewer)
   }
 
   private toPayload(row: LeadEntity, names: Map<string, string> = new Map()): ILeadPayload {
@@ -554,6 +569,7 @@ export class LeadsService {
       ref: reference(LEAD_PREFIX, Number(row.orderId ?? 0), row.createdAt),
       first_response_at: row.firstResponseAt ? row.firstResponseAt.toISOString() : null,
       consent_at: row.consentAt ? row.consentAt.toISOString() : null,
+      archived_at: row.archivedAt ? row.archivedAt.toISOString() : null,
       source: row.source,
       status: row.status,
       reject_reason: row.rejectReason ?? '',

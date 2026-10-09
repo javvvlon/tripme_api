@@ -114,6 +114,7 @@ export interface IOrderPayload {
   confirmation: IConfirmation
   note: string
   cancel_reason: string
+  archived_at: string | null
   created_at: string
   updated_at: string
 }
@@ -181,6 +182,7 @@ export interface IOrderQuery {
   q?: string
   status?: string
   manager?: string
+  archived?: string
 }
 
 /**
@@ -204,14 +206,8 @@ export class OrdersService {
 
   private paymentsOf: ((orders: IOrderMoneyInput[]) => Promise<Map<string, IOrderMoney>>) | null = null
 
-  private removalGuard: ((orderId: string) => Promise<void>) | null = null
-
   registerMoney(reader: (orders: IOrderMoneyInput[]) => Promise<Map<string, IOrderMoney>>): void {
     this.paymentsOf = reader
-  }
-
-  registerRemovalGuard(guard: (orderId: string) => Promise<void>): void {
-    this.removalGuard = guard
   }
 
   private documentGuard: ((documentId: string) => Promise<void>) | null = null
@@ -434,12 +430,14 @@ export class OrdersService {
   }
 
   private filtered(query: IOrderQuery, viewer: IViewer) {
-    const builder = this.orders.createQueryBuilder('o')
+    const builder = this.orders.createQueryBuilder('o').leftJoin(LeadEntity, 'lead', 'lead.id = o.leadId')
+
+    builder.andWhere(query.archived === '1'
+      ? '(o.archivedAt is not null or lead.archivedAt is not null)'
+      : 'o.archivedAt is null and lead.archivedAt is null')
 
     if (!seesEveryone(viewer)) {
-      builder
-        .leftJoin(LeadEntity, 'lead', 'lead.id = o.leadId')
-        .andWhere('(o.managerId = :viewer or (o.managerId is null and lead.managerId = :viewer))', { viewer: viewer.id })
+      builder.andWhere('(o.managerId = :viewer or (o.managerId is null and lead.managerId = :viewer))', { viewer: viewer.id })
     }
 
     if (query.manager === 'me') builder.andWhere('o.managerId = :me', { me: viewer.id })
@@ -506,6 +504,8 @@ export class OrdersService {
     if (lead.status === LeadStatus.Rejected) {
       throw new ConflictException('A rejected lead cannot take new orders')
     }
+
+    if (lead.archivedAt) throw new ConflictException('Restore the lead before creating an order')
 
     const trip = input.trip ?? {}
     const amount = Number(trip.price_amount)
@@ -641,28 +641,26 @@ export class OrdersService {
     return (await this.payloads([saved]))[0]!
   }
 
-  async remove(id: string, viewer: IViewer): Promise<{ removed: boolean }> {
-    const order = await this.visible(id, viewer)
-
-    if (SETTLED_STATUSES.includes(order.status as OrderStatus)) {
-      throw new ConflictException('An order that has been paid cannot be deleted')
-    }
-
-    await this.removalGuard?.(id)
-
-    const files = await this.documentFiles.filesOf([id])
-
-    await this.orders.delete({ id })
-    await this.documentFiles.discardFiles(files)
-
-    return { removed: true }
+  async archive(id: string, viewer: IViewer): Promise<IOrderPayload> {
+    return this.setArchived(id, viewer, true)
   }
 
-  async releaseLead(leadId: string): Promise<() => Promise<void>> {
-    const orders = await this.orders.find({ where: { leadId }, select: { id: true } })
-    const files = await this.documentFiles.filesOf(orders.map(order => order.id))
+  async restore(id: string, viewer: IViewer): Promise<IOrderPayload> {
+    return this.setArchived(id, viewer, false)
+  }
 
-    return () => this.documentFiles.discardFiles(files)
+  private async setArchived(id: string, viewer: IViewer, archived: boolean): Promise<IOrderPayload> {
+    const order = await this.visible(id, viewer)
+
+    if (Boolean(order.archivedAt) !== archived) {
+      order.archivedAt = archived ? new Date() : null
+      order.archivedBy = archived ? viewer.id : null
+      order.updatedAt = new Date()
+
+      await this.orders.save(order)
+    }
+
+    return (await this.payloads([order]))[0]!
   }
 
   async assertLeadMayBecome(leadId: string, next: string): Promise<void> {
@@ -841,6 +839,7 @@ export class OrdersService {
       confirmation: this.confirmationFor(row, items, money),
       note: row.note ?? '',
       cancel_reason: row.cancelReason ?? '',
+      archived_at: row.archivedAt ? row.archivedAt.toISOString() : null,
       created_at: row.createdAt.toISOString(),
       updated_at: row.updatedAt.toISOString(),
     }

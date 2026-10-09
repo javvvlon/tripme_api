@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Query, UseGuards } from '@nestjs/common'
+import { Body, Controller, Get, HttpCode, Param, Patch, Post, Query, UseGuards } from '@nestjs/common'
 import { AuthGuard } from '~/modules/auth/guards/auth.guard'
 import { OptionalAuthGuard } from '~/modules/auth/guards/optional-auth.guard'
 import { RolesGuard } from '~/modules/auth/guards/roles.guard'
@@ -52,8 +52,9 @@ export class LeadsAdminController {
     @Query('manager') manager?: string,
     @Query('page') page?: string,
     @Query('per_page') perPage?: string,
+    @Query('archived') archived?: string,
   ) {
-    const query = { status, q, sort, dir, manager }
+    const query = { status, q, sort, dir, manager, archived }
     const viewer = viewerOf(claims)
     const request = pageRequest(page, perPage)
 
@@ -87,8 +88,15 @@ export class LeadsAdminController {
     return this.leads.patch(id, body, viewerOf(claims))
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string, @CurrentUser() claims: IAccessTokenClaims) {
-    return this.leads.remove(id, viewerOf(claims))
+  @Post(':id/archive')
+  @HttpCode(200)
+  archive(@Param('id') id: string, @CurrentUser() claims: IAccessTokenClaims) {
+    return this.leads.archive(id, viewerOf(claims))
+  }
+
+  @Post(':id/restore')
+  @HttpCode(200)
+  restore(@Param('id') id: string, @CurrentUser() claims: IAccessTokenClaims) {
+    return this.leads.restore(id, viewerOf(claims))
   }
 }

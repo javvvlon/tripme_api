@@ -237,12 +237,6 @@ export class FinanceService {
     }
   }
 
-  async assertNoPayments(orderId: string): Promise<void> {
-    if (await this.payments.exists({ where: { orderId } })) {
-      throw new ConflictException('An order with recorded payments cannot be deleted')
-    }
-  }
-
   private async build(orderId: string, viewer: IViewer): Promise<IFinancePayload> {
     const [items, rows, context, documents] = await Promise.all([
       this.orders.itemsOf(orderId),
