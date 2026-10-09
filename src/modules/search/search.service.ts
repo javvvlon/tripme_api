@@ -9,6 +9,7 @@ import { buildFacets } from './facets'
 import type { Offer } from './models/Offer'
 import type { SearchFacets } from './facets'
 import type { SearchCriteria, SupplierStatus } from './contracts/search'
+import { activeLocalFacets, localFilter } from './local-filters'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -168,6 +169,7 @@ export class SearchService {
         subscriber.next({ type: 'start', statuses: snapshot() })
 
         let all: Offer[] = []
+        let raw: Offer[] = []
         let hasMore = false
         let appliedLocally: string[] = []
 
@@ -179,6 +181,7 @@ export class SearchService {
           const local = this.applyLocalFilters(run.offers, criteria)
 
           appliedLocally = local.appliedLocally
+          raw = [...raw, ...run.offers]
           hasMore = hasMore || run.hasMore
           all = [...all, ...local.offers].sort((a, b) => a.sortPrice() - b.sortPrice())
           statuses.set(supplier.ref.id, { ...run.status, offers: local.offers.length })
@@ -187,7 +190,7 @@ export class SearchService {
             type: 'offers',
             statuses: snapshot(),
             items: local.offers.map(offer => offer.toObject()),
-            facets: buildFacets(all, 100),
+            facets: this.facetsOf(all, raw, criteria),
           })
         }))
 
@@ -224,31 +227,29 @@ export class SearchService {
     return { date: null, span: SOONEST_WINDOWS.at(-1)!, statuses }
   }
 
+  private native(): Set<string> {
+    return new Set(this.suppliers.flatMap(s => s.capabilities.nativeFilters as string[]))
+  }
+
   private applyLocalFilters(
     offers: Offer[],
     criteria: SearchCriteria,
   ): { offers: Offer[], appliedLocally: string[] } {
-    const native = new Set(this.suppliers.flatMap(s => s.capabilities.nativeFilters as string[]))
-    const applied: string[] = []
-    let result = offers
+    const native = this.native()
 
-    const { stars, resorts, meals } = criteria.filters
-
-    if (stars?.length && !native.has('stars')) {
-      applied.push('stars')
-      result = result.filter(o => stars.includes(o.get('hotelStars') ?? 0))
+    return {
+      offers: localFilter(offers, criteria.filters, native),
+      appliedLocally: activeLocalFacets(criteria.filters, native),
     }
+  }
 
-    if (resorts?.length && !native.has('resorts')) {
-      applied.push('resorts')
-      result = result.filter(o => resorts.includes(o.get('district') ?? ''))
-    }
+  private facetsOf(filtered: Offer[], raw: Offer[], criteria: SearchCriteria): SearchFacets {
+    const native = this.native()
 
-    if (meals?.length && !native.has('meals')) {
-      applied.push('meals')
-      result = result.filter(o => meals.includes(o.get('mealCode') ?? ''))
-    }
-
-    return { offers: result, appliedLocally: applied }
+    return buildFacets(filtered, 100, {
+      stars: localFilter(raw, criteria.filters, native, 'stars'),
+      meals: localFilter(raw, criteria.filters, native, 'meals'),
+      districts: localFilter(raw, criteria.filters, native, 'resorts'),
+    })
   }
 }

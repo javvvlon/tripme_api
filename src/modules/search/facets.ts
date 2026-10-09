@@ -1,5 +1,7 @@
 import type { Offer } from './models/Offer'
 import { Availability } from './contracts/search'
+import { MEAL_PLANS, mealKeyOf, mealPlanOf } from './meal-plans'
+import type { MealPlan } from './meal-plans'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -32,6 +34,8 @@ export interface DayPrice {
   count: number
 }
 
+const TYPICAL_SHARE = 0.95
+
 const BUCKETS = 6
 
 export function cheapestByDay(offers: Offer[]): DayPrice[] {
@@ -60,6 +64,12 @@ export function cheapestByDay(offers: Offer[]): DayPrice[] {
     })
 }
 
+const planRank = (value: string): number => {
+  const rank = MEAL_PLANS.indexOf(value as MealPlan)
+
+  return rank === -1 ? MEAL_PLANS.length : rank
+}
+
 function tally(
   offers: Offer[],
   pick: (offer: Offer) => { value: string, label: string } | null,
@@ -78,28 +88,38 @@ function tally(
   return [...counts.values()].sort((a, b) => b.count - a.count)
 }
 
-export function buildFacets(offers: Offer[], pageSize: number): SearchFacets {
+export interface IFacetScopes {
+  stars?: Offer[]
+  meals?: Offer[]
+  districts?: Offer[]
+}
+
+export function buildFacets(offers: Offer[], pageSize: number, scopes: IFacetScopes = {}): SearchFacets {
   const prices = offers.map(o => o.sortPrice()).filter(Number.isFinite)
   const min = prices.length ? Math.min(...prices) : null
   const max = prices.length ? Math.max(...prices) : null
 
   const buckets: SearchFacets['priceBuckets'] = []
   if (min !== null && max !== null && max > min) {
-    const step = (max - min) / BUCKETS
+    const sorted = [...prices].sort((a, b) => a - b)
+    const ceiling = sorted[Math.floor((sorted.length - 1) * TYPICAL_SHARE)] ?? max
+    const top = ceiling > min ? ceiling : max
+    const step = (top - min) / BUCKETS
 
     for (let i = 0; i < BUCKETS; i++) {
       const from = min + step * i
-      const to = i === BUCKETS - 1 ? max : from + step
+      const last = i === BUCKETS - 1
+      const to = last ? max : from + step
       buckets.push({
         from: Math.round(from),
         to: Math.round(to),
-        count: prices.filter(p => p >= from && (i === BUCKETS - 1 ? p <= to : p < to)).length,
+        count: prices.filter(p => p >= from && (last ? p <= to : p < to)).length,
       })
     }
   }
 
   return {
-    stars: tally(offers, (o) => {
+    stars: tally(scopes.stars ?? offers, (o) => {
       const stars = o.get('hotelStars')
       return stars ? { value: String(stars), label: '★'.repeat(stars) } : null
     }).sort((a, b) => Number(b.value) - Number(a.value)),
@@ -109,13 +129,15 @@ export function buildFacets(offers: Offer[], pageSize: number): SearchFacets {
       label: o.get('supplier').name,
     })),
 
-    meals: tally(offers, (o) => {
+    meals: tally(scopes.meals ?? offers, (o) => {
       const code = o.get('mealCode')
       const name = o.get('mealName')
-      return code && name ? { value: code, label: name } : null
-    }),
+      const key = mealKeyOf(code, name)
 
-    districts: tally(offers, (o) => {
+      return key ? { value: key, label: mealPlanOf(code, name) ? key : name || key } : null
+    }).sort((a, b) => planRank(a.value) - planRank(b.value)),
+
+    districts: tally(scopes.districts ?? offers, (o) => {
       const district = o.get('district')
       return district ? { value: district, label: district } : null
     }),

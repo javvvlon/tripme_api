@@ -1,6 +1,8 @@
 import { Model } from '~/shared/helpers/model'
 import { Availability } from '~/modules/search/contracts/search'
 import type { Money, PriceBreakdown, SupplierRef } from '~/modules/search/contracts/search'
+import { mealPlanOf } from '../meal-plans'
+import type { MealPlan } from '../meal-plans'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -46,6 +48,14 @@ export class Offer extends Model<IOffer> {
     const price = this.get('price')
 
     return price.converted?.amount ?? price.source.amount
+  }
+
+  public resolveMealPlan(): MealPlan | null {
+    return mealPlanOf(this.get('mealCode'), this.get('mealName'))
+  }
+
+  public override toObject(): IOffer & { mealPlan: MealPlan | null } {
+    return { ...super.toObject(), mealPlan: this.resolveMealPlan() }
   }
 
   public dedupeKey(): string {
