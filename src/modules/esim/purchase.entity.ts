@@ -46,6 +46,10 @@ export class EsimPurchaseEntity {
   @Column({ type: 'text' })
   email!: string
 
+  @Index()
+  @Column({ name: 'user_id', type: 'uuid', nullable: true })
+  userId!: string | null
+
   @Column({ type: 'text' })
   phone!: string
 

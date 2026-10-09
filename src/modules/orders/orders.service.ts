@@ -1,6 +1,6 @@
 import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { DataSource, Repository } from 'typeorm'
+import { DataSource, In, Repository } from 'typeorm'
 import type { EntityManager } from 'typeorm'
 import { PointsService } from '~/modules/points/points.service'
 import { LEAD_TRANSITIONS, LeadEntity, LeadStatus } from '~/modules/leads/lead.entity'
@@ -115,6 +115,7 @@ export interface IOrderPayload {
   note: string
   cancel_reason: string
   archived_at: string | null
+  client_id: string | null
   created_at: string
   updated_at: string
 }
@@ -178,6 +179,11 @@ export interface IOrderMoney {
   depositMet: boolean
 }
 
+export type OrderEvent =
+  | { type: 'status', orderId: string, to: string }
+  | { type: 'issued', orderId: string, itemId: string }
+  | { type: 'payment', orderId: string, amountUzs: number }
+
 export interface IOrderQuery {
   q?: string
   status?: string
@@ -203,6 +209,16 @@ export class OrdersService {
     private readonly leadsService: LeadsService,
     private readonly itemsService: OrderItemsService,
   ) {}
+
+  private readonly eventListeners: Array<(event: OrderEvent) => Promise<void>> = []
+
+  onEvent(listener: (event: OrderEvent) => Promise<void>): void {
+    this.eventListeners.push(listener)
+  }
+
+  emit(event: OrderEvent): void {
+    for (const listener of this.eventListeners) void listener(event).catch(() => undefined)
+  }
 
   private paymentsOf: ((orders: IOrderMoneyInput[]) => Promise<Map<string, IOrderMoney>>) | null = null
 
@@ -274,7 +290,7 @@ export class OrdersService {
       ? [OrderStatus.Requested, OrderStatus.Confirmed]
       : [target as OrderStatus]
 
-    return this.dataSource.transaction(async (manager) => {
+    const moved = await this.dataSource.transaction(async (manager) => {
       const repository = manager.getRepository(OrderEntity)
       const fresh = await repository.findOne({ where: { id: orderId } })
 
@@ -289,6 +305,10 @@ export class OrdersService {
 
       return true
     })
+
+    if (moved) this.emit({ type: 'status', orderId, to: path.at(-1)! })
+
+    return moved
   }
 
   private async moveTo(manager: EntityManager, order: OrderEntity, next: OrderStatus, actorId: string | null): Promise<void> {
@@ -329,9 +349,13 @@ export class OrdersService {
   }
 
   async issueItem(orderId: string, itemId: string, documentId: string | null, viewer: IViewer): Promise<IOrderPayload> {
-    return this.changeItems(orderId, viewer, async (manager) => {
+    const payload = await this.changeItems(orderId, viewer, async (manager) => {
       await this.itemsService.issue(manager, orderId, itemId, documentId)
     })
+
+    this.emit({ type: 'issued', orderId, itemId })
+
+    return payload
   }
 
   private async changeItems(
@@ -356,6 +380,20 @@ export class OrdersService {
     })
 
     return (await this.payloads([order]))[0]!
+  }
+
+  async customerMoney(orderId: string): Promise<IDocumentMoney & { paymentStatus: string }> {
+    const order = await this.orders.findOne({ where: { id: orderId } })
+
+    if (!order) throw new NotFoundException('Order not found')
+
+    const items = await this.itemsService.byOrder([orderId])
+    const money = (await this.moneyOf([order], items)).get(orderId)
+
+    return {
+      ...documentMoneyOf(items.get(orderId) ?? [], money?.receivedUzs ?? 0, money?.balanceUzs ?? 0),
+      paymentStatus: money?.paymentStatus ?? 'unpaid',
+    }
   }
 
   async documentMoney(orderId: string): Promise<IDocumentMoney> {
@@ -571,6 +609,7 @@ export class OrdersService {
       if (!order) throw new NotFoundException('Order not found')
 
       let completed = false
+      let movedTo: string | null = null
 
       if (input.supplier_order_id !== undefined) order.supplierOrderId = text(input.supplier_order_id, 80)
       if (input.passport_id !== undefined) order.passportId = text(input.passport_id, 40)
@@ -621,6 +660,7 @@ export class OrdersService {
         if (next === OrderStatus.Cancelled) order.cancelReason = text(input.cancel_reason, 500)
 
         completed = next === OrderStatus.Completed
+        movedTo = next
       }
 
       order.updatedAt = new Date()
@@ -631,14 +671,16 @@ export class OrdersService {
 
       if (completed) await this.points.awardFor(order, manager)
 
-      return order
+      return { order, movedTo }
     })
+
+    if (saved.movedTo) this.emit({ type: 'status', orderId: id, to: saved.movedTo })
 
     const passportTouched = input.passport_expires_at !== undefined || input.passport_id !== undefined
 
     if (passportTouched && input.status === undefined && await this.advance(id, actorId)) return this.one(id, viewer)
 
-    return (await this.payloads([saved]))[0]!
+    return (await this.payloads([saved.order]))[0]!
   }
 
   async archive(id: string, viewer: IViewer): Promise<IOrderPayload> {
@@ -765,14 +807,17 @@ export class OrdersService {
 
   private async payloads(rows: OrderEntity[]): Promise<IOrderPayload[]> {
     const ids = rows.map(row => row.id)
-    const [names, items] = await Promise.all([
+    const leadIds = [...new Set(rows.map(row => row.leadId))]
+    const [names, items, leads] = await Promise.all([
       this.leadsService.namesOf(rows.map(row => row.managerId)),
       this.itemsService.byOrder(ids),
+      leadIds.length ? this.leads.find({ where: { id: In(leadIds) }, select: { id: true, userId: true } }) : Promise.resolve([]),
     ])
+    const clients = new Map(leads.map(lead => [lead.id, lead.userId]))
 
     const money = await this.moneyOf(rows, items)
 
-    return rows.map(row => this.toPayload(row, names, items.get(row.id) ?? [], money.get(row.id)))
+    return rows.map(row => ({ ...this.toPayload(row, names, items.get(row.id) ?? [], money.get(row.id)), client_id: clients.get(row.leadId) ?? null }))
   }
 
   private async moneyOf(rows: OrderEntity[], items: Map<string, IOrderItemPayload[]>): Promise<Map<string, IOrderMoney>> {
@@ -840,6 +885,7 @@ export class OrdersService {
       note: row.note ?? '',
       cancel_reason: row.cancelReason ?? '',
       archived_at: row.archivedAt ? row.archivedAt.toISOString() : null,
+      client_id: null,
       created_at: row.createdAt.toISOString(),
       updated_at: row.updatedAt.toISOString(),
     }

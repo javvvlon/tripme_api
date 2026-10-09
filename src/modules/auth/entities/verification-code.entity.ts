@@ -26,6 +26,12 @@ export class VerificationCodeEntity {
   @Column({ name: 'consumed_at', type: 'timestamptz', nullable: true })
   consumedAt!: Date | null
 
+  @Column({ type: 'text', default: 'email' })
+  purpose!: string
+
+  @Column({ type: 'text', default: '' })
+  target!: string
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date
 }

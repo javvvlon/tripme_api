@@ -34,6 +34,7 @@ export interface IUserRaw {
   phone_number: string
   role: UserRole
   is_verified: boolean
+  phone_verified: boolean
 }
 
 export interface ITokenPair {

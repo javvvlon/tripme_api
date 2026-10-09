@@ -9,6 +9,7 @@ export enum DocumentKind {
   Attachment = 'attachment',
   Contract = 'contract',
   Voucher = 'voucher',
+  ClientUpload = 'client_upload',
 }
 
 export const DOCUMENT_KINDS = Object.values(DocumentKind)

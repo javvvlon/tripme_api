@@ -136,7 +136,10 @@ export class FinanceService {
       recordedBy: viewer.id,
     }))
 
-    if (direction === PaymentDirection.CustomerIn) await this.orders.advance(orderId, viewer.id)
+    if (direction === PaymentDirection.CustomerIn) {
+      this.orders.emit({ type: 'payment', orderId, amountUzs: toUzs(amount, rate) })
+      await this.orders.advance(orderId, viewer.id)
+    }
 
     return this.build(orderId, viewer)
   }

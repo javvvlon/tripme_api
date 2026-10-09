@@ -1,4 +1,8 @@
-import { Body, Controller, Get, HttpCode, Param, Post } from '@nestjs/common'
+import { Body, Controller, Get, HttpCode, Param, Post, UseGuards } from '@nestjs/common'
+import { OptionalAuthGuard } from '~/modules/auth/guards/optional-auth.guard'
+import { CurrentUser } from '~/modules/auth/decorators'
+import { customerIdOf } from '~/modules/leads/lead.access'
+import type { IAccessTokenClaims } from '~/modules/auth/contracts/auth'
 import { EsimService } from './esim.service'
 import type { ICheckoutInput } from './esim.rules'
 
@@ -26,8 +30,9 @@ export class EsimController {
 
   @Post('purchases')
   @HttpCode(201)
-  checkout(@Body() body: ICheckoutInput) {
-    return this.esim.checkout(body)
+  @UseGuards(OptionalAuthGuard)
+  checkout(@Body() body: ICheckoutInput, @CurrentUser() claims?: IAccessTokenClaims) {
+    return this.esim.checkout(body, customerIdOf(claims))
   }
 
   @Get('purchases/:token')

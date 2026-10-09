@@ -26,5 +26,6 @@ import { esimSandbox } from './esim.links'
     { provide: PAYMENT_GATEWAYS, useFactory: gatewaysFromEnv },
     { provide: PURCHASE_PAYMENTS, useExisting: EsimService },
   ],
+  exports: [EsimService],
 })
 export class EsimModule {}

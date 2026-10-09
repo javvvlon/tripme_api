@@ -1,5 +1,7 @@
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common'
-import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common'
+import { BadRequestException, ConflictException, ForbiddenException, NotFoundException } from '@nestjs/common'
+import { randomBytes } from 'node:crypto'
+import { phoneKey } from '~/shared/helpers/phone'
 import { UserRepository } from '~/modules/auth/repositories/user.repository'
 import { SessionRepository } from '~/modules/auth/repositories/session.repository'
 import { PasswordService } from './password.service'
@@ -97,9 +99,15 @@ export class AuthService {
 
     if (next.firstName === '') throw new BadRequestException('A first name is required')
 
+    const before = await this.profile(userId)
+
     await this.users.updateProfile(userId, Object.fromEntries(
       Object.entries(next).filter(([, value]) => value !== undefined),
     ))
+
+    if (next.phoneNumber !== undefined && phoneKey(next.phoneNumber) !== phoneKey(before.get('phoneNumber'))) {
+      await this.users.markPhoneVerified(userId, false)
+    }
 
     return this.profile(userId)
   }
@@ -118,6 +126,28 @@ export class AuthService {
     if (next.length < 8) throw new BadRequestException('A password needs at least 8 characters')
 
     await this.users.setPassword(userId, await this.passwords.hash(next))
+  }
+
+  private readonly deletionListeners: Array<(userId: string) => Promise<void>> = []
+
+  onAccountDeleted(listener: (userId: string) => Promise<void>): void {
+    this.deletionListeners.push(listener)
+  }
+
+  async deleteAccount(userId: string, password: string): Promise<void> {
+    const user = await this.users.findByIdWithPassword(userId)
+
+    if (!user || user.get('deleted')) throw new NotFoundException('User not found')
+    if (user.get('role') !== UserRole.Client) throw new ForbiddenException('Staff accounts are removed by an administrator')
+
+    const stored = user.get('passwordHash')
+
+    if (!stored || !await this.passwords.verify(password, stored)) throw new BadRequestException('The current password is wrong')
+
+    for (const listener of this.deletionListeners) await listener(userId)
+
+    await this.users.anonymise(userId, await this.passwords.hash(randomBytes(24).toString('hex')))
+    await this.sessions.revokeAllForUser(userId)
   }
 
   async profile(userId: string): Promise<User> {

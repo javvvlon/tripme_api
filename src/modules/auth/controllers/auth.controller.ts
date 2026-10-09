@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, Post, Req } from '@nestjs/common'
+import { Body, Controller, Get, HttpCode, Post, Req } from '@nestjs/common'
 import { AuthService } from '~/modules/auth/services/auth.service'
 import { VerificationService } from '~/modules/auth/services/verification.service'
 import { TokenService } from '~/modules/auth/services/token.service'
@@ -60,10 +60,31 @@ export class AuthController {
     else await this.auth.logout(header)
   }
 
+  @Get('capabilities')
+  capabilities() {
+    return this.verification.capabilities()
+  }
+
   @Post('send-verification-message')
   @HttpCode(204)
   async sendVerification(@Body() body: Record<string, unknown>): Promise<void> {
-    await this.verification.send(parseEmail(body))
+    await this.verification.send(parseEmail(body), localeOf(body))
+  }
+
+  @Post('password/forgot')
+  @HttpCode(204)
+  async forgot(@Body() body: Record<string, unknown>): Promise<void> {
+    await this.verification.sendReset(parseEmail(body), localeOf(body))
+  }
+
+  @Post('password/reset')
+  @HttpCode(200)
+  async reset(@Body() body: Record<string, unknown>, @Req() request: Request): Promise<ITokenPair> {
+    const email = parseEmail(body)
+    const code = typeof body?.code === 'string' ? body.code : ''
+    const password = typeof body?.password === 'string' ? body.password : ''
+
+    return this.verification.resetPassword(email, code, password, context(request))
   }
 
   @Post('verify')
@@ -74,6 +95,9 @@ export class AuthController {
     return this.verification.verify(email, code, context(request))
   }
 }
+
+const localeOf = (body: Record<string, unknown>): string =>
+  typeof body?.locale === 'string' ? body.locale.slice(0, 5) : 'ru'
 
 function context(request: Request): IRequestContext {
   return {

@@ -36,6 +36,12 @@ export class UserEntity {
   @Column({ name: 'consent_at', type: 'timestamptz', nullable: true })
   consentAt!: Date | null
 
+  @Column({ name: 'phone_verified_at', type: 'timestamptz', nullable: true })
+  phoneVerifiedAt!: Date | null
+
+  @Column({ name: 'deleted_at', type: 'timestamptz', nullable: true })
+  deletedAt!: Date | null
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date
 

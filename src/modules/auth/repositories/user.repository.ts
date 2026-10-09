@@ -74,6 +74,24 @@ export class UserRepository {
     await this.users.update({ id }, { isVerified: true })
   }
 
+  async markPhoneVerified(id: string, verified: boolean): Promise<void> {
+    await this.users.update({ id }, { phoneVerifiedAt: verified ? new Date() : null })
+  }
+
+  async anonymise(id: string, passwordHash: string): Promise<void> {
+    await this.users.update({ id }, {
+      email: `deleted-${id}@tripme.invalid`,
+      firstName: '',
+      lastName: '',
+      phoneNumber: '',
+      passwordHash,
+      isVerified: false,
+      phoneVerifiedAt: null,
+      consentAt: null,
+      deletedAt: new Date(),
+    })
+  }
+
   async emailExists(email: string): Promise<boolean> {
     return this.users.existsBy({ email: normaliseEmail(email) })
   }

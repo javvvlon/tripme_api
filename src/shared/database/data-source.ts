@@ -24,6 +24,8 @@ import { OrderDocumentEntity } from '~/modules/orders/order-document.entity'
 import { OrderItemEntity } from '~/modules/orders/items/order-item.entity'
 import { PaymentEntity } from '~/modules/finance/payment.entity'
 import { EsimPurchaseEntity } from '~/modules/esim/purchase.entity'
+import { TravellerEntity } from '~/modules/account/traveller.entity'
+import { ConversationEntity, MessageEntity } from '~/modules/messages/message.entities'
 import { PointsSettingsEntity, PointsTierEntity, PointsTransactionEntity } from '~/modules/points/points.entities'
 import { OperatorEntity } from '~/modules/operators/operator.entity'
 import { MediaFileEntity } from '~/shared/storage/media-file.entity'
@@ -63,6 +65,8 @@ import { ConfirmationRule1755900032000 } from './migrations/1755900032000-Confir
 import { EsimPurchases1755900033000 } from './migrations/1755900033000-EsimPurchases'
 import { LeadCustomerLink1755900034000 } from './migrations/1755900034000-LeadCustomerLink'
 import { Archive1755900035000 } from './migrations/1755900035000-Archive'
+import { ClientAccount1755900036000 } from './migrations/1755900036000-ClientAccount'
+import { Messages1755900037000 } from './migrations/1755900037000-Messages'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -84,7 +88,7 @@ export const databaseOptions = (): DataSourceOptions => {
       ContentLayoutEntity, ContentListEntity, ContentItemEntity,
       ContentItemTranslationEntity, ContentSectionEntity, ContentSectionTranslationEntity,
       ContentBannerEntity, ContentBannerTranslationEntity, ContentPageEntity,
-      PostEntity, PostTranslationEntity, ContactMessageEntity, LeadEntity, LeadEventEntity, OrderEntity, OrderEventEntity, OrderDocumentEntity, OrderItemEntity, PaymentEntity, EsimPurchaseEntity, OperatorEntity,
+      PostEntity, PostTranslationEntity, ContactMessageEntity, LeadEntity, LeadEventEntity, OrderEntity, OrderEventEntity, OrderDocumentEntity, OrderItemEntity, PaymentEntity, EsimPurchaseEntity, TravellerEntity, ConversationEntity, MessageEntity, OperatorEntity,
       PointsTierEntity, PointsSettingsEntity, PointsTransactionEntity,
       MediaFileEntity, MediaFolderEntity,
     ],
@@ -117,7 +121,7 @@ export const databaseOptions = (): DataSourceOptions => {
       LeadOwnership1755900029000,
       OrderItems1755900030000,
       Payments1755900031000,
-      ConfirmationRule1755900032000, EsimPurchases1755900033000, LeadCustomerLink1755900034000, Archive1755900035000,
+      ConfirmationRule1755900032000, EsimPurchases1755900033000, LeadCustomerLink1755900034000, Archive1755900035000, ClientAccount1755900036000, Messages1755900037000,
     ],
     synchronize: false,
     migrationsRun: false,

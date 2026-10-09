@@ -4,6 +4,8 @@ import { InjectRepository } from '@nestjs/typeorm'
 import { DataSource, IsNull, MoreThan, Repository } from 'typeorm'
 import { VerificationCodeEntity } from '~/modules/auth/entities'
 
+export type CodePurpose = 'email' | 'phone' | 'reset'
+
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
  */
@@ -19,24 +21,28 @@ export class VerificationRepository {
     return createHash('sha256').update(code).digest('hex')
   }
 
-  async issue(userId: string, code: string, expiresAt: Date): Promise<void> {
+  async issue(userId: string, code: string, expiresAt: Date, purpose: CodePurpose = 'email', target = ''): Promise<void> {
     await this.dataSource.transaction(async (manager) => {
       const codes = manager.getRepository(VerificationCodeEntity)
 
-      await codes.update({ userId, consumedAt: IsNull() }, { consumedAt: new Date() })
+      await codes.update({ userId, purpose, consumedAt: IsNull() }, { consumedAt: new Date() })
       await codes.save(codes.create({
         userId,
         codeHash: VerificationRepository.hash(code),
         expiresAt,
+        purpose,
+        target,
       }))
     })
   }
 
-  async consume(userId: string, code: string): Promise<boolean> {
+  async consume(userId: string, code: string, purpose: CodePurpose = 'email', target?: string): Promise<boolean> {
     const { affected } = await this.codes.update(
       {
         userId,
         codeHash: VerificationRepository.hash(code),
+        purpose,
+        ...(target !== undefined ? { target } : {}),
         consumedAt: IsNull(),
         expiresAt: MoreThan(new Date()),
       },
@@ -46,7 +52,7 @@ export class VerificationRepository {
     return (affected ?? 0) > 0
   }
 
-  async countSince(userId: string, since: Date): Promise<number> {
-    return this.codes.countBy({ userId, createdAt: MoreThan(since) })
+  async countSince(userId: string, since: Date, purpose: CodePurpose = 'email'): Promise<number> {
+    return this.codes.countBy({ userId, purpose, createdAt: MoreThan(since) })
   }
 }

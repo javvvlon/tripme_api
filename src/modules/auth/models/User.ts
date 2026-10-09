@@ -15,6 +15,8 @@ export interface IUser {
   phoneNumber: string
   role: UserRole
   isVerified: boolean
+  phoneVerified: boolean
+  deleted: boolean
 }
 
 export class User extends Model<IUser> {
@@ -28,6 +30,8 @@ export class User extends Model<IUser> {
       phoneNumber: raw.phoneNumber,
       role: raw.role,
       isVerified: raw.isVerified,
+      phoneVerified: Boolean(raw.phoneVerifiedAt),
+      deleted: Boolean(raw.deletedAt),
     }
   }
 
@@ -48,6 +52,7 @@ export class User extends Model<IUser> {
       phone_number: this.get('phoneNumber'),
       role: this.get('role'),
       is_verified: this.get('isVerified'),
+      phone_verified: this.get('phoneVerified'),
     }
   }
 }

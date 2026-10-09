@@ -120,7 +120,7 @@ export class EsimService implements IPurchasePayments {
     return this.gateways.map(gateway => ({ method: gateway.method, sandbox: gateway.sandbox }))
   }
 
-  async checkout(input: ICheckoutInput): Promise<IEsimPurchasePayload> {
+  async checkout(input: ICheckoutInput, userId: string | null = null): Promise<IEsimPurchasePayload> {
     const checkout = checkoutOf(input ?? {})
     const plan = await this.provider.plan(checkout.planId)
 
@@ -142,6 +142,7 @@ export class EsimService implements IPurchasePayments {
       marginPercent: String(margin),
       priceUzs: String(retailUzs(plan.wholesaleUsd, rate, margin)),
       email: checkout.email,
+      userId,
       phone: checkout.phone,
       locale: checkout.locale,
       paymentMethod: gateway.method,
@@ -261,6 +262,12 @@ export class EsimService implements IPurchasePayments {
       .execute()
   }
 
+  private readonly issuedListeners: Array<(purchase: EsimPurchaseEntity) => Promise<void>> = []
+
+  onIssued(listener: (purchase: EsimPurchaseEntity) => Promise<void>): void {
+    this.issuedListeners.push(listener)
+  }
+
   private async fulfil(id: string): Promise<void> {
     const purchase = await this.purchases.findOne({ where: { id } })
 
@@ -268,14 +275,18 @@ export class EsimService implements IPurchasePayments {
 
     if (!this.source) return
 
+    let issued = false
+
     const plan = (await this.provider.plan(purchase.planId)) ?? (purchase.plan as unknown as IEsimPlan)
 
     try {
-      const issued = await this.provider.issue(plan, `ESIM-${purchase.number}`)
+      const esim = await this.provider.issue(plan, `ESIM-${purchase.number}`)
+
+      issued = true
 
       Object.assign(purchase, {
         status: PurchaseStatus.Issued,
-        esim: { ...issued },
+        esim: { ...esim },
         issueError: '',
       })
     }
@@ -292,6 +303,10 @@ export class EsimService implements IPurchasePayments {
     purchase.updatedAt = new Date()
 
     await this.purchases.save(purchase)
+
+    if (issued) {
+      for (const listener of this.issuedListeners) await listener(purchase).catch(() => undefined)
+    }
   }
 
   private gatewayFor(method: string): IPaymentGateway {

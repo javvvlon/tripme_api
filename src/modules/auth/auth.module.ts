@@ -46,6 +46,6 @@ import { RolesGuard } from './guards/roles.guard'
     OptionalAuthGuard,
     RolesGuard,
   ],
-  exports: [AuthGuard, OptionalAuthGuard, RolesGuard, TokenService, UserRepository, PasswordService],
+  exports: [AuthGuard, OptionalAuthGuard, RolesGuard, TokenService, UserRepository, PasswordService, VerificationService, SessionRepository, AuthService],
 })
 export class AuthModule {}

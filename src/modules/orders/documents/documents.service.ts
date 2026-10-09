@@ -182,6 +182,10 @@ export class DocumentsService {
     return document.orderId
   }
 
+  async find(id: string): Promise<OrderDocumentEntity | null> {
+    return this.documents.findOne({ where: { id } })
+  }
+
   async remove(id: string): Promise<void> {
     const document = await this.documents.findOne({ where: { id } })
 
