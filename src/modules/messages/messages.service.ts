@@ -12,6 +12,7 @@ import { siteUrl } from '~/modules/esim/esim.links'
 import { routeOf } from '~/modules/notifications/notification.rules'
 import { ConversationEntity, MessageEntity } from './message.entities'
 import { AuthorRole, messageBody, unreadFor } from './message.rules'
+import { MessagesHub } from './messages.hub'
 
 export interface IMessagePayload {
   id: string
@@ -50,6 +51,7 @@ export class MessagesService {
     @InjectRepository(UserEntity) private readonly users: Repository<UserEntity>,
     private readonly dataSource: DataSource,
     @Inject(MESSENGER) private readonly messenger: IMessenger,
+    private readonly hub: MessagesHub,
   ) {}
 
   async clientThread(clientId: string): Promise<IThreadPayload> {
@@ -71,9 +73,7 @@ export class MessagesService {
   }
 
   async postAsClient(clientId: string, raw: unknown): Promise<IMessagePayload> {
-    const message = await this.post(clientId, AuthorRole.Client, clientId, messageBody(raw))
-
-    return (await this.payloads([message]))[0]!
+    return this.announce(await this.post(clientId, AuthorRole.Client, clientId, messageBody(raw)))
   }
 
   async postAsStaff(viewer: IViewer, clientId: string, raw: unknown): Promise<IMessagePayload> {
@@ -84,7 +84,7 @@ export class MessagesService {
     await this.markRead(clientId, 'staff')
     void this.alertClient(clientId).catch(() => undefined)
 
-    return (await this.payloads([message]))[0]!
+    return this.announce(message)
   }
 
   async postSystem(clientId: string, body: string, orderId: string | null = null): Promise<void> {
@@ -92,7 +92,26 @@ export class MessagesService {
 
     if (!client || client.deletedAt || client.role !== UserRole.Client) return
 
-    await this.post(clientId, AuthorRole.System, null, body.slice(0, 2000), orderId)
+    await this.announce(await this.post(clientId, AuthorRole.System, null, body.slice(0, 2000), orderId))
+  }
+
+  async canStaffSee(viewer: IViewer, clientId: string): Promise<boolean> {
+    try {
+      await this.assertStaffSees(viewer, clientId)
+
+      return true
+    }
+    catch {
+      return false
+    }
+  }
+
+  private async announce(message: MessageEntity): Promise<IMessagePayload> {
+    const payload = (await this.payloads([message]))[0]!
+
+    this.hub.emit({ type: 'message', clientId: message.clientId, message: payload })
+
+    return payload
   }
 
   async clientUnread(clientId: string): Promise<number> {
@@ -215,6 +234,7 @@ export class MessagesService {
 
   private async markRead(clientId: string, reader: 'client' | 'staff'): Promise<void> {
     await this.conversations.update({ clientId }, reader === 'client' ? { clientReadAt: new Date() } : { staffReadAt: new Date() })
+    this.hub.emit({ type: 'read', clientId, side: reader })
   }
 
   private async payloads(rows: MessageEntity[]): Promise<IMessagePayload[]> {

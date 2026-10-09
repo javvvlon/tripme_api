@@ -7,14 +7,16 @@ import { UserEntity } from '~/modules/auth/entities'
 import { ConversationEntity, MessageEntity } from './message.entities'
 import { MessagesService } from './messages.service'
 import { ClientMessagesController, StaffMessagesController } from './messages.controller'
+import { MessagesStreamController } from './messages-stream.controller'
+import { MessagesHub } from './messages.hub'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
  */
 @Module({
   imports: [AuthModule, TypeOrmModule.forFeature([ConversationEntity, MessageEntity, UserEntity])],
-  controllers: [ClientMessagesController, StaffMessagesController],
-  providers: [MessagesService],
+  controllers: [ClientMessagesController, StaffMessagesController, MessagesStreamController],
+  providers: [MessagesService, MessagesHub],
   exports: [MessagesService],
 })
 export class MessagesModule implements OnModuleInit {

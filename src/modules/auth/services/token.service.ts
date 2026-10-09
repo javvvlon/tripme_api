@@ -6,6 +6,10 @@ import { SessionRepository } from '~/modules/auth/repositories/session.repositor
 import type { IAccessTokenClaims, ITokenPair } from '~/modules/auth/contracts/auth'
 import type { User } from '~/modules/auth/models/User'
 
+const STREAM_TICKET = 'stream'
+
+const STREAM_TICKET_TTL = '60s'
+
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
  */
@@ -40,7 +44,24 @@ export class TokenService {
 
   async verifyAccess(token: string): Promise<IAccessTokenClaims | null> {
     try {
-      return await this.jwt.verifyAsync<IAccessTokenClaims>(token)
+      const claims = await this.jwt.verifyAsync<IAccessTokenClaims & { typ?: string }>(token)
+
+      return claims.typ ? null : claims
+    }
+    catch {
+      return null
+    }
+  }
+
+  async issueStreamTicket(claims: IAccessTokenClaims): Promise<string> {
+    return this.jwt.signAsync({ sub: claims.sub, email: claims.email, role: claims.role, typ: STREAM_TICKET }, { expiresIn: STREAM_TICKET_TTL })
+  }
+
+  async verifyStreamTicket(ticket: string): Promise<IAccessTokenClaims | null> {
+    try {
+      const claims = await this.jwt.verifyAsync<IAccessTokenClaims & { typ?: string }>(ticket)
+
+      return claims.typ === STREAM_TICKET ? { sub: claims.sub, email: claims.email, role: claims.role } : null
     }
     catch {
       return null
