@@ -17,7 +17,7 @@ export interface IContactInput {
 export class ContactService {
   constructor(private readonly leads: LeadsService) {}
 
-  async submit(input: IContactInput, userId: string | null = null): Promise<{ received: boolean }> {
+  async submit(input: IContactInput, userId: string | null = null, signedIn = Boolean(userId)): Promise<{ received: boolean }> {
     await this.leads.submit({
       first_name: input.first_name,
       last_name: input.last_name,
@@ -26,7 +26,7 @@ export class ContactService {
       locale: input.locale,
       channel: 'contact',
       consent: input.consent,
-    }, undefined, userId)
+    }, undefined, userId, null, signedIn)
 
     return { received: true }
   }

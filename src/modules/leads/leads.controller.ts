@@ -7,7 +7,7 @@ import { UserRole } from '~/modules/auth/contracts/auth'
 import type { IAccessTokenClaims } from '~/modules/auth/contracts/auth'
 import { LEAD_STATUSES, LeadSource } from './lead.entity'
 import { LeadsService } from './leads.service'
-import { viewerOf } from './lead.access'
+import { customerIdOf, viewerOf } from './lead.access'
 import type { ILeadInput, ILeadPatch } from './leads.service'
 import { pageRequest } from '~/shared/helpers/pagination'
 
@@ -22,7 +22,7 @@ export class LeadsController {
   @HttpCode(201)
   @UseGuards(OptionalAuthGuard)
   submit(@Body() body: ILeadInput, @CurrentUser() claims?: IAccessTokenClaims) {
-    return this.leads.submit(body, LeadSource.Site, claims?.sub ?? null)
+    return this.leads.submit(body, LeadSource.Site, customerIdOf(claims), null, Boolean(claims))
   }
 }
 

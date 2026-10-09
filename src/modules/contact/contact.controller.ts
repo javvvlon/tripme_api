@@ -2,6 +2,7 @@ import { Body, Controller, HttpCode, Post, UseGuards } from '@nestjs/common'
 import { OptionalAuthGuard } from '~/modules/auth/guards/optional-auth.guard'
 import { CurrentUser } from '~/modules/auth/decorators'
 import { ContactService } from './contact.service'
+import { customerIdOf } from '~/modules/leads/lead.access'
 import type { IContactInput } from './contact.service'
 import type { IAccessTokenClaims } from '~/modules/auth/contracts/auth'
 
@@ -16,6 +17,6 @@ export class ContactController {
   @HttpCode(200)
   @UseGuards(OptionalAuthGuard)
   submit(@Body() body: IContactInput, @CurrentUser() claims?: IAccessTokenClaims) {
-    return this.contact.submit(body, claims?.sub ?? null)
+    return this.contact.submit(body, customerIdOf(claims), Boolean(claims))
   }
 }

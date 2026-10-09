@@ -204,6 +204,7 @@ export class LeadsService {
     source = LeadSource.Site,
     userId: string | null = null,
     actorId: string | null = null,
+    signedIn = Boolean(userId),
   ): Promise<{ uuid: string, order_id: number }> {
     const firstName = text(input.first_name, 120)
     const phone = text(input.phone, 40)
@@ -211,7 +212,7 @@ export class LeadsService {
     if (!firstName) throw new BadRequestException('A first name is required')
     if (!phone) throw new BadRequestException('A phone number is required')
 
-    if (source === LeadSource.Site && !userId && input.consent !== true) {
+    if (source === LeadSource.Site && !signedIn && input.consent !== true) {
       throw new BadRequestException('Consent to the processing of personal data is required')
     }
 

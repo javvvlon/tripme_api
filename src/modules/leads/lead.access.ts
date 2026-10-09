@@ -33,3 +33,6 @@ export const canSeeOrder = (
   seesEveryone(viewer)
   || order.managerId === viewer.id
   || (order.managerId === null && lead?.managerId === viewer.id)
+
+export const customerIdOf = (claims?: { sub: string, role: string } | null): string | null =>
+  claims?.role === UserRole.Client ? claims.sub : null
