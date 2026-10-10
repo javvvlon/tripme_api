@@ -29,7 +29,7 @@ export class PrestigeSupplier extends SamoSupplier {
     TOURINC: '0',
     PROGRAMGROUPINC: '0',
     FREIGHT: '1',
-    FILTER: '0',
+    FILTER: '1',
     MOMENT_CONFIRM: '0',
     UFILTER: '',
     HOTELTYPES: '',

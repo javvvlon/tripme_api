@@ -10,6 +10,7 @@ import type { Offer } from './models/Offer'
 import type { SearchFacets } from './facets'
 import type { SearchCriteria, SupplierStatus } from './contracts/search'
 import { activeLocalFacets, localFilter } from './local-filters'
+import { cheapestOnSale } from './sale'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -40,18 +41,6 @@ export interface SoonestDeparture {
 }
 
 const SOONEST_WINDOWS = [7, 21, 60] as const
-
-const cheapestPerId = (offers: Offer[]): Offer[] => {
-  const byId = new Map<string, Offer>()
-
-  for (const offer of offers) {
-    const seen = byId.get(offer.get('id'))
-
-    if (!seen || offer.sortPrice() < seen.sortPrice()) byId.set(offer.get('id'), offer)
-  }
-
-  return [...byId.values()]
-}
 
 const addDays = (day: string, count: number): string => {
   const date = new Date(`${day}T00:00:00Z`)
@@ -94,7 +83,7 @@ export class SearchService {
 
     try {
       const result = await supplier.fetchPage(criteria, page, signal)
-      const offers = cheapestPerId(result.offers)
+      const offers = cheapestOnSale(result.offers)
 
       return {
         offers,

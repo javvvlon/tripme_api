@@ -44,6 +44,10 @@ export class Offer extends Model<IOffer> {
     return this.get('availability') === Availability.Available
   }
 
+  public isStopped(): boolean {
+    return this.get('availability') === Availability.Stopped
+  }
+
   public sortPrice(): number {
     const price = this.get('price')
 
