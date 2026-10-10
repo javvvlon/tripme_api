@@ -18,11 +18,11 @@ const row = (over: Partial<SamoRow> = {}): SamoRow => ({
 } as SamoRow)
 
 describe('samo hotel catalog', () => {
-  it('reads each hotel city and category from the search page', () => {
+  it('reads each hotel name, city and category from the search page', () => {
     const catalog = parseHotelCatalog(page)
 
-    expect(catalog.get('751428')).toEqual({ town: '293967', stars: '10003' })
-    expect(catalog.get('-2269372')).toEqual({ town: '', stars: '' })
+    expect(catalog.get('751428')).toEqual({ town: '293967', stars: '10003', name: 'Gaia Hotel Phu Quoc', starCount: 3 })
+    expect(catalog.get('-2269372')).toEqual({ town: '', stars: '', name: 'Gaia Hotel PhuQuoc', starCount: null })
   })
 
   it('returns nothing for a page without the catalog', () => {

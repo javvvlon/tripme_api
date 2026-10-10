@@ -11,6 +11,14 @@ import type { SearchFacets } from './facets'
 import type { SearchCriteria, SupplierStatus } from './contracts/search'
 import { activeLocalFacets, localFilter } from './local-filters'
 import { cheapestOnSale } from './sale'
+import { hotelKey, hotelLabel, matchesHotel } from './hotel-key'
+
+export interface IHotelSuggestion {
+  key: string
+  name: string
+  stars: number | null
+  suppliers: number
+}
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -214,6 +222,46 @@ export class SearchService {
     }
 
     return { date: null, span: SOONEST_WINDOWS.at(-1)!, statuses }
+  }
+
+  async hotels(from: string, to: string, query: string, limit = 20): Promise<IHotelSuggestion[]> {
+    if (!query.trim()) {
+      for (const supplier of this.suppliers) void supplier.hotels?.(from, to).catch(() => [])
+
+      return []
+    }
+
+    const lists = await Promise.allSettled(this.suppliers.map(async supplier => ({
+      supplier: supplier.ref.id,
+      hotels: await supplier.hotels?.(from, to) ?? [],
+    })))
+    const found = new Map<string, IHotelSuggestion & { names: Map<string, number> }>()
+
+    for (const list of lists) {
+      if (list.status !== 'fulfilled') continue
+
+      for (const hotel of list.value.hotels) {
+        if (!matchesHotel(hotel.name, query)) continue
+
+        const key = hotelKey(hotel.name)
+        const entry = found.get(key) ?? { key, name: '', stars: null, suppliers: 0, names: new Map() }
+
+        entry.names.set(hotel.name, (entry.names.get(hotel.name) ?? 0) + 1)
+        entry.stars = entry.stars ?? hotel.stars
+        entry.suppliers += 1
+        found.set(key, entry)
+      }
+    }
+
+    const needle = query.trim().toLowerCase()
+
+    return [...found.values()]
+      .map(({ names, ...entry }) => ({ ...entry, name: hotelLabel([...names].sort((a, b) => b[1] - a[1])[0]![0]) }))
+      .sort((a, b) =>
+        Number(b.name.toLowerCase().startsWith(needle)) - Number(a.name.toLowerCase().startsWith(needle))
+        || b.suppliers - a.suppliers
+        || a.name.localeCompare(b.name))
+      .slice(0, limit)
   }
 
   private native(): Set<string> {

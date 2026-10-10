@@ -26,6 +26,11 @@ export class SearchController {
     return this.soonestCache.through(criteria, () => this.search.soonest(criteria))
   }
 
+  @Get('hotels')
+  hotels(@Query('from') from = '', @Query('to') to = '', @Query('q') q = ''): Promise<unknown> {
+    return this.search.hotels(String(from), String(to), String(q).slice(0, 80))
+  }
+
   @Sse('offers/stream')
   stream(@Query() query: SearchQueryDto): Observable<MessageEvent> {
     const criteria = toCriteria(query)

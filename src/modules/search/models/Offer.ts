@@ -3,6 +3,7 @@ import { Availability } from '~/modules/search/contracts/search'
 import type { Money, PriceBreakdown, SupplierRef } from '~/modules/search/contracts/search'
 import { mealPlanOf } from '../meal-plans'
 import type { MealPlan } from '../meal-plans'
+import { hotelKey } from '../hotel-key'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -58,8 +59,8 @@ export class Offer extends Model<IOffer> {
     return mealPlanOf(this.get('mealCode'), this.get('mealName'))
   }
 
-  public override toObject(): IOffer & { mealPlan: MealPlan | null } {
-    return { ...super.toObject(), mealPlan: this.resolveMealPlan() }
+  public override toObject(): IOffer & { mealPlan: MealPlan | null, hotelKey: string } {
+    return { ...super.toObject(), mealPlan: this.resolveMealPlan(), hotelKey: hotelKey(this.get('hotelName')) }
   }
 
   public dedupeKey(): string {

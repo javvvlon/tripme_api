@@ -1,4 +1,5 @@
 import { mealKeyOf } from './meal-plans'
+import { hotelKey } from './hotel-key'
 import type { Offer } from './models/Offer'
 import type { SearchFilters } from './contracts/search'
 
@@ -26,8 +27,11 @@ export function localFilter(
   skip?: LocalFacet,
 ): Offer[] {
   const active = activeLocalFacets(filters, native).filter(facet => facet !== skip)
+  const hotels = new Set(filters.hotels ?? [])
 
-  if (!active.length) return offers
+  if (!active.length && !hotels.size) return offers
 
-  return offers.filter(offer => active.every(facet => (filters[facet] as Array<string | number>).includes(valueOf[facet](offer))))
+  return offers.filter(offer =>
+    (!hotels.size || hotels.has(hotelKey(offer.get('hotelName'))))
+    && active.every(facet => (filters[facet] as Array<string | number>).includes(valueOf[facet](offer))))
 }

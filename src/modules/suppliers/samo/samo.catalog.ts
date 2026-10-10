@@ -4,10 +4,14 @@
 export interface ISamoHotelPlace {
   town: string
   stars: string
+  name: string
+  starCount: number | null
 }
 
 interface IRawHotel {
   id?: number | string
+  name?: string | null
+  star?: string | null
   townKey?: number | string | null
   starGroupList?: string | null
 }
@@ -62,6 +66,8 @@ export function parseHotelCatalog(html: string): Map<string, ISamoHotelPlace> {
     catalog.set(String(hotel.id), {
       town: hotel.townKey === undefined || hotel.townKey === null ? '' : String(hotel.townKey),
       stars: (hotel.starGroupList ?? '').split(',')[0]?.trim() ?? '',
+      name: typeof hotel.name === 'string' ? hotel.name.trim() : '',
+      starCount: /^[1-5]/.test(hotel.star ?? '') ? Number((hotel.star ?? '')[0]) : null,
     })
   }
 
