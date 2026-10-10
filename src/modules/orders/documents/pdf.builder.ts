@@ -233,6 +233,9 @@ function totals(doc: PDFKit.PDFDocument, flavour: DocumentFlavour, data: IDocume
       ? [
           ['Итого', formatAmount(summary.totalUzs, 'сум')],
           ['Оплачено', formatAmount(summary.receivedUzs, 'сум')],
+          ...(summary.ratesDate && summary.balanceUzs > 0
+            ? [['Курс ЦБ на', summary.ratesDate.split('-').reverse().join('.')] as [string, string]]
+            : []),
         ]
       : []
     : []

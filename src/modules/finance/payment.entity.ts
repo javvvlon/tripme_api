@@ -33,6 +33,9 @@ export class PaymentEntity {
   @Column({ name: 'amount_uzs', type: 'numeric' })
   amountUzs!: string
 
+  @Column({ type: 'jsonb', nullable: true })
+  rates!: Record<string, number> | null
+
   @Column({ type: 'text' })
   method!: string
 

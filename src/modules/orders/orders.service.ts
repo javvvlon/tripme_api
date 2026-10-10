@@ -175,8 +175,24 @@ export interface IOrderMoney {
   paymentStatus: string
   balanceUzs: number
   receivedUzs: number
+  totalUzs: number
   depositUzs: number
   depositMet: boolean
+  settled: boolean
+  rates: Record<string, number>
+  ratesDate: string | null
+}
+
+const valued = (items: IOrderItemPayload[], money: IOrderMoney | undefined): IOrderItemPayload[] => {
+  if (!money || money.settled) return items
+
+  return items.map((item) => {
+    const rate = item.price_currency && item.price_currency !== 'UZS' ? money.rates[item.price_currency] : undefined
+
+    if (!rate || item.price_amount === null) return item
+
+    return { ...item, fx_rate: rate, fx_date: money.ratesDate ?? item.fx_date, price_uzs: Math.round(item.price_amount * rate) }
+  })
 }
 
 export type OrderEvent =
@@ -391,7 +407,7 @@ export class OrdersService {
     const money = (await this.moneyOf([order], items)).get(orderId)
 
     return {
-      ...documentMoneyOf(items.get(orderId) ?? [], money?.receivedUzs ?? 0, money?.balanceUzs ?? 0),
+      ...documentMoneyOf(valued(items.get(orderId) ?? [], money), money),
       paymentStatus: money?.paymentStatus ?? 'unpaid',
     }
   }
@@ -404,7 +420,7 @@ export class OrdersService {
     const items = await this.itemsService.byOrder([orderId])
     const money = (await this.moneyOf([order], items)).get(orderId)
 
-    return documentMoneyOf(items.get(orderId) ?? [], money?.receivedUzs ?? 0, money?.balanceUzs ?? 0)
+    return documentMoneyOf(valued(items.get(orderId) ?? [], money), money)
   }
 
   async markContract(orderId: string, documentId: string): Promise<void> {
@@ -428,11 +444,6 @@ export class OrdersService {
     order.updatedAt = new Date()
 
     await this.orders.save(order)
-  }
-
-  async setItemRate(orderId: string, itemId: string, rate: unknown, viewer: IViewer): Promise<void> {
-    await this.visible(orderId, viewer)
-    await this.itemsService.setRate(orderId, itemId, rate)
   }
 
   async forLead(leadId: string, viewer: IViewer): Promise<IOrderPayload[]> {
@@ -875,7 +886,7 @@ export class OrdersService {
       price_amount: row.priceAmount === null ? null : Number(row.priceAmount),
       price_currency: row.priceCurrency,
       trip: row.trip ?? {},
-      items,
+      items: valued(items, money),
       payment_status: money?.paymentStatus ?? 'unpaid',
       balance_uzs: money?.balanceUzs ?? 0,
       deposit_percent: row.depositPercent,

@@ -49,14 +49,4 @@ export class FinanceController {
 
     return this.finance.setDeposit(id, body.percent, viewerOf(claims))
   }
-
-  @Patch('orders/:id/items/:itemId/rate')
-  rate(
-    @Param('id') id: string,
-    @Param('itemId') itemId: string,
-    @Body() body: { fx_rate?: number },
-    @CurrentUser() claims: IAccessTokenClaims,
-  ) {
-    return this.finance.setItemRate(id, itemId, body?.fx_rate, viewerOf(claims))
-  }
 }

@@ -67,6 +67,7 @@ import { LeadCustomerLink1755900034000 } from './migrations/1755900034000-LeadCu
 import { Archive1755900035000 } from './migrations/1755900035000-Archive'
 import { ClientAccount1755900036000 } from './migrations/1755900036000-ClientAccount'
 import { Messages1755900037000 } from './migrations/1755900037000-Messages'
+import { PaymentRates1755900038000 } from './migrations/1755900038000-PaymentRates'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -121,7 +122,7 @@ export const databaseOptions = (): DataSourceOptions => {
       LeadOwnership1755900029000,
       OrderItems1755900030000,
       Payments1755900031000,
-      ConfirmationRule1755900032000, EsimPurchases1755900033000, LeadCustomerLink1755900034000, Archive1755900035000, ClientAccount1755900036000, Messages1755900037000,
+      ConfirmationRule1755900032000, EsimPurchases1755900033000, LeadCustomerLink1755900034000, Archive1755900035000, ClientAccount1755900036000, Messages1755900037000, PaymentRates1755900038000,
     ],
     synchronize: false,
     migrationsRun: false,

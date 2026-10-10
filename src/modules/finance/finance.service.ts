@@ -13,10 +13,10 @@ import type { IUploadedFile } from '~/shared/storage/storage.service'
 import { PaymentEntity } from './payment.entity'
 import {
   CUSTOMER_DIRECTIONS, PAYMENT_CURRENCIES, PAYMENT_DIRECTIONS, PAYMENT_METHODS,
-  rateFor, summarize, toUzs,
+  PaymentStatus, rateFor, summarize, toUzs,
 } from './finance.rules'
 import { PaymentDirection } from './finance.rules'
-import type { IPricedItem } from './finance.rules'
+import type { ILedgerEntry, IPricedItem, RateTable } from './finance.rules'
 
 export interface IPaymentInput {
   direction?: string
@@ -60,6 +60,7 @@ export interface IFinancePayload {
   deposit_uzs: number
   deposit_met: boolean
   payment_status: string
+  rates_date: string | null
   legacy_paid: boolean
   can_reverse: boolean
   payments: IPaymentPayload[]
@@ -73,8 +74,17 @@ const priced = (items: IOrderItemPayload[]): IPricedItem[] => items.map(item => 
   status: item.status,
   priceAmount: item.price_amount,
   priceCurrency: item.price_currency,
-  fxRate: item.fx_rate,
+  fxRate: item.agreed_rate,
 }))
+
+const ledgerOf = (rows: PaymentEntity[]): ILedgerEntry[] => rows.map(row => ({
+  direction: row.direction,
+  amountUzs: Number(row.amountUzs),
+  paidAt: row.paidAt,
+  rates: row.rates,
+}))
+
+const SETTLED: string[] = [PaymentStatus.Paid, PaymentStatus.Overpaid]
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -116,6 +126,7 @@ export class FinanceService {
     }
 
     const rate = await this.rateOf(currency, input.fx_rate)
+    const rates = await this.ratesOn(paidAt, currency, rate)
     const itemId = await this.itemOf(orderId, input.item_id)
     const receipt = file ? await this.documents.attach(orderId, file, viewer.id) : null
 
@@ -128,6 +139,7 @@ export class FinanceService {
       fxRate: String(rate),
       fxDate: paidAt,
       amountUzs: String(toUzs(amount, rate)),
+      rates,
       method,
       paidAt,
       receiptDocumentId: receipt?.id ?? null,
@@ -167,6 +179,7 @@ export class FinanceService {
       fxRate: original.fxRate,
       fxDate: original.fxDate,
       amountUzs: String(-Number(original.amountUzs)),
+      rates: original.rates,
       method: original.method,
       paidAt: today(),
       receiptDocumentId: null,
@@ -184,31 +197,30 @@ export class FinanceService {
     return this.build(orderId, viewer)
   }
 
-  async setItemRate(orderId: string, itemId: string, rate: unknown, viewer: IViewer): Promise<IFinancePayload> {
-    await this.orders.setItemRate(orderId, itemId, rate, viewer)
-
-    return this.build(orderId, viewer)
-  }
-
   async moneyOf(orders: IOrderMoneyInput[]): Promise<Map<string, IOrderMoney>> {
     const money = new Map<string, IOrderMoney>()
 
     if (!orders.length) return money
 
-    const rows = await this.payments.find({ where: { orderId: In(orders.map(order => order.id)) } })
+    const [rows, today] = await Promise.all([
+      this.payments.find({ where: { orderId: In(orders.map(order => order.id)) }, order: { createdAt: 'ASC' } }),
+      this.todayRates(),
+    ])
 
     for (const order of orders) {
-      const entries = rows
-        .filter(row => row.orderId === order.id)
-        .map(row => ({ direction: row.direction, amountUzs: Number(row.amountUzs) }))
-      const summary = summarize(priced(order.items), entries, order.depositPercent, order.legacyPaid)
+      const entries = ledgerOf(rows.filter(row => row.orderId === order.id))
+      const summary = summarize(priced(order.items), entries, order.depositPercent, order.legacyPaid, today.rates)
 
       money.set(order.id, {
         paymentStatus: summary.paymentStatus,
         balanceUzs: summary.balanceUzs,
         receivedUzs: summary.receivedUzs,
+        totalUzs: summary.totalUzs,
         depositUzs: summary.depositUzs,
         depositMet: summary.depositMet,
+        settled: order.legacyPaid || SETTLED.includes(summary.paymentStatus),
+        rates: today.rates,
+        ratesDate: today.date,
       })
     }
 
@@ -241,19 +253,15 @@ export class FinanceService {
   }
 
   private async build(orderId: string, viewer: IViewer): Promise<IFinancePayload> {
-    const [items, rows, context, documents] = await Promise.all([
+    const [items, rows, context, documents, today] = await Promise.all([
       this.orders.itemsOf(orderId),
       this.payments.find({ where: { orderId }, order: { createdAt: 'ASC' } }),
       this.orders.moneyContextOf(orderId),
       this.documents.list(orderId),
+      this.todayRates(),
     ])
 
-    const summary = summarize(
-      priced(items),
-      rows.map(row => ({ direction: row.direction, amountUzs: Number(row.amountUzs) })),
-      context.depositPercent,
-      context.legacyPaid,
-    )
+    const summary = summarize(priced(items), ledgerOf(rows), context.depositPercent, context.legacyPaid, today.rates)
     const elevated = seesEveryone(viewer)
     const reversed = new Set(rows.map(row => row.reversesPaymentId).filter(Boolean))
     const receipts = new Map(documents.map(document => [document.id, { name: document.name, url: document.url }]))
@@ -271,6 +279,7 @@ export class FinanceService {
       deposit_uzs: summary.depositUzs,
       deposit_met: summary.depositMet,
       payment_status: summary.paymentStatus,
+      rates_date: today.date,
       legacy_paid: context.legacyPaid,
       can_reverse: elevated,
       payments: rows
@@ -294,6 +303,23 @@ export class FinanceService {
           created_at: row.createdAt.toISOString(),
         })),
     }
+  }
+
+  private async todayRates(): Promise<{ rates: RateTable, date: string | null }> {
+    const current = await this.rates.current().catch(() => null)
+
+    return { rates: current?.rates ?? {}, date: current?.date ?? null }
+  }
+
+  private async ratesOn(day: string, currency: string, rate: number): Promise<RateTable | null> {
+    const source = day === today()
+      ? await this.rates.current().catch(() => null)
+      : await this.rates.on(day) ?? await this.rates.current().catch(() => null)
+    const rates: RateTable = { ...(source?.rates ?? {}) }
+
+    if (currency !== 'UZS') rates[currency] = rate
+
+    return Object.keys(rates).length ? rates : null
   }
 
   private async rateOf(currency: string, given: unknown): Promise<number> {

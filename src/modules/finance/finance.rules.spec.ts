@@ -22,11 +22,11 @@ describe('finance rules', () => {
     expect(rateFor('EUR', { USD: 11809 })).toBeNull()
   })
 
-  it('derives the payment status from money received', () => {
-    expect(paymentStatusOf(1000, 0)).toBe(PaymentStatus.Unpaid)
-    expect(paymentStatusOf(1000, 400)).toBe(PaymentStatus.Partial)
-    expect(paymentStatusOf(1000, 1000)).toBe(PaymentStatus.Paid)
-    expect(paymentStatusOf(1000, 1200)).toBe(PaymentStatus.Overpaid)
+  it('derives the payment status from what is received and still owed', () => {
+    expect(paymentStatusOf(0, 1000, 0)).toBe(PaymentStatus.Unpaid)
+    expect(paymentStatusOf(400, 600, 0)).toBe(PaymentStatus.Partial)
+    expect(paymentStatusOf(1000, 0, 0)).toBe(PaymentStatus.Paid)
+    expect(paymentStatusOf(1200, 0, 200)).toBe(PaymentStatus.Overpaid)
   })
 
   it('sums active services, nets refunds and reversals, and checks the deposit', () => {
@@ -69,5 +69,103 @@ describe('finance rules', () => {
     expect(summary.totalUzs).toBe(180000)
     expect(summary.depositUzs).toBe(90000)
     expect(summary.depositMet).toBe(false)
+  })
+
+  describe('remainder at today\'s rate', () => {
+    const trip = { status: 'confirmed', priceAmount: 1000, priceCurrency: 'USD', fxRate: 12000 }
+    const paid = (amountUzs: number, paidAt: string, usd: number) =>
+      ({ direction: PaymentDirection.CustomerIn, amountUzs, paidAt, rates: { USD: usd } })
+
+    it('asks for the rest at today\'s rate, five days after half was paid', () => {
+      const summary = summarize([trip], [paid(6_000_000, '2026-10-05', 12000)], null, false, { USD: 12100 })
+
+      expect(summary.receivedUzs).toBe(6_000_000)
+      expect(summary.balanceUzs).toBe(6_050_000)
+      expect(summary.totalUzs).toBe(12_050_000)
+      expect(summary.paymentStatus).toBe(PaymentStatus.Partial)
+    })
+
+    it('settles once the rest is paid at that rate', () => {
+      const summary = summarize(
+        [trip],
+        [paid(6_000_000, '2026-10-05', 12000), paid(6_050_000, '2026-10-10', 12100)],
+        null, false, { USD: 12100 },
+      )
+
+      expect(summary.balanceUzs).toBe(0)
+      expect(summary.overpaidUzs).toBe(0)
+      expect(summary.totalUzs).toBe(12_050_000)
+      expect(summary.paymentStatus).toBe(PaymentStatus.Paid)
+    })
+
+    it('leaves an order paid before the switch exactly as it was', () => {
+      const before = summarize([trip], [{ direction: PaymentDirection.CustomerIn, amountUzs: 12_000_000 }], null, false, {})
+      const after = summarize([trip], [{ direction: PaymentDirection.CustomerIn, amountUzs: 12_000_000 }], null, false, { USD: 12500 })
+
+      expect(after).toEqual(before)
+      expect(after.totalUzs).toBe(12_000_000)
+      expect(after.paymentStatus).toBe(PaymentStatus.Paid)
+    })
+
+    it('prices an unpaid order at today\'s rate', () => {
+      const summary = summarize([trip], [], null, false, { USD: 12100 })
+
+      expect(summary.totalUzs).toBe(12_100_000)
+      expect(summary.balanceUzs).toBe(12_100_000)
+    })
+
+    it('ignores dust from rounding the rate', () => {
+      const summary = summarize(
+        [trip],
+        [paid(6_000_000, '2026-10-05', 12000), paid(6_049_500, '2026-10-10', 12100)],
+        null, false, { USD: 12100 },
+      )
+
+      expect(summary.balanceUzs).toBe(0)
+      expect(summary.paymentStatus).toBe(PaymentStatus.Paid)
+    })
+
+    it('keeps sum-priced services at face value in a mixed order', () => {
+      const cover = { status: 'confirmed', priceAmount: 500_000, priceCurrency: 'UZS', fxRate: null }
+      const summary = summarize([trip, cover], [paid(6_250_000, '2026-10-05', 12000)], null, false, { USD: 12100 })
+
+      expect(summary.balanceUzs).toBe(6_050_000 + 250_000)
+    })
+
+    it('reports money paid beyond the order as overpaid', () => {
+      const summary = summarize([trip], [paid(13_000_000, '2026-10-05', 12000)], null, false, { USD: 12100 })
+
+      expect(summary.balanceUzs).toBe(0)
+      expect(summary.overpaidUzs).toBe(1_000_000)
+      expect(summary.paymentStatus).toBe(PaymentStatus.Overpaid)
+    })
+
+    it('puts a reversed payment back on the bill at today\'s rate', () => {
+      const summary = summarize(
+        [trip],
+        [paid(6_000_000, '2026-10-05', 12000), paid(-6_000_000, '2026-10-06', 12000)],
+        null, false, { USD: 12100 },
+      )
+
+      expect(summary.balanceUzs).toBe(12_100_000)
+      expect(summary.paymentStatus).toBe(PaymentStatus.Unpaid)
+    })
+
+    it('credits older payments at the rate the service was priced at', () => {
+      const summary = summarize(
+        [trip],
+        [{ direction: PaymentDirection.CustomerIn, amountUzs: 6_000_000 }],
+        null, false, { USD: 12100 },
+      )
+
+      expect(summary.balanceUzs).toBe(6_050_000)
+    })
+
+    it('counts the deposit as met by the share of the trip paid, not by sum', () => {
+      const summary = summarize([trip], [paid(3_600_000, '2026-10-05', 12000)], 30, false, { USD: 12100 })
+
+      expect(summary.depositUzs).toBe(Math.round((3_600_000 + 8_470_000) * 0.3 / 100) * 100)
+      expect(summary.depositMet).toBe(true)
+    })
   })
 })

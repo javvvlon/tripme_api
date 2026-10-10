@@ -17,6 +17,7 @@ export interface IDocumentMoney {
   missingRates: number
   receivedUzs: number
   balanceUzs: number
+  ratesDate: string | null
 }
 
 const KIND_LABELS: Record<string, string> = {
@@ -54,14 +55,18 @@ export function documentLinesOf(items: IOrderItemPayload[]): IDocumentLine[] {
     }))
 }
 
-export function documentMoneyOf(items: IOrderItemPayload[], receivedUzs: number, balanceUzs: number): IDocumentMoney {
+export function documentMoneyOf(
+  items: IOrderItemPayload[],
+  money?: { receivedUzs: number, balanceUzs: number, totalUzs: number, ratesDate: string | null, settled: boolean },
+): IDocumentMoney {
   const lines = documentLinesOf(items)
 
   return {
     lines,
-    totalUzs: lines.reduce((total, line) => total + (line.uzs ?? 0), 0),
+    totalUzs: money ? money.totalUzs : lines.reduce((total, line) => total + (line.uzs ?? 0), 0),
     missingRates: lines.filter(line => line.uzs === null).length,
-    receivedUzs,
-    balanceUzs,
+    receivedUzs: money?.receivedUzs ?? 0,
+    balanceUzs: money?.balanceUzs ?? 0,
+    ratesDate: money && !money.settled ? money.ratesDate : null,
   }
 }

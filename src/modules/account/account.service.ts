@@ -51,6 +51,7 @@ export interface ICustomerOrderDetail extends ICustomerOrder {
   total_uzs: number
   received_uzs: number
   balance_uzs: number
+  rates_date: string | null
   payment_status: string
 }
 
@@ -180,6 +181,7 @@ export class AccountService {
       total_uzs: money.totalUzs,
       received_uzs: money.receivedUzs,
       balance_uzs: money.balanceUzs,
+      rates_date: money.ratesDate,
       payment_status: money.paymentStatus,
       history: events.map(event => ({
         from: event.fromStatus,

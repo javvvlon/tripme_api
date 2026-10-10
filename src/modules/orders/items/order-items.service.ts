@@ -27,6 +27,7 @@ export interface IOrderItemPayload {
   cost_amount: number | null
   cost_currency: string
   fx_rate: number | null
+  agreed_rate: number | null
   fx_date: string | null
   required_for_confirmation: boolean
   details: Record<string, unknown>
@@ -181,23 +182,6 @@ export class OrderItemsService {
     return repository.save(item)
   }
 
-  async setRate(orderId: string, itemId: string, rate: unknown): Promise<void> {
-    const value = Number(rate)
-
-    if (!Number.isFinite(value) || value <= 0) throw new BadRequestException('The rate must be a positive number')
-
-    const item = await this.items.findOne({ where: { id: itemId, orderId } })
-
-    if (!item) throw new NotFoundException('Service not found')
-    if (!item.priceCurrency || item.priceCurrency === 'UZS') throw new BadRequestException('This service is priced in sum')
-
-    item.fxRate = String(value)
-    item.fxDate = today()
-    item.updatedAt = new Date()
-
-    await this.items.save(item)
-  }
-
   async byOrder(orderIds: string[]): Promise<Map<string, IOrderItemPayload[]>> {
     const grouped = new Map<string, IOrderItemPayload[]>()
 
@@ -285,6 +269,7 @@ export class OrderItemsService {
       cost_currency: row.costCurrency,
       fx_rate: fxRate,
       fx_date: row.fxDate,
+      agreed_rate: fxRate,
       required_for_confirmation: row.requiredForConfirmation,
       details: row.details ?? {},
     }
