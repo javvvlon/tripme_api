@@ -88,9 +88,6 @@ export class LeadEntity {
   @Column({ name: 'reject_reason', type: 'text', default: '' })
   rejectReason!: string
 
-  @Column({ name: 'trip_no', type: 'int', default: 1 })
-  tripNo!: number
-
   @Column({ name: 'hotel_name', type: 'text', default: '' })
   hotelName!: string
 
@@ -108,6 +105,9 @@ export class LeadEntity {
 
   @Column({ type: 'int', default: 0 })
   children!: number
+
+  @Column({ name: 'children_ages', type: 'jsonb', default: () => `'[]'` })
+  childrenAges!: number[]
 
   @Column({ name: 'price_amount', type: 'numeric', nullable: true })
   priceAmount!: string | null

@@ -5,9 +5,11 @@ import type { EntityManager } from 'typeorm'
 import { pageOf } from '~/shared/helpers/pagination'
 import type { IPage, IPageRequest } from '~/shared/helpers/pagination'
 import { LEAD_PREFIX, numberFromReference, reference } from '~/shared/helpers/reference'
+import { phoneKey } from '~/shared/helpers/phone'
 import { UserEntity } from '~/modules/auth/entities'
 import { LEAD_STATUSES, LEAD_TRANSITIONS, LeadEntity, LeadSource, LeadStatus } from './lead.entity'
 import { LeadEventEntity, LeadEventKind } from './lead-event.entity'
+import { agesOf, partyOf } from './lead.party'
 import { QUEUE_STATUSES, STAFF_ROLES, canSeeLead, seesEveryone } from './lead.access'
 import type { IViewer } from './lead.access'
 
@@ -22,6 +24,7 @@ export interface ILeadTripInput {
   price_currency?: string
   route_from?: string
   route_to?: string
+  kid_ages?: unknown
   [key: string]: unknown
 }
 
@@ -30,6 +33,8 @@ export interface ILeadInput {
   destination?: string
   planned_dates?: string
   party_size?: number
+  adults?: number
+  children_ages?: unknown
   budget_amount?: number
   budget_currency?: string
   first_name?: string
@@ -89,7 +94,8 @@ export interface ILeadPatch {
   channel?: string
   destination?: string
   planned_dates?: string
-  party_size?: number
+  adults?: number
+  children_ages?: unknown
   budget_amount?: number | null
   budget_currency?: string
   manager_id?: string | null
@@ -106,11 +112,30 @@ export interface ILeadOrderRef {
   createdAt: Date
 }
 
-const CLOSED_ORDERS = ['completed', 'cancelled']
+export interface ILeadAccount {
+  first_name: string
+  last_name: string
+  phone: string
+  email: string
+}
+
+export interface ILeadRelated {
+  uuid: string
+  ref: string
+  status: string
+  visible: boolean
+  archived_at: string | null
+  destination: string
+  hotel_name: string
+  check_in: string | null
+  nights: number
+  manager_name: string
+  orders: Array<{ ref: string, status: string }>
+  created_at: string
+}
 
 export interface ILeadPayload {
   uuid: string
-  trip_no: number
   archived_at: string | null
   order_id: number
   ref: string
@@ -128,6 +153,7 @@ export interface ILeadPayload {
   manager_id: string | null
   manager_name: string
   user_id: string | null
+  account: ILeadAccount | null
   first_name: string
   last_name: string
   phone: string
@@ -139,6 +165,7 @@ export interface ILeadPayload {
   nights: number
   adults: number
   children: number
+  children_ages: number[]
   price_amount: number | null
   price_currency: string
   route_from: string
@@ -166,6 +193,13 @@ const asDate = (value: unknown): string | null =>
 const count = (value: unknown): number =>
   Number.isFinite(Number(value)) ? Math.max(0, Math.trunc(Number(value))) : 0
 
+const tripParty = (trip: ILeadTripInput): Partial<LeadEntity> =>
+  partyOf(count(trip.adults), agesOf(trip.kid_ages), count(trip.children))
+
+const PHONE_KEY_SQL = `(case when length(regexp_replace(lead.phone, '\\D', '', 'g')) = 9
+  then '998' || regexp_replace(lead.phone, '\\D', '', 'g')
+  else regexp_replace(lead.phone, '\\D', '', 'g') end)`
+
 const tripColumns = (trip: ILeadTripInput): Partial<LeadEntity> => {
   const amount = Number(trip.price_amount)
 
@@ -174,8 +208,6 @@ const tripColumns = (trip: ILeadTripInput): Partial<LeadEntity> => {
     supplierName: text(trip.supplier_name, 120),
     checkIn: asDate(trip.check_in),
     nights: count(trip.nights),
-    adults: count(trip.adults),
-    children: count(trip.children),
     priceAmount: Number.isFinite(amount) && amount > 0 ? String(amount) : null,
     priceCurrency: text(trip.price_currency, 8),
     routeFrom: text(trip.route_from, 120),
@@ -210,65 +242,74 @@ export class LeadsService {
     this.ordersOf = reader
   }
 
-  async newTrip(id: string, viewer: IViewer): Promise<ILeadPayload> {
+  async newRequest(id: string, viewer: IViewer): Promise<ILeadPayload> {
     const lead = await this.visible(id, viewer)
+    const previousRef = reference(LEAD_PREFIX, Number(lead.orderId ?? 0), lead.createdAt)
 
-    if (lead.archivedAt) throw new ConflictException('An archived lead cannot start a new trip')
-    if (!seesEveryone(viewer) && lead.managerId !== viewer.id) throw new ForbiddenException('Only the lead\'s manager can start a new trip')
+    const created = await this.leads.manager.transaction(async (manager) => {
+      const leads = manager.getRepository(LeadEntity)
+      const saved = await leads.save(leads.create({
+        status: LeadStatus.InProgress,
+        source: LeadSource.Manual,
+        channel: 'manual',
+        firstName: lead.firstName,
+        lastName: lead.lastName,
+        phone: lead.phone,
+        locale: lead.locale,
+        userId: lead.userId,
+        managerId: viewer.id,
+        firstResponseAt: new Date(),
+        consentAt: lead.consentAt,
+        ...partyOf(lead.adults, lead.childrenAges ?? [], lead.children),
+      }))
+      const stored = await leads.findOneOrFail({ where: { id: saved.id } })
+      const ref = reference(LEAD_PREFIX, Number(stored.orderId ?? 0), stored.createdAt)
 
-    const orders = await this.ordersOf?.(id) ?? []
-    const open = orders.filter(order => !CLOSED_ORDERS.includes(order.status))
+      await this.record(manager, stored.id, LeadEventKind.Created, { from: lead.id, to: viewer.id, subject: previousRef, actorId: viewer.id })
+      await this.record(manager, lead.id, LeadEventKind.NextRequest, { to: stored.id, subject: ref, actorId: viewer.id })
 
-    if (open.length) throw new ConflictException(`Finish or cancel ${open.map(order => order.ref).join(', ')} first`)
-    if (!orders.length && lead.status !== LeadStatus.Rejected) {
-      throw new ConflictException('A new trip starts after an order is completed or the lead is rejected')
-    }
-
-    const events = await this.events.find({ where: { leadId: id, kind: LeadEventKind.TripStarted }, order: { createdAt: 'DESC' }, take: 1 })
-    const since = events[0]?.createdAt ?? null
-    const previous = {
-      trip_no: lead.tripNo,
-      hotel: lead.hotelName,
-      supplier: lead.supplierName,
-      destination: lead.destination,
-      check_in: lead.checkIn,
-      nights: lead.nights,
-      price_amount: lead.priceAmount === null ? null : Number(lead.priceAmount),
-      price_currency: lead.priceCurrency,
-      status: lead.status,
-      orders: orders.filter(order => !since || order.createdAt > since).map(order => ({ ref: order.ref, status: order.status })),
-    }
-
-    return this.leads.manager.transaction(async (manager) => {
-      await this.record(manager, lead.id, LeadEventKind.TripStarted, {
-        from: String(lead.tripNo),
-        to: String(lead.tripNo + 1),
-        subject: JSON.stringify(previous),
-        actorId: viewer.id,
-      })
-
-      if (lead.status !== LeadStatus.InProgress) {
-        await this.record(manager, lead.id, LeadEventKind.Status, { from: lead.status, to: LeadStatus.InProgress, actorId: viewer.id })
-      }
-
-      Object.assign(lead, tripColumns({}))
-      lead.tripNo += 1
-      lead.status = LeadStatus.InProgress
-      lead.rejectReason = ''
-      lead.destination = ''
-      lead.plannedDates = ''
-      lead.budgetAmount = null
-      lead.budgetCurrency = ''
-      lead.updatedAt = new Date()
-
-      await manager.getRepository(LeadEntity).save(lead)
-
-      const names = await this.namesOf([lead.managerId])
-
-      return this.toPayload(lead, names)
+      return stored
     })
+
+    return this.one(created.id, viewer)
   }
 
+  async related(id: string, viewer: IViewer): Promise<ILeadRelated[]> {
+    const lead = await this.visible(id, viewer)
+    const key = phoneKey(lead.phone)
+    const matches: string[] = []
+
+    if (lead.userId) matches.push('lead.userId = :user')
+    if (key) matches.push(`${PHONE_KEY_SQL} = :key`)
+    if (!matches.length) return []
+
+    const rows = await this.leads.createQueryBuilder('lead')
+      .where('lead.id <> :id', { id })
+      .andWhere(`(${matches.join(' or ')})`, { user: lead.userId, key })
+      .orderBy('lead.createdAt', 'DESC')
+      .take(20)
+      .getMany()
+
+    const [names, orders] = await Promise.all([
+      this.namesOf(rows.map(row => row.managerId)),
+      Promise.all(rows.map(row => this.ordersOf?.(row.id) ?? Promise.resolve([] as ILeadOrderRef[]))),
+    ])
+
+    return rows.map((row, index) => ({
+      uuid: row.id,
+      ref: reference(LEAD_PREFIX, Number(row.orderId ?? 0), row.createdAt),
+      status: row.status,
+      visible: canSeeLead(viewer, row),
+      archived_at: row.archivedAt ? row.archivedAt.toISOString() : null,
+      destination: row.destination ?? '',
+      hotel_name: row.hotelName,
+      check_in: row.checkIn,
+      nights: row.nights,
+      manager_name: row.managerId ? names.get(row.managerId) ?? '' : '',
+      orders: orders[index].map(order => ({ ref: order.ref, status: order.status })),
+      created_at: row.createdAt.toISOString(),
+    }))
+  }
 
   async submit(
     input: ILeadInput,
@@ -288,6 +329,8 @@ export class LeadsService {
     }
 
     const trip = input.trip ?? {}
+    const ages = agesOf(input.children_ages ?? trip.kid_ages)
+    const adults = count(input.adults) || count(trip.adults) || (ages.length ? 0 : count(input.party_size))
 
     const lead = this.leads.create({
       status: LeadStatus.New,
@@ -300,7 +343,6 @@ export class LeadsService {
       channel: text(input.channel, 24) || (source === LeadSource.Manual ? 'manual' : 'site'),
       destination: text(input.destination, 120) || text(trip.route_to_label, 120) || text(trip.route_to, 120),
       plannedDates: text(input.planned_dates, 120),
-      partySize: count(input.party_size) || count(trip.adults) + count(trip.children),
       budgetAmount: Number.isFinite(Number(input.budget_amount)) && Number(input.budget_amount) > 0
         ? String(input.budget_amount)
         : null,
@@ -308,6 +350,7 @@ export class LeadsService {
       managerId: source === LeadSource.Manual ? actorId : null,
       userId,
       ...tripColumns(trip),
+      ...partyOf(adults, ages, count(trip.children)),
       consentAt: input.consent === true ? new Date() : null,
     })
 
@@ -324,16 +367,14 @@ export class LeadsService {
 
   async one(id: string, viewer: IViewer): Promise<ILeadPayload> {
     const lead = await this.visible(id, viewer)
-    const names = await this.namesOf([lead.managerId])
 
-    return this.toPayload(lead, names)
+    return (await this.present([lead]))[0]
   }
 
   async list(query: ILeadQuery, viewer: IViewer): Promise<ILeadPayload[]> {
     const rows = await this.filtered(query, viewer).take(500).getMany()
-    const names = await this.namesOf(rows.map(row => row.managerId))
 
-    return rows.map(row => this.toPayload(row, names))
+    return this.present(rows)
   }
 
   async page(
@@ -343,15 +384,15 @@ export class LeadsService {
   ): Promise<IPage<ILeadPayload, { all: number, fresh: number, free: number, mine: number }>> {
     const [rows, total] = await this.filtered(query, viewer).skip(request.skip).take(request.perPage).getManyAndCount()
     const scope = { archived: query.archived }
-    const [all, fresh, free, mine, names] = await Promise.all([
+    const [all, fresh, free, mine, items] = await Promise.all([
       this.filtered(scope, viewer).getCount(),
       this.filtered({ ...scope, status: LeadStatus.New }, viewer).getCount(),
       this.filtered({ ...scope, manager: 'none' }, viewer).getCount(),
       this.filtered({ ...scope, manager: 'me' }, viewer).getCount(),
-      this.namesOf(rows.map(row => row.managerId)),
+      this.present(rows),
     ])
 
-    return pageOf(rows.map(row => this.toPayload(row, names)), total, request, { all, fresh, free, mine })
+    return pageOf(items, total, request, { all, fresh, free, mine })
   }
 
   private filtered(query: ILeadQuery, viewer: IViewer) {
@@ -448,7 +489,6 @@ export class LeadsService {
       if (input.channel !== undefined) lead.channel = text(input.channel, 24)
       if (input.destination !== undefined) lead.destination = text(input.destination, 120)
       if (input.planned_dates !== undefined) lead.plannedDates = text(input.planned_dates, 120)
-      if (input.party_size !== undefined) lead.partySize = count(input.party_size)
       if (input.budget_currency !== undefined) lead.budgetCurrency = text(input.budget_currency, 8)
       if (input.first_name !== undefined) lead.firstName = text(input.first_name, 120)
       if (input.last_name !== undefined) lead.lastName = text(input.last_name, 120)
@@ -458,6 +498,13 @@ export class LeadsService {
         lead.budgetAmount = input.budget_amount === null ? null : String(input.budget_amount)
       }
 
+      if (input.adults !== undefined || input.children_ages !== undefined) {
+        const ages = input.children_ages === undefined ? lead.childrenAges ?? [] : agesOf(input.children_ages)
+        const adults = input.adults === undefined ? lead.adults : count(input.adults)
+
+        Object.assign(lead, partyOf(adults, ages))
+      }
+
       if (input.trip === null) Object.assign(lead, tripColumns({}))
 
       if (input.trip && typeof input.trip === 'object') {
@@ -465,16 +512,16 @@ export class LeadsService {
 
         Object.assign(lead, tripColumns(input.trip))
 
+        if (count(input.trip.adults)) Object.assign(lead, tripParty(input.trip))
         if (!lead.destination) lead.destination = text(input.trip.route_to_label, 120) || lead.routeTo
-        if (!lead.partySize) lead.partySize = lead.adults + lead.children
       }
 
       lead.updatedAt = new Date()
 
       await manager.getRepository(LeadEntity).save(lead)
 
-      return this.toPayload(lead, await this.namesOf([lead.managerId]))
-    })
+      return lead
+    }).then(async saved => (await this.present([saved]))[0])
   }
 
   async take(id: string, viewer: IViewer): Promise<ILeadPayload> {
@@ -494,7 +541,7 @@ export class LeadsService {
       })
     }
 
-    return this.toPayload(lead, await this.namesOf([lead.managerId]))
+    return (await this.present([lead]))[0]
   }
 
   async claimForOrder(manager: EntityManager, lead: LeadEntity, viewer: IViewer): Promise<void> {
@@ -568,6 +615,33 @@ export class LeadsService {
     return new Map(rows.map(row => [row.id, displayName(row)]))
   }
 
+  private async present(rows: LeadEntity[]): Promise<ILeadPayload[]> {
+    const [names, accounts] = await Promise.all([
+      this.namesOf(rows.map(row => row.managerId)),
+      this.accountsOf(rows.map(row => row.userId)),
+    ])
+
+    return rows.map(row => this.toPayload(row, names, row.userId ? accounts.get(row.userId) ?? null : null))
+  }
+
+  private async accountsOf(ids: Array<string | null | undefined>): Promise<Map<string, ILeadAccount>> {
+    const wanted = [...new Set(ids.filter((id): id is string => Boolean(id)))]
+
+    if (!wanted.length) return new Map()
+
+    const rows = await this.users.find({
+      where: { id: In(wanted) },
+      select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true },
+    })
+
+    return new Map(rows.map(row => [row.id, {
+      first_name: row.firstName ?? '',
+      last_name: row.lastName ?? '',
+      phone: row.phoneNumber ?? '',
+      email: row.email ?? '',
+    }]))
+  }
+
   async assertStaff(id: string): Promise<void> {
     const found = await this.users.findOne({ where: { id, role: In(STAFF_ROLES) }, select: { id: true } })
 
@@ -639,10 +713,9 @@ export class LeadsService {
     return this.one(id, viewer)
   }
 
-  private toPayload(row: LeadEntity, names: Map<string, string> = new Map()): ILeadPayload {
+  private toPayload(row: LeadEntity, names: Map<string, string>, account: ILeadAccount | null): ILeadPayload {
     return {
       uuid: row.id,
-      trip_no: row.tripNo ?? 1,
       order_id: Number(row.orderId ?? 0),
       ref: reference(LEAD_PREFIX, Number(row.orderId ?? 0), row.createdAt),
       first_response_at: row.firstResponseAt ? row.firstResponseAt.toISOString() : null,
@@ -660,9 +733,10 @@ export class LeadsService {
       manager_id: row.managerId,
       manager_name: row.managerId ? names.get(row.managerId) ?? '' : '',
       user_id: row.userId,
-      first_name: row.firstName,
-      last_name: row.lastName,
-      phone: row.phone,
+      account,
+      first_name: account?.first_name || row.firstName,
+      last_name: account?.last_name || row.lastName,
+      phone: account?.phone || row.phone,
       comment: row.comment,
       locale: row.locale,
       hotel_name: row.hotelName,
@@ -671,6 +745,7 @@ export class LeadsService {
       nights: row.nights,
       adults: row.adults,
       children: row.children,
+      children_ages: row.childrenAges ?? [],
       price_amount: row.priceAmount === null ? null : Number(row.priceAmount),
       price_currency: row.priceCurrency,
       route_from: row.routeFrom,

@@ -66,6 +66,11 @@ export class LeadsAdminController {
     return this.leads.one(id, viewerOf(claims))
   }
 
+  @Get(':id/related')
+  related(@Param('id') id: string, @CurrentUser() claims: IAccessTokenClaims) {
+    return this.leads.related(id, viewerOf(claims))
+  }
+
   @Get(':id/history')
   history(@Param('id') id: string, @CurrentUser() claims: IAccessTokenClaims) {
     return this.leads.history(id, viewerOf(claims))
@@ -83,10 +88,10 @@ export class LeadsAdminController {
     return this.leads.take(id, viewerOf(claims))
   }
 
-  @Post(':id/new-trip')
-  @HttpCode(200)
-  newTrip(@Param('id') id: string, @CurrentUser() claims: IAccessTokenClaims) {
-    return this.leads.newTrip(id, viewerOf(claims))
+  @Post(':id/new-request')
+  @HttpCode(201)
+  newRequest(@Param('id') id: string, @CurrentUser() claims: IAccessTokenClaims) {
+    return this.leads.newRequest(id, viewerOf(claims))
   }
 
   @Patch(':id')
