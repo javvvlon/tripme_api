@@ -88,6 +88,9 @@ export class LeadEntity {
   @Column({ name: 'reject_reason', type: 'text', default: '' })
   rejectReason!: string
 
+  @Column({ name: 'trip_no', type: 'int', default: 1 })
+  tripNo!: number
+
   @Column({ name: 'hotel_name', type: 'text', default: '' })
   hotelName!: string
 

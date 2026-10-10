@@ -1,6 +1,6 @@
 import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { DataSource, In, Repository } from 'typeorm'
+import { DataSource, In, IsNull, Repository } from 'typeorm'
 import type { EntityManager } from 'typeorm'
 import { PointsService } from '~/modules/points/points.service'
 import { LEAD_TRANSITIONS, LeadEntity, LeadStatus } from '~/modules/leads/lead.entity'
@@ -717,6 +717,16 @@ export class OrdersService {
     }
 
     return (await this.payloads([order]))[0]!
+  }
+
+  async refsOfLead(leadId: string): Promise<Array<{ ref: string, status: string, createdAt: Date }>> {
+    const rows = await this.orders.find({ where: { leadId, archivedAt: IsNull() }, order: { createdAt: 'ASC' } })
+
+    return rows.map(row => ({
+      ref: reference(ORDER_PREFIX, Number(row.orderNo ?? 0), row.createdAt),
+      status: row.status,
+      createdAt: row.createdAt,
+    }))
   }
 
   async assertLeadMayBecome(leadId: string, next: string): Promise<void> {

@@ -100,8 +100,17 @@ export interface ILeadPatch {
   trip?: ILeadTripInput | null
 }
 
+export interface ILeadOrderRef {
+  ref: string
+  status: string
+  createdAt: Date
+}
+
+const CLOSED_ORDERS = ['completed', 'cancelled']
+
 export interface ILeadPayload {
   uuid: string
+  trip_no: number
   archived_at: string | null
   order_id: number
   ref: string
@@ -193,6 +202,71 @@ export class LeadsService {
 
   registerStatusGuard(guard: (leadId: string, next: string) => Promise<void>): void {
     this.guard = guard
+  }
+
+  private ordersOf: ((leadId: string) => Promise<ILeadOrderRef[]>) | null = null
+
+  registerOrdersReader(reader: (leadId: string) => Promise<ILeadOrderRef[]>): void {
+    this.ordersOf = reader
+  }
+
+  async newTrip(id: string, viewer: IViewer): Promise<ILeadPayload> {
+    const lead = await this.visible(id, viewer)
+
+    if (lead.archivedAt) throw new ConflictException('An archived lead cannot start a new trip')
+    if (!seesEveryone(viewer) && lead.managerId !== viewer.id) throw new ForbiddenException('Only the lead\'s manager can start a new trip')
+
+    const orders = await this.ordersOf?.(id) ?? []
+    const open = orders.filter(order => !CLOSED_ORDERS.includes(order.status))
+
+    if (open.length) throw new ConflictException(`Finish or cancel ${open.map(order => order.ref).join(', ')} first`)
+    if (!orders.length && lead.status !== LeadStatus.Rejected) {
+      throw new ConflictException('A new trip starts after an order is completed or the lead is rejected')
+    }
+
+    const events = await this.events.find({ where: { leadId: id, kind: LeadEventKind.TripStarted }, order: { createdAt: 'DESC' }, take: 1 })
+    const since = events[0]?.createdAt ?? null
+    const previous = {
+      trip_no: lead.tripNo,
+      hotel: lead.hotelName,
+      supplier: lead.supplierName,
+      destination: lead.destination,
+      check_in: lead.checkIn,
+      nights: lead.nights,
+      price_amount: lead.priceAmount === null ? null : Number(lead.priceAmount),
+      price_currency: lead.priceCurrency,
+      status: lead.status,
+      orders: orders.filter(order => !since || order.createdAt > since).map(order => ({ ref: order.ref, status: order.status })),
+    }
+
+    return this.leads.manager.transaction(async (manager) => {
+      await this.record(manager, lead.id, LeadEventKind.TripStarted, {
+        from: String(lead.tripNo),
+        to: String(lead.tripNo + 1),
+        subject: JSON.stringify(previous),
+        actorId: viewer.id,
+      })
+
+      if (lead.status !== LeadStatus.InProgress) {
+        await this.record(manager, lead.id, LeadEventKind.Status, { from: lead.status, to: LeadStatus.InProgress, actorId: viewer.id })
+      }
+
+      Object.assign(lead, tripColumns({}))
+      lead.tripNo += 1
+      lead.status = LeadStatus.InProgress
+      lead.rejectReason = ''
+      lead.destination = ''
+      lead.plannedDates = ''
+      lead.budgetAmount = null
+      lead.budgetCurrency = ''
+      lead.updatedAt = new Date()
+
+      await manager.getRepository(LeadEntity).save(lead)
+
+      const names = await this.namesOf([lead.managerId])
+
+      return this.toPayload(lead, names)
+    })
   }
 
 
@@ -568,6 +642,7 @@ export class LeadsService {
   private toPayload(row: LeadEntity, names: Map<string, string> = new Map()): ILeadPayload {
     return {
       uuid: row.id,
+      trip_no: row.tripNo ?? 1,
       order_id: Number(row.orderId ?? 0),
       ref: reference(LEAD_PREFIX, Number(row.orderId ?? 0), row.createdAt),
       first_response_at: row.firstResponseAt ? row.firstResponseAt.toISOString() : null,

@@ -11,6 +11,7 @@ export enum LeadEventKind {
   OrderAssigned = 'order_assigned',
   Archived = 'archived',
   Restored = 'restored',
+  TripStarted = 'trip_started',
 }
 
 @Entity('lead_events')

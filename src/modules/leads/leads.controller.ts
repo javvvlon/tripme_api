@@ -83,6 +83,12 @@ export class LeadsAdminController {
     return this.leads.take(id, viewerOf(claims))
   }
 
+  @Post(':id/new-trip')
+  @HttpCode(200)
+  newTrip(@Param('id') id: string, @CurrentUser() claims: IAccessTokenClaims) {
+    return this.leads.newTrip(id, viewerOf(claims))
+  }
+
   @Patch(':id')
   patch(@Param('id') id: string, @Body() body: ILeadPatch, @CurrentUser() claims: IAccessTokenClaims) {
     return this.leads.patch(id, body, viewerOf(claims))
