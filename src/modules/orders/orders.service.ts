@@ -467,15 +467,18 @@ export class OrdersService {
     query: IOrderQuery,
     request: IPageRequest,
     viewer: IViewer,
-  ): Promise<IPage<IOrderPayload, { all: number, live: number }>> {
+  ): Promise<IPage<IOrderPayload, { all: number, live: number, mine: number, free: number }>> {
     const [rows, total] = await this.filtered(query, viewer).skip(request.skip).take(request.perPage).getManyAndCount()
-    const [all, done, items] = await Promise.all([
-      this.filtered({}, viewer).getCount(),
-      this.filtered({ status: OrderStatus.Completed }, viewer).getCount(),
+    const scope = { archived: query.archived }
+    const [all, done, mine, free, items] = await Promise.all([
+      this.filtered(scope, viewer).getCount(),
+      this.filtered({ ...scope, status: OrderStatus.Completed }, viewer).getCount(),
+      this.filtered({ ...scope, manager: 'me' }, viewer).getCount(),
+      this.filtered({ ...scope, manager: 'none' }, viewer).getCount(),
       this.payloads(rows),
     ])
 
-    return pageOf(items, total, request, { all, live: all - done })
+    return pageOf(items, total, request, { all, live: all - done, mine, free })
   }
 
   private filtered(query: IOrderQuery, viewer: IViewer) {

@@ -266,15 +266,18 @@ export class LeadsService {
     query: ILeadQuery,
     request: IPageRequest,
     viewer: IViewer,
-  ): Promise<IPage<ILeadPayload, { all: number, fresh: number }>> {
+  ): Promise<IPage<ILeadPayload, { all: number, fresh: number, free: number, mine: number }>> {
     const [rows, total] = await this.filtered(query, viewer).skip(request.skip).take(request.perPage).getManyAndCount()
-    const [all, fresh, names] = await Promise.all([
-      this.filtered({}, viewer).getCount(),
-      this.filtered({ status: LeadStatus.New }, viewer).getCount(),
+    const scope = { archived: query.archived }
+    const [all, fresh, free, mine, names] = await Promise.all([
+      this.filtered(scope, viewer).getCount(),
+      this.filtered({ ...scope, status: LeadStatus.New }, viewer).getCount(),
+      this.filtered({ ...scope, manager: 'none' }, viewer).getCount(),
+      this.filtered({ ...scope, manager: 'me' }, viewer).getCount(),
       this.namesOf(rows.map(row => row.managerId)),
     ])
 
-    return pageOf(rows.map(row => this.toPayload(row, names)), total, request, { all, fresh })
+    return pageOf(rows.map(row => this.toPayload(row, names)), total, request, { all, fresh, free, mine })
   }
 
   private filtered(query: ILeadQuery, viewer: IViewer) {
