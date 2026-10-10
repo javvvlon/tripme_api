@@ -43,6 +43,12 @@ describe('date range search', () => {
     expect(toCriteria({ ...query, dateTo: '2026-10-16' }).dateTo).toBe('2026-10-16')
   })
 
+  it('searches about a week, 6 to 8 nights, unless nights are given', () => {
+    expect(toCriteria(query)).toMatchObject({ nightsFrom: 6, nightsTo: 8 })
+    expect(toCriteria({ ...query, nights: '10' })).toMatchObject({ nightsFrom: 10, nightsTo: 10 })
+    expect(toCriteria({ ...query, nights: '6', nightsTo: '9' })).toMatchObject({ nightsFrom: 6, nightsTo: 9 })
+  })
+
   it('falls back to a single day for a missing or backwards range', () => {
     expect(toCriteria(query).dateTo).toBe('2026-10-13')
     expect(toCriteria({ ...query, dateTo: '2026-10-01' }).dateTo).toBe('2026-10-13')

@@ -12,6 +12,8 @@ import type { ISupplierTransport, SupplierCapabilities } from '~/modules/supplie
 import type { SearchCriteria } from '~/modules/search/contracts/search'
 import { Offer } from '~/modules/search/models/Offer'
 import type { SamoQuery, SamoRow } from './samo.contracts'
+import { hotelKey } from '~/modules/search/hotel-key'
+import type { ISupplierHotel } from '~/modules/suppliers/base/contracts'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -85,17 +87,30 @@ export abstract class SamoSupplier extends BaseSupplier<SamoQuery, SamoRow> {
   }
 
   protected async buildQuery(criteria: SearchCriteria, page: number): Promise<SamoQuery | Unsupported> {
-    if (criteria.adults > this.capabilities.maxAdults) {
-      return new Unsupported(`at most ${this.capabilities.maxAdults} adults`)
-    }
-
     const townFrom = await this.dictionary.departureCode(criteria.from)
     if (!townFrom) return new Unsupported(`does not fly from "${criteria.from}"`)
+
+    const limits = this.dictionary.routeConstraints()
+    const maxAdults = limits.maxAdults > 1 ? limits.maxAdults : this.capabilities.maxAdults
+    const maxChildren = limits.maxChildren > 0 ? limits.maxChildren : this.capabilities.maxChildren
+
+    if (criteria.adults > maxAdults) return new Unsupported(`at most ${maxAdults} adults`)
+    if (criteria.childrenAges.length > maxChildren) return new Unsupported(`at most ${maxChildren} children`)
 
     await this.destinationsFrom(criteria.from)
 
     const state = await this.dictionary.countryCode(criteria.to)
     if (!state) return new Unsupported(`does not sell "${criteria.to}" from "${criteria.from}"`)
+
+    if (criteria.filters.hotels.length) {
+      const wanted = new Set(criteria.filters.hotels)
+      const catalog = await this.hotelCatalog(townFrom, state, this.constants.STATEFROM ?? '')
+      const codes = [...catalog].filter(([, hotel]) => hotel.name && wanted.has(hotelKey(hotel.name))).map(([code]) => code)
+
+      if (!codes.length) return new Unsupported('does not sell the chosen hotels')
+
+      criteria = { ...criteria, filters: { ...criteria.filters, hotels: codes } }
+    }
 
     const params = new SamoSearchIntention({ townFrom, state }, page, this.constants).toRequest(criteria)
 
@@ -112,6 +127,20 @@ export abstract class SamoSupplier extends BaseSupplier<SamoQuery, SamoRow> {
       'X-Requested-With': 'XMLHttpRequest',
       'Referer': this.baseUrl,
     }
+  }
+
+  async hotels(departureSlug: string, countrySlug: string): Promise<ISupplierHotel[]> {
+    const townFrom = await this.dictionary.departureCode(departureSlug)
+    if (!townFrom) return []
+
+    await this.destinationsFrom(departureSlug)
+
+    const state = await this.dictionary.countryCode(countrySlug)
+    if (!state) return []
+
+    const catalog = await this.hotelCatalog(townFrom, state, this.constants.STATEFROM ?? '')
+
+    return [...catalog].filter(([, hotel]) => hotel.name).map(([code, hotel]) => ({ code, name: hotel.name, stars: hotel.starCount }))
   }
 
   async routeFacts(departureSlug: string, countrySlug: string) {
