@@ -9,7 +9,7 @@ export const LIST_KINDS = ['cards', 'features', 'faq'] as const
 
 export type ListKind = typeof LIST_KINDS[number]
 
-export const SECTION_KINDS = ['hero', 'featured', 'cards', 'features', 'faq', 'feed', 'banner', 'media', 'cta', 'quote', 'text', 'spotlight', 'search', 'contact'] as const
+export const SECTION_KINDS = ['hero', 'featured', 'cards', 'features', 'faq', 'feed', 'banner', 'media', 'cta', 'quote', 'text', 'spotlight', 'search', 'contact', 'carousel'] as const
 
 export type SectionKind = typeof SECTION_KINDS[number]
 
@@ -124,7 +124,20 @@ export const BLOCK_RULES: Record<SectionKind, IBlockRule> = {
   },
   search: { ...STANDALONE, pages: ['home'], link: false, titleRequired: false, bodyRequired: false },
   contact: { ...STANDALONE, pages: BOTH, link: false, titleRequired: false, bodyRequired: false },
+  carousel: {
+    bodyRequired: false,
+    pages: BOTH,
+    sources: ['list', 'posts'],
+    layout: false,
+    link: false,
+    titleRequired: false,
+    item: { image: true, link: true, badge: true },
+  },
 }
+
+const LIST_FOR: Partial<Record<SectionKind, ListKind>> = { carousel: 'cards' }
+
+export const listKindFor = (kind: SectionKind): string => LIST_FOR[kind] ?? kind
 
 export const SINGLE_KINDS: SectionKind[] = ['search', 'contact']
 
@@ -248,7 +261,7 @@ export function sectionProblem(
 
       if (!kind) return `${at}: pick a list`
 
-      if (kind !== section.kind) return `${at}: a "${kind}" list cannot fill a "${section.kind}" section`
+      if (kind !== listKindFor(section.kind)) return `${at}: a "${kind}" list cannot fill a "${section.kind}" section`
     }
 
     const anchor = normaliseAnchor(section.anchor)

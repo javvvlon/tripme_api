@@ -97,6 +97,15 @@ describe('rich blocks', () => {
       .toBe('Section 1: needs a heading in at least one language')
   })
 
+  it('fills a carousel from a cards list', () => {
+    const kinds = new Map([['cards-list', 'cards'], ['faq-list', 'faq']])
+
+    expect(sectionProblem([{ kind: 'carousel', source: 'list', list_id: 'cards-list', translations: [] }], kinds, 'home')).toBeNull()
+    expect(sectionProblem([{ kind: 'carousel', source: 'list', list_id: 'faq-list', translations: [] }], kinds, 'home'))
+      .toBe('Section 1: a "faq" list cannot fill a "carousel" section')
+    expect(sectionProblem([{ kind: 'carousel', source: 'posts', translations: [] }], kinds, 'blog')).toBeNull()
+  })
+
   it('lets a picture stand in for the heading', () => {
     const picture = { image_url: 'https://cdn.test/banner.jpg' }
 
