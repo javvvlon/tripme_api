@@ -10,6 +10,8 @@ import { UserRole } from '~/modules/auth/contracts/auth'
 import type { ILoginData, ISignupData, ITokenPair } from '~/modules/auth/contracts/auth'
 import type { User } from '~/modules/auth/models/User'
 
+export const ACCOUNT_DEACTIVATED = 'account_deactivated'
+
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
  */
@@ -36,7 +38,9 @@ export class AuthService {
     const ok = await this.passwords.verify(data.password, hash)
 
     if (!user || !ok) throw new UnauthorizedException('Invalid email or password')
-    if (user.get('archived')) throw new UnauthorizedException('This account is deactivated')
+    if (user.get('archived')) {
+      throw new ForbiddenException({ statusCode: 403, code: ACCOUNT_DEACTIVATED, message: 'This account is deactivated' })
+    }
 
     return this.tokens.issue(user, context)
   }
