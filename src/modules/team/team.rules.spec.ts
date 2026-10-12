@@ -7,13 +7,9 @@ describe('canManage', () => {
     expect([UserRole.Agent, UserRole.Manager, UserRole.Admin].every(role => canManage(UserRole.Admin, role))).toBe(true)
   })
 
-  it('keeps managers away from admins', () => {
-    expect(canManage(UserRole.Manager, UserRole.Agent)).toBe(true)
-    expect(canManage(UserRole.Manager, UserRole.Manager)).toBe(true)
-    expect(canManage(UserRole.Manager, UserRole.Admin)).toBe(false)
-  })
-
-  it('gives agents and clients nothing', () => {
+  it('gives managers, agents and clients nothing', () => {
+    expect(canManage(UserRole.Manager, UserRole.Agent)).toBe(false)
+    expect(canManage(UserRole.Manager, UserRole.Manager)).toBe(false)
     expect(canManage(UserRole.Agent, UserRole.Agent)).toBe(false)
     expect(canManage(UserRole.Admin, UserRole.Client)).toBe(false)
   })

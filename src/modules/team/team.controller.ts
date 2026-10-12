@@ -13,7 +13,7 @@ import type { IMemberInput } from './team.service'
  */
 @Controller('cms/team')
 @UseGuards(AuthGuard, RolesGuard)
-@Roles(UserRole.Manager, UserRole.Admin)
+@Roles(UserRole.Admin)
 export class TeamController {
   constructor(private readonly team: TeamService) {}
 
