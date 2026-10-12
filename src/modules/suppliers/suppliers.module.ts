@@ -6,6 +6,7 @@ import { EasybookingSupplier } from './easybooking/easybooking.supplier'
 import { SelfietravelSupplier } from './selfietravel/selfietravel.supplier'
 import { FstravelSupplier } from './fstravel/fstravel.supplier'
 import { PrestigeSupplier } from './prestige/prestige.supplier'
+import { FlykhivaSupplier } from './flykhiva/flykhiva.supplier'
 import { FixtureTransport, HttpTransport } from './base/transport'
 import { SUPPLIER_TRANSPORT, SUPPLIERS } from './base/tokens'
 import type { ISupplier } from './base/contracts'
@@ -30,6 +31,7 @@ import type { ISupplier } from './base/contracts'
     SelfietravelSupplier,
     FstravelSupplier,
     PrestigeSupplier,
+    FlykhivaSupplier,
     {
       provide: SUPPLIERS,
       useFactory: (
@@ -38,8 +40,9 @@ import type { ISupplier } from './base/contracts'
         selfie: SelfietravelSupplier,
         fstravel: FstravelSupplier,
         prestige: PrestigeSupplier,
-      ): ISupplier[] => [kompas, easybooking, selfie, fstravel, prestige],
-      inject: [KompastourSupplier, EasybookingSupplier, SelfietravelSupplier, FstravelSupplier, PrestigeSupplier],
+        flykhiva: FlykhivaSupplier,
+      ): ISupplier[] => [kompas, easybooking, selfie, fstravel, prestige, flykhiva],
+      inject: [KompastourSupplier, EasybookingSupplier, SelfietravelSupplier, FstravelSupplier, PrestigeSupplier, FlykhivaSupplier],
     },
   ],
   exports: [SUPPLIERS, RoutesService],

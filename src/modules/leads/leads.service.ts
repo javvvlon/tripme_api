@@ -311,6 +311,30 @@ export class LeadsService {
     }))
   }
 
+  async quoteAnswered(leadId: string, clientId: string, answer: { accepted: boolean, title: string, trip: ILeadTripInput }): Promise<void> {
+    const lead = await this.leads.findOne({ where: { id: leadId } })
+
+    if (!lead || lead.userId !== clientId) throw new NotFoundException('Lead not found')
+
+    await this.leads.manager.transaction(async (manager) => {
+      await this.record(manager, lead.id, answer.accepted ? LeadEventKind.QuoteAccepted : LeadEventKind.QuoteDeclined, {
+        subject: answer.title,
+        actorId: clientId,
+      })
+
+      if (!answer.accepted || lead.archivedAt || !text(answer.trip.hotel_name, 240)) return
+
+      Object.assign(lead, tripColumns(answer.trip))
+
+      if (count(answer.trip.adults)) Object.assign(lead, tripParty(answer.trip))
+      if (!lead.destination) lead.destination = text(answer.trip.route_to_label, 120) || lead.routeTo
+
+      lead.updatedAt = new Date()
+
+      await manager.getRepository(LeadEntity).save(lead)
+    })
+  }
+
   async submit(
     input: ILeadInput,
     source = LeadSource.Site,

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, Param, ParseUUIDPipe, Post, UseGuards } from '@nestjs/common'
+import { Body, Controller, Get, HttpCode, Param, ParseIntPipe, ParseUUIDPipe, Post, UseGuards } from '@nestjs/common'
 import { AuthGuard } from '~/modules/auth/guards/auth.guard'
 import { RolesGuard } from '~/modules/auth/guards/roles.guard'
 import { CurrentUser, Roles } from '~/modules/auth/decorators'
@@ -6,6 +6,8 @@ import { UserRole } from '~/modules/auth/contracts/auth'
 import { viewerOf } from '~/modules/leads/lead.access'
 import { MessagesService } from './messages.service'
 import type { IAccessTokenClaims } from '~/modules/auth/contracts/auth'
+import type { IQuoteInput } from './messages.service'
+import type { VariantDecision } from './quote.rules'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -30,6 +32,17 @@ export class ClientMessagesController {
   @HttpCode(201)
   send(@CurrentUser() claims: IAccessTokenClaims, @Body() body: { body?: string }) {
     return this.messages.postAsClient(claims.sub, body?.body)
+  }
+
+  @Post(':id/variants/:n')
+  @HttpCode(200)
+  answer(
+    @CurrentUser() claims: IAccessTokenClaims,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('n', ParseIntPipe) n: number,
+    @Body() body: { decision?: VariantDecision },
+  ) {
+    return this.messages.answerQuote(claims.sub, id, n, body?.decision as VariantDecision)
   }
 }
 
@@ -63,5 +76,11 @@ export class StaffMessagesController {
   @HttpCode(201)
   send(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() claims: IAccessTokenClaims, @Body() body: { body?: string }) {
     return this.messages.postAsStaff(viewerOf(claims), id, body?.body)
+  }
+
+  @Post('clients/:id/messages/quote')
+  @HttpCode(201)
+  sendQuote(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() claims: IAccessTokenClaims, @Body() body: IQuoteInput) {
+    return this.messages.postQuote(viewerOf(claims), id, body ?? {})
   }
 }

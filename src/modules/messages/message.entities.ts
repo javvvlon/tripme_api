@@ -1,4 +1,5 @@
 import { Column, Entity, Index, PrimaryColumn, PrimaryGeneratedColumn } from 'typeorm'
+import type { IQuoteData } from './quote.rules'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -41,6 +42,12 @@ export class MessageEntity {
 
   @Column({ name: 'order_id', type: 'uuid', nullable: true })
   orderId!: string | null
+
+  @Column({ type: 'text', default: 'text' })
+  kind!: string
+
+  @Column({ type: 'jsonb', nullable: true })
+  data!: IQuoteData | null
 
   @Column({ name: 'created_at', type: 'timestamptz', default: () => 'now()' })
   createdAt!: Date

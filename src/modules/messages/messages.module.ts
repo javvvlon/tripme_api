@@ -4,6 +4,8 @@ import { TypeOrmModule } from '@nestjs/typeorm'
 import { AuthModule } from '~/modules/auth/auth.module'
 import { AuthService } from '~/modules/auth/services/auth.service'
 import { UserEntity } from '~/modules/auth/entities'
+import { LeadsModule } from '~/modules/leads/leads.module'
+import { LeadEntity } from '~/modules/leads/lead.entity'
 import { ConversationEntity, MessageEntity } from './message.entities'
 import { MessagesService } from './messages.service'
 import { ClientMessagesController, StaffMessagesController } from './messages.controller'
@@ -14,7 +16,7 @@ import { MessagesHub } from './messages.hub'
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
  */
 @Module({
-  imports: [AuthModule, TypeOrmModule.forFeature([ConversationEntity, MessageEntity, UserEntity])],
+  imports: [AuthModule, LeadsModule, TypeOrmModule.forFeature([ConversationEntity, MessageEntity, UserEntity, LeadEntity])],
   controllers: [ClientMessagesController, StaffMessagesController, MessagesStreamController],
   providers: [MessagesService, MessagesHub],
   exports: [MessagesService],

@@ -13,6 +13,8 @@ export enum LeadEventKind {
   Restored = 'restored',
   TripStarted = 'trip_started',
   NextRequest = 'next_request',
+  QuoteAccepted = 'quote_accepted',
+  QuoteDeclined = 'quote_declined',
 }
 
 @Entity('lead_events')

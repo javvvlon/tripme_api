@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm'
 import { DataSource, In, Repository } from 'typeorm'
 import { UserEntity } from '~/modules/auth/entities'
 import { UserRole } from '~/modules/auth/contracts/auth'
-import { seesEveryone } from '~/modules/leads/lead.access'
+import { canSeeLead, seesEveryone } from '~/modules/leads/lead.access'
 import type { IViewer } from '~/modules/leads/lead.access'
 import { MESSENGER } from '~/shared/messaging/messenger'
 import type { IMessenger } from '~/shared/messaging/messenger'
@@ -12,6 +12,11 @@ import { siteUrl } from '~/modules/esim/esim.links'
 import { routeOf } from '~/modules/notifications/notification.rules'
 import { ConversationEntity, MessageEntity } from './message.entities'
 import { AuthorRole, messageBody, unreadFor } from './message.rules'
+import { MessageKind, decide, decisionReply, quoteVariants } from './quote.rules'
+import type { IQuoteData, VariantDecision } from './quote.rules'
+import { LeadEntity } from '~/modules/leads/lead.entity'
+import { LeadsService } from '~/modules/leads/leads.service'
+import { LEAD_PREFIX, reference } from '~/shared/helpers/reference'
 import { MessagesHub } from './messages.hub'
 
 export interface IMessagePayload {
@@ -19,7 +24,17 @@ export interface IMessagePayload {
   author: string
   author_name: string
   body: string
+  kind: string
+  order_id: string | null
+  quote: IQuoteData | null
   created_at: string
+}
+
+export interface IQuoteInput {
+  body?: string
+  lead_id?: string
+  locale?: string
+  variants?: unknown
 }
 
 export interface IThreadPayload {
@@ -49,6 +64,8 @@ export class MessagesService {
     @InjectRepository(ConversationEntity) private readonly conversations: Repository<ConversationEntity>,
     @InjectRepository(MessageEntity) private readonly messages: Repository<MessageEntity>,
     @InjectRepository(UserEntity) private readonly users: Repository<UserEntity>,
+    @InjectRepository(LeadEntity) private readonly leads: Repository<LeadEntity>,
+    private readonly leadsService: LeadsService,
     private readonly dataSource: DataSource,
     @Inject(MESSENGER) private readonly messenger: IMessenger,
     private readonly hub: MessagesHub,
@@ -85,6 +102,52 @@ export class MessagesService {
     void this.alertClient(clientId).catch(() => undefined)
 
     return this.announce(message)
+  }
+
+  async postQuote(viewer: IViewer, clientId: string, input: IQuoteInput): Promise<IMessagePayload> {
+    await this.assertStaffSees(viewer, clientId)
+
+    const lead = input.lead_id ? await this.leads.findOne({ where: { id: input.lead_id } }) : null
+
+    if (!lead || lead.userId !== clientId || !canSeeLead(viewer, lead)) throw new NotFoundException('Lead not found')
+
+    const data: IQuoteData = {
+      lead_id: lead.id,
+      lead_ref: reference(LEAD_PREFIX, Number(lead.orderId ?? 0), lead.createdAt),
+      locale: ['ru', 'uz', 'en'].includes(String(input.locale)) ? String(input.locale) : 'ru',
+      variants: quoteVariants(input.variants),
+    }
+
+    const message = await this.post(clientId, AuthorRole.Staff, viewer.id, messageBody(input.body), null, MessageKind.Quote, data)
+
+    await this.markRead(clientId, 'staff')
+    void this.alertClient(clientId).catch(() => undefined)
+
+    return this.announce(message)
+  }
+
+  async answerQuote(clientId: string, messageId: string, n: number, decision: VariantDecision): Promise<IMessagePayload> {
+    const message = await this.messages.findOne({ where: { id: messageId, clientId, kind: MessageKind.Quote } })
+
+    if (!message?.data) throw new NotFoundException('Offer not found')
+
+    const data = decide(message.data, n, decision, new Date())
+    const variant = data.variants.find(entry => entry.n === n)!
+
+    await this.leadsService.quoteAnswered(data.lead_id, clientId, {
+      accepted: decision === 'accepted',
+      title: variant.title,
+      trip: variant.trip,
+    })
+
+    message.data = data
+    await this.messages.save(message)
+
+    const updated = await this.announce(message)
+
+    await this.announce(await this.post(clientId, AuthorRole.Client, clientId, decisionReply(data.locale, variant, decision)))
+
+    return updated
   }
 
   async postSystem(clientId: string, body: string, orderId: string | null = null): Promise<void> {
@@ -219,7 +282,15 @@ export class MessagesService {
     }
   }
 
-  private async post(clientId: string, role: AuthorRole, authorId: string | null, body: string, orderId: string | null = null): Promise<MessageEntity> {
+  private async post(
+    clientId: string,
+    role: AuthorRole,
+    authorId: string | null,
+    body: string,
+    orderId: string | null = null,
+    kind: MessageKind = MessageKind.Text,
+    data: IQuoteData | null = null,
+  ): Promise<MessageEntity> {
     return this.dataSource.transaction(async (manager) => {
       const conversations = manager.getRepository(ConversationEntity)
       const now = new Date()
@@ -228,7 +299,7 @@ export class MessagesService {
 
       if (role === AuthorRole.Client) await conversations.update({ clientId }, { clientReadAt: now })
 
-      return manager.getRepository(MessageEntity).save({ clientId, authorId, authorRole: role, body, orderId, createdAt: now })
+      return manager.getRepository(MessageEntity).save({ clientId, authorId, authorRole: role, body, orderId, kind, data, createdAt: now })
     })
   }
 
@@ -247,6 +318,9 @@ export class MessagesService {
       author: row.authorRole,
       author_name: row.authorRole === AuthorRole.System ? 'TripMe' : names.get(row.authorId ?? '') ?? '',
       body: row.body,
+      kind: row.kind ?? MessageKind.Text,
+      order_id: row.orderId,
+      quote: row.kind === MessageKind.Quote ? row.data : null,
       created_at: row.createdAt.toISOString(),
     }))
   }
