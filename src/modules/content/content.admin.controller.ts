@@ -212,6 +212,7 @@ function parseList(body: Record<string, unknown>): IListInput {
         image_url: typeof item.image_url === 'string' ? item.image_url : null,
         link: typeof item.link === 'string' ? item.link : null,
         badge_type: typeof item.badge_type === 'string' ? item.badge_type : null,
+        icon: typeof item.icon === 'string' ? item.icon : null,
         translations: translations.map((t) => {
           const translation = t as Record<string, unknown>
 

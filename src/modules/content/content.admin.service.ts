@@ -9,7 +9,7 @@ import {
   ContentListEntity,
   ContentSectionEntity,
 } from './entities'
-import { BLOCK_RULES, isBadgeType, isSectionKind, normaliseAnchor, sectionProblem, sectionSettings } from './content.blocks'
+import { BLOCK_RULES, isBadgeType, isFeatureIcon, isSectionKind, normaliseAnchor, sectionProblem, sectionSettings } from './content.blocks'
 import type { ContentPage, ListKind, SectionKind, SectionSource } from './content.blocks'
 
 /**
@@ -26,6 +26,7 @@ export interface IListItemInput {
   image_url?: string | null
   link?: string | null
   badge_type?: string | null
+  icon?: string | null
   translations: ITranslationInput[]
 }
 
@@ -179,6 +180,7 @@ export class ContentAdminService {
           link: item.link,
           position: item.position,
           badge_type: item.badgeType,
+          icon: item.icon,
           translations: (item.translations ?? []).map(t => ({
             locale: t.locale,
             title: t.title,
@@ -236,6 +238,7 @@ export class ContentAdminService {
           link: fields.link ? blank(item.link) : null,
           position: index + 1,
           badgeType: fields.badge && isBadgeType(item.badge_type) ? item.badge_type : null,
+          icon: fields.icon && isFeatureIcon(item.icon) ? item.icon : null,
           translations: item.translations
             .filter(t => t.title?.trim())
             .map(t => ({

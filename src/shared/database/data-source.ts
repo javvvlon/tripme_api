@@ -73,6 +73,7 @@ import { LeadParty1755900040000 } from './migrations/1755900040000-LeadParty'
 import { MessageQuotes1755900041000 } from './migrations/1755900041000-MessageQuotes'
 import { FlykhivaOperator1755900042000 } from './migrations/1755900042000-FlykhivaOperator'
 import { StaffArchive1755900043000 } from './migrations/1755900043000-StaffArchive'
+import { ContentItemIcon1755900044000 } from './migrations/1755900044000-ContentItemIcon'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -127,7 +128,7 @@ export const databaseOptions = (): DataSourceOptions => {
       LeadOwnership1755900029000,
       OrderItems1755900030000,
       Payments1755900031000,
-      ConfirmationRule1755900032000, EsimPurchases1755900033000, LeadCustomerLink1755900034000, Archive1755900035000, ClientAccount1755900036000, Messages1755900037000, PaymentRates1755900038000, LeadTrips1755900039000, LeadParty1755900040000, MessageQuotes1755900041000, FlykhivaOperator1755900042000, StaffArchive1755900043000,
+      ConfirmationRule1755900032000, EsimPurchases1755900033000, LeadCustomerLink1755900034000, Archive1755900035000, ClientAccount1755900036000, Messages1755900037000, PaymentRates1755900038000, LeadTrips1755900039000, LeadParty1755900040000, MessageQuotes1755900041000, FlykhivaOperator1755900042000, StaffArchive1755900043000, ContentItemIcon1755900044000,
     ],
     synchronize: false,
     migrationsRun: false,

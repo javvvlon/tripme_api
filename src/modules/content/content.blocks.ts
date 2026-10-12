@@ -21,6 +21,10 @@ export const BADGE_TYPES = ['primary', 'secondary', 'sale'] as const
 
 export type BadgeType = typeof BADGE_TYPES[number]
 
+export const FEATURE_ICONS = ['trophy', 'support', 'shield', 'doc', 'medal', 'plane', 'star', 'clock', 'users', 'globe', 'tag', 'check', 'calendar', 'pin', 'wave', 'kids'] as const
+
+export type FeatureIcon = typeof FEATURE_ICONS[number]
+
 export const FEED_PAGE_SIZES = [6, 9, 12, 18, 24] as const
 
 export const SPOTLIGHT_SIZES = [3, 4, 5, 6] as const
@@ -35,6 +39,7 @@ export interface IItemFields {
   image: boolean
   link: boolean
   badge: boolean
+  icon: boolean
 }
 
 export interface IBlockRule {
@@ -47,7 +52,7 @@ export interface IBlockRule {
   item: IItemFields
 }
 
-const NO_ITEMS: IItemFields = { image: false, link: false, badge: false }
+const NO_ITEMS: IItemFields = { image: false, link: false, badge: false, icon: false }
 
 const BOTH: readonly ContentPage[] = ['home', 'blog']
 
@@ -79,7 +84,7 @@ export const BLOCK_RULES: Record<SectionKind, IBlockRule> = {
     layout: true,
     link: true,
     titleRequired: true,
-    item: { image: true, link: true, badge: true },
+    item: { image: true, link: true, badge: true, icon: false },
   },
   features: {
     bodyRequired: false,
@@ -88,7 +93,7 @@ export const BLOCK_RULES: Record<SectionKind, IBlockRule> = {
     layout: false,
     link: false,
     titleRequired: true,
-    item: { image: true, link: false, badge: false },
+    item: { image: true, link: false, badge: false, icon: true },
   },
   faq: {
     bodyRequired: false,
@@ -131,7 +136,7 @@ export const BLOCK_RULES: Record<SectionKind, IBlockRule> = {
     layout: false,
     link: false,
     titleRequired: false,
-    item: { image: true, link: true, badge: true },
+    item: { image: true, link: true, badge: true, icon: false },
   },
 }
 
@@ -200,6 +205,9 @@ export const isSectionSource = (value: unknown): value is SectionSource =>
 
 export const isBadgeType = (value: unknown): value is BadgeType =>
   BADGE_TYPES.includes(value as BadgeType)
+
+export const isFeatureIcon = (value: unknown): value is FeatureIcon =>
+  FEATURE_ICONS.includes(value as FeatureIcon)
 
 export const normaliseAnchor = (value: string | null | undefined): string | null =>
   value

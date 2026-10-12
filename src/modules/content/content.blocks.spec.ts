@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { normaliseAnchor, sectionProblem, sectionSettings } from './content.blocks'
+import { BLOCK_RULES, isFeatureIcon, normaliseAnchor, sectionProblem, sectionSettings } from './content.blocks'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -145,5 +145,19 @@ describe('normaliseAnchor', () => {
     expect(normaliseAnchor('  Горящие Hot deals! ')).toBe('hot-deals')
     expect(normaliseAnchor('   ')).toBeNull()
     expect(normaliseAnchor(null)).toBeNull()
+  })
+})
+
+describe('feature icons', () => {
+  it('lets only the feature list carry a line icon', () => {
+    expect(BLOCK_RULES.features.item.icon).toBe(true)
+    expect(BLOCK_RULES.cards.item.icon).toBe(false)
+    expect(BLOCK_RULES.carousel.item.icon).toBe(false)
+  })
+
+  it('accepts only icons from the set', () => {
+    expect(isFeatureIcon('trophy')).toBe(true)
+    expect(isFeatureIcon('emoji')).toBe(false)
+    expect(isFeatureIcon(null)).toBe(false)
   })
 })

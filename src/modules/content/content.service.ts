@@ -53,6 +53,7 @@ export interface IPageContentResponse {
       link: string | null
       position: number
       badge_type: string | null
+      icon: string | null
       translations: Array<{
         locale: string
         title: string
@@ -127,6 +128,7 @@ export class ContentService {
               link: item.link,
               position: item.position,
               badge_type: item.badgeType,
+              icon: item.icon,
               translations: (item.translations ?? []).map(t => ({
                 locale: t.locale,
                 title: t.title,

@@ -30,6 +30,9 @@ export class ContentItemEntity {
   @Column({ name: 'badge_type', type: 'text', nullable: true })
   badgeType!: string | null
 
+  @Column({ type: 'text', nullable: true })
+  icon!: string | null
+
   @OneToMany(() => ContentItemTranslationEntity, translation => translation.item, { cascade: true })
   translations!: ContentItemTranslationEntity[]
 }
