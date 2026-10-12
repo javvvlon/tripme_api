@@ -97,6 +97,15 @@ describe('rich blocks', () => {
       .toBe('Section 1: needs a heading in at least one language')
   })
 
+  it('lets a picture stand in for the heading', () => {
+    const picture = { image_url: 'https://cdn.test/banner.jpg' }
+
+    expect(sectionProblem([{ kind: 'banner', source: 'none', translations: [], settings: picture }], lists, 'home')).toBeNull()
+    expect(sectionProblem([{ kind: 'hero', source: 'none', translations: [{ title: '' }], settings: picture }], lists, 'blog')).toBeNull()
+    expect(sectionProblem([{ kind: 'cta', source: 'none', translations: [], settings: picture }], lists, 'home'))
+      .toBe('Section 1: needs a heading in at least one language')
+  })
+
   it('keeps only known looks', () => {
     expect(sectionSettings('banner', { image_url: ' https://x/1.jpg ', style: 'wide', tone: 'neon' }))
       .toEqual({ image_url: 'https://x/1.jpg', style: 'wide', tone: 'light' })

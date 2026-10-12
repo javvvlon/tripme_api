@@ -203,7 +203,13 @@ export interface ISectionShape {
   layout_id?: string | null
   anchor?: string | null
   translations?: Array<{ title: string, body?: string | null }>
+  settings?: unknown
 }
+
+export const PICTURE_KINDS: SectionKind[] = ['hero', 'banner', 'media']
+
+const hasPicture = (section: ISectionShape): boolean =>
+  PICTURE_KINDS.includes(section.kind) && Boolean(sectionSettings(section.kind, section.settings).image_url)
 
 export function sectionProblem(
   sections: ISectionShape[],
@@ -227,7 +233,7 @@ export function sectionProblem(
 
     if (!rule.sources.includes(section.source)) return `${at}: "${section.kind}" cannot show "${section.source}"`
 
-    if (rule.titleRequired && section.translations && !section.translations.some(t => t.title?.trim())) {
+    if (rule.titleRequired && !hasPicture(section) && section.translations && !section.translations.some(t => t.title?.trim())) {
       return `${at}: needs a heading in at least one language`
     }
 
