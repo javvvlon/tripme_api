@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { BadRequestException, Injectable, Logger, ServiceUnavailableException } from '@nestjs/common'
-import { DeleteObjectCommand, ListObjectsV2Command, PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
+import { CopyObjectCommand, DeleteObjectCommand, ListObjectsV2Command, PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
+import type { _Object } from '@aws-sdk/client-s3'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -116,19 +117,28 @@ export class StorageService {
     return { path, url: `${origin}/storage/v1/object/public/${this.bucket}/${path}` }
   }
 
-  async list(folder = 'content', limit = 200): Promise<IStoredFile[]> {
+  async list(folder = 'content', limit = 5000): Promise<IStoredFile[]> {
     if (!this.configured || !this.publicOrigin) return []
 
     const origin = this.publicOrigin
 
     try {
-      const response = await this.s3().send(new ListObjectsV2Command({
-        Bucket: this.bucket,
-        Prefix: `${folder}/`,
-        MaxKeys: limit,
-      }))
+      const objects: _Object[] = []
+      let token: string | undefined
 
-      return (response.Contents ?? [])
+      do {
+        const response = await this.s3().send(new ListObjectsV2Command({
+          Bucket: this.bucket,
+          Prefix: `${folder}/`,
+          MaxKeys: 1000,
+          ContinuationToken: token,
+        }))
+
+        objects.push(...(response.Contents ?? []))
+        token = response.IsTruncated ? response.NextContinuationToken : undefined
+      } while (token && objects.length < limit)
+
+      return objects
         .filter(object => Boolean(object.Key) && !object.Key!.endsWith('/'))
         .sort((a, b) => (b.LastModified?.getTime() ?? 0) - (a.LastModified?.getTime() ?? 0))
         .map(object => ({
@@ -154,6 +164,35 @@ export class StorageService {
     return at === -1 ? null : publicUrl.slice(at + marker.length)
   }
 
+  async copy(publicUrl: string, folder = 'content'): Promise<{ url: string, path: string }> {
+    const key = this.keyOf(publicUrl)
+
+    if (!key) throw new BadRequestException('That URL is not a stored file')
+
+    if (!this.configured) {
+      throw new ServiceUnavailableException('File storage is not configured — see SUPABASE_S3_ACCESS_KEY_ID in .env')
+    }
+
+    const path = `${folder}/${randomUUID()}${/\.[a-z0-9]{2,5}$/i.exec(key)?.[0]?.toLowerCase() ?? ''}`
+
+    try {
+      await this.s3().send(new CopyObjectCommand({
+        Bucket: this.bucket,
+        Key: path,
+        CopySource: `${this.bucket}/${key}`,
+        CacheControl: 'public, max-age=31536000, immutable',
+        MetadataDirective: 'REPLACE',
+        ContentType: contentTypeOf(key),
+      }))
+    }
+    catch (error) {
+      this.logger.error(`copy failed: ${String(error)}`)
+      throw new ServiceUnavailableException('Could not copy the file')
+    }
+
+    return { path, url: `${this.publicOrigin!}/storage/v1/object/public/${this.bucket}/${path}` }
+  }
+
   async remove(publicUrl: string): Promise<void> {
     if (!this.configured) return
 
@@ -176,4 +215,10 @@ function extension(name: string, mimetype: string): string {
   if (fromName) return fromName.toLowerCase()
 
   return { 'image/png': '.png', 'image/jpeg': '.jpg', 'image/webp': '.webp', 'image/avif': '.avif' }[mimetype] ?? ''
+}
+
+function contentTypeOf(key: string): string {
+  const ext = /\.([a-z0-9]{2,5})$/i.exec(key)?.[1]?.toLowerCase() ?? ''
+
+  return { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', webp: 'image/webp', avif: 'image/avif' }[ext] ?? 'application/octet-stream'
 }

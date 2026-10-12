@@ -139,6 +139,28 @@ export class MediaService {
     return { path, title, folder_id: folderId }
   }
 
+  async duplicate(url: string): Promise<IStoredFile> {
+    const source = this.storage.keyOf(url)
+
+    if (!source) throw new BadRequestException('That URL is not a stored file')
+
+    const held = await this.files.findOne({ where: { path: source } })
+    const copy = await this.storage.copy(url)
+
+    if (held?.title || held?.folderId) {
+      await this.files.save({ path: copy.path, title: held.title, folderId: held.folderId, updatedAt: new Date() })
+    }
+
+    return {
+      url: copy.url,
+      path: copy.path,
+      title: held?.title ?? '',
+      folder_id: held?.folderId ?? null,
+      size: 0,
+      uploaded_at: new Date().toISOString(),
+    }
+  }
+
   async remove(url: string): Promise<void> {
     const path = this.storage.keyOf(url)
 

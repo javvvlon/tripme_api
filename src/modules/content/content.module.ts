@@ -4,6 +4,7 @@ import { ContentController } from './content.controller'
 import { ContentAdminController } from './content.admin.controller'
 import { ContentService } from './content.service'
 import { ContentAdminService } from './content.admin.service'
+import { MediaUsageService } from './media-usage.service'
 import { AuthModule } from '~/modules/auth/auth.module'
 import { PostsModule } from '~/modules/posts/posts.module'
 import {
@@ -38,7 +39,7 @@ import {
     ]),
   ],
   controllers: [ContentController, ContentAdminController],
-  providers: [ContentService, ContentAdminService],
+  providers: [ContentService, ContentAdminService, MediaUsageService],
   exports: [ContentService],
 })
 export class ContentModule {}

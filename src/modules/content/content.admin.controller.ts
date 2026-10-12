@@ -13,6 +13,7 @@ import { ContentAdminService } from './content.admin.service'
 import { BLOCK_RULES, LIST_KINDS, isListKind, isPage, isSectionKind, isSectionSource } from './content.blocks'
 import type { ContentPage, ListKind, SectionKind } from './content.blocks'
 import { RevalidationService } from '~/shared/revalidation/revalidation.service'
+import { MediaUsageService } from './media-usage.service'
 import type { IBannerInput, IListInput, ISectionInput } from './content.admin.service'
 
 /**
@@ -27,11 +28,31 @@ export class ContentAdminController {
     private readonly revalidation: RevalidationService,
     private readonly storage: StorageService,
     private readonly media: MediaService,
+    private readonly usage: MediaUsageService,
   ) {}
 
   @Get('uploads')
-  library(@Query('q') q?: string, @Query('folder') folder?: string) {
-    return this.media.library(q ?? '', folder ?? '')
+  async library(@Query('q') q?: string, @Query('folder') folder?: string) {
+    const files = await this.media.library(q ?? '', folder ?? '')
+    const uses = await this.usage.of(files.map(file => file.path))
+
+    return files.map(file => ({ ...file, used: uses.get(file.path)?.length ?? 0 }))
+  }
+
+  @Get('uploads/usage')
+  async uploadUsage(@Query('url') url?: string) {
+    const path = url ? this.storage.keyOf(url) : null
+
+    if (!path) throw new BadRequestException('"url" must be a stored file')
+
+    return { items: (await this.usage.of([path])).get(path) ?? [] }
+  }
+
+  @Post('uploads/duplicate')
+  duplicateUpload(@Body() body: { url?: string }) {
+    if (!body.url) throw new BadRequestException('"url" is required')
+
+    return this.media.duplicate(body.url)
   }
 
   @Get('media/folders')
