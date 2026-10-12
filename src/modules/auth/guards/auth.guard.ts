@@ -1,6 +1,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common'
 import type { CanActivate, ExecutionContext } from '@nestjs/common'
 import { TokenService } from '~/modules/auth/services/token.service'
+import { UserRepository } from '~/modules/auth/repositories/user.repository'
 import type { IAccessTokenClaims } from '~/modules/auth/contracts/auth'
 import type { Request } from 'express'
 
@@ -17,7 +18,10 @@ export function bearerToken(request: Request): string | null {
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-  constructor(private readonly tokens: TokenService) {}
+  constructor(
+    private readonly tokens: TokenService,
+    private readonly users: UserRepository,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request & { user?: IAccessTokenClaims }>()
@@ -29,7 +33,11 @@ export class AuthGuard implements CanActivate {
 
     if (!claims) throw new UnauthorizedException('Session expired')
 
-    request.user = claims
+    const standing = await this.users.standing(claims.sub)
+
+    if (!standing) throw new UnauthorizedException('Session expired')
+
+    request.user = { ...claims, role: standing.role }
 
     return true
   }

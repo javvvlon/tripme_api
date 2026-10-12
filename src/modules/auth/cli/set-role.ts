@@ -4,7 +4,6 @@ import { getRepositoryToken } from '@nestjs/typeorm'
 import type { Repository } from 'typeorm'
 import { AppModule } from '~/app.module'
 import { UserEntity } from '~/modules/auth/entities'
-import { SessionRepository } from '~/modules/auth/repositories/session.repository'
 import { normaliseEmail } from '~/modules/auth/repositories/user.repository'
 import { UserRole } from '~/modules/auth/contracts/auth'
 
@@ -50,9 +49,8 @@ async function main(): Promise<void> {
     const before = user.role
 
     await users.update({ id: user.id }, { role })
-    await app.get(SessionRepository).revokeAllForUser(user.id)
 
-    console.log(`${user.email}: ${before} → ${role}. Signed out everywhere, the new role applies at the next sign-in.`)
+    console.log(`${user.email}: ${before} → ${role}. Applies right away; a page reload shows the new menus.`)
   }
   finally {
     await app.close()

@@ -37,6 +37,12 @@ export class UserRepository {
     return entity ? User.fromRaw(entity) : null
   }
 
+  async standing(id: string): Promise<{ role: UserRole } | null> {
+    const row = await this.users.findOne({ where: { id }, select: { id: true, role: true, archivedAt: true, deletedAt: true } })
+
+    return row && !row.archivedAt && !row.deletedAt ? { role: row.role } : null
+  }
+
   async findById(id: string): Promise<User | null> {
     const entity = await this.users.findOne({ where: { id } })
 
