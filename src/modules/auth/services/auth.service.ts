@@ -36,6 +36,7 @@ export class AuthService {
     const ok = await this.passwords.verify(data.password, hash)
 
     if (!user || !ok) throw new UnauthorizedException('Invalid email or password')
+    if (user.get('archived')) throw new UnauthorizedException('This account is deactivated')
 
     return this.tokens.issue(user, context)
   }
@@ -73,7 +74,7 @@ export class AuthService {
     }
 
     const user = await this.users.findById(session.userId)
-    if (!user) throw new UnauthorizedException('Session expired')
+    if (!user || user.get('archived')) throw new UnauthorizedException('Session expired')
 
     await this.sessions.revoke(refreshToken)
 

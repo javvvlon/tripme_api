@@ -1,6 +1,6 @@
 import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { Brackets, In, Repository } from 'typeorm'
+import { Brackets, In, IsNull, Repository } from 'typeorm'
 import type { EntityManager } from 'typeorm'
 import { pageOf } from '~/shared/helpers/pagination'
 import type { IPage, IPageRequest } from '~/shared/helpers/pagination'
@@ -602,7 +602,7 @@ export class LeadsService {
 
   async staff(): Promise<IStaffMember[]> {
     const rows = await this.users.find({
-      where: { role: In(STAFF_ROLES) },
+      where: { role: In(STAFF_ROLES), archivedAt: IsNull() },
       select: { id: true, firstName: true, lastName: true, email: true, role: true },
       order: { firstName: 'ASC', lastName: 'ASC' },
     })
@@ -667,7 +667,7 @@ export class LeadsService {
   }
 
   async assertStaff(id: string): Promise<void> {
-    const found = await this.users.findOne({ where: { id, role: In(STAFF_ROLES) }, select: { id: true } })
+    const found = await this.users.findOne({ where: { id, role: In(STAFF_ROLES), archivedAt: IsNull() }, select: { id: true } })
 
     if (!found) throw new BadRequestException('A lead can only go to an agent or a manager')
   }
@@ -706,6 +706,28 @@ export class LeadsService {
     await this.record(manager, lead.id, kind, { from: previous, to: target, actorId })
 
     lead.managerId = target
+  }
+
+  async handOver(fromId: string, toId: string | null, actorId: string): Promise<number> {
+    const rows = await this.leads.find({ where: { managerId: fromId, archivedAt: IsNull() } })
+
+    await this.leads.manager.transaction(async (manager) => {
+      for (const lead of rows) {
+        await this.assign(manager, lead, toId, LeadEventKind.Assigned, actorId)
+
+        lead.updatedAt = new Date()
+
+        await manager.getRepository(LeadEntity).save(lead)
+      }
+
+      await manager.query(
+        `update orders set manager_id = $1, updated_at = now()
+         where manager_id = $2 and archived_at is null and status not in ('completed', 'cancelled')`,
+        [toId, fromId],
+      )
+    })
+
+    return rows.length
   }
 
   async archive(id: string, viewer: IViewer): Promise<ILeadPayload> {

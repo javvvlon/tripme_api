@@ -17,6 +17,7 @@ export interface IUser {
   isVerified: boolean
   phoneVerified: boolean
   deleted: boolean
+  archived: boolean
 }
 
 export class User extends Model<IUser> {
@@ -32,6 +33,7 @@ export class User extends Model<IUser> {
       isVerified: raw.isVerified,
       phoneVerified: Boolean(raw.phoneVerifiedAt),
       deleted: Boolean(raw.deletedAt),
+      archived: Boolean(raw.archivedAt),
     }
   }
 

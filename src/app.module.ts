@@ -12,6 +12,7 @@ import { FinanceModule } from '~/modules/finance/finance.module'
 import { EsimModule } from '~/modules/esim/esim.module'
 import { NotificationsModule } from '~/modules/notifications/notifications.module'
 import { MessagesModule } from '~/modules/messages/messages.module'
+import { TeamModule } from '~/modules/team/team.module'
 import { OperatorsModule } from '~/modules/operators/operators.module'
 import { AccountModule } from '~/modules/account/account.module'
 import { PointsModule } from '~/modules/points/points.module'
@@ -45,6 +46,7 @@ import { MessagingModule } from '~/shared/messaging/messaging.module'
     EsimModule,
     NotificationsModule,
     MessagesModule,
+    TeamModule,
     OperatorsModule,
     AccountModule,
     PointsModule,
