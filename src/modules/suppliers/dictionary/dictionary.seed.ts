@@ -49,7 +49,7 @@ export const COUNTRY_LABELS: Record<string, string[]> = {
   spain: ['Испания'],
   italy: ['Италия'],
   mauritius: ['Маврикий'],
-  srilanka: ['Шри-Ланка'],
+  srilanka: ['Шри-Ланка', 'Шри Ланка'],
   qatar: ['Катар'],
   oman: ['Оман'],
   bahrain: ['Бахрейн'],

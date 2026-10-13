@@ -7,6 +7,10 @@ import { SelfietravelSupplier } from './selfietravel/selfietravel.supplier'
 import { FstravelSupplier } from './fstravel/fstravel.supplier'
 import { PrestigeSupplier } from './prestige/prestige.supplier'
 import { FlykhivaSupplier } from './flykhiva/flykhiva.supplier'
+import { MalvaSupplier } from './malva/malva.supplier'
+import { RightflightSupplier } from './rightflight/rightflight.supplier'
+import { AquatravelSupplier } from './aquatravel/aquatravel.supplier'
+import { CrystalbaySupplier } from './crystalbay/crystalbay.supplier'
 import { FixtureTransport, HttpTransport } from './base/transport'
 import { SUPPLIER_TRANSPORT, SUPPLIERS } from './base/tokens'
 import type { ISupplier } from './base/contracts'
@@ -32,6 +36,10 @@ import type { ISupplier } from './base/contracts'
     FstravelSupplier,
     PrestigeSupplier,
     FlykhivaSupplier,
+    MalvaSupplier,
+    RightflightSupplier,
+    AquatravelSupplier,
+    CrystalbaySupplier,
     {
       provide: SUPPLIERS,
       useFactory: (
@@ -41,8 +49,12 @@ import type { ISupplier } from './base/contracts'
         fstravel: FstravelSupplier,
         prestige: PrestigeSupplier,
         flykhiva: FlykhivaSupplier,
-      ): ISupplier[] => [kompas, easybooking, selfie, fstravel, prestige, flykhiva],
-      inject: [KompastourSupplier, EasybookingSupplier, SelfietravelSupplier, FstravelSupplier, PrestigeSupplier, FlykhivaSupplier],
+        malva: MalvaSupplier,
+        rightflight: RightflightSupplier,
+        aquatravel: AquatravelSupplier,
+        crystalbay: CrystalbaySupplier,
+      ): ISupplier[] => [kompas, easybooking, selfie, fstravel, prestige, flykhiva, malva, rightflight, aquatravel, crystalbay],
+      inject: [KompastourSupplier, EasybookingSupplier, SelfietravelSupplier, FstravelSupplier, PrestigeSupplier, FlykhivaSupplier, MalvaSupplier, RightflightSupplier, AquatravelSupplier, CrystalbaySupplier],
     },
   ],
   exports: [SUPPLIERS, RoutesService],
