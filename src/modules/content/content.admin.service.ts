@@ -9,7 +9,7 @@ import {
   ContentListEntity,
   ContentSectionEntity,
 } from './entities'
-import { BLOCK_RULES, isBadgeType, isFeatureIcon, isSectionKind, normaliseAnchor, sectionProblem, sectionSettings } from './content.blocks'
+import { BLOCK_RULES, isBadgeType, isFeatureIcon, isSectionKind, ratingOf, normaliseAnchor, sectionProblem, sectionSettings } from './content.blocks'
 import type { ContentPage, ListKind, SectionKind, SectionSource } from './content.blocks'
 
 /**
@@ -20,6 +20,7 @@ export interface ITranslationInput {
   title: string
   description?: string | null
   badge_label?: string | null
+  subtitle?: string | null
 }
 
 export interface IListItemInput {
@@ -27,6 +28,7 @@ export interface IListItemInput {
   link?: string | null
   badge_type?: string | null
   icon?: string | null
+  rating?: number | null
   translations: ITranslationInput[]
 }
 
@@ -181,11 +183,13 @@ export class ContentAdminService {
           position: item.position,
           badge_type: item.badgeType,
           icon: item.icon,
+          rating: item.rating,
           translations: (item.translations ?? []).map(t => ({
             locale: t.locale,
             title: t.title,
             description: t.description,
             badge_label: t.badgeLabel,
+            subtitle: t.subtitle,
           })),
         })),
     }
@@ -239,6 +243,7 @@ export class ContentAdminService {
           position: index + 1,
           badgeType: fields.badge && isBadgeType(item.badge_type) ? item.badge_type : null,
           icon: fields.icon && isFeatureIcon(item.icon) ? item.icon : null,
+          rating: fields.rating ? ratingOf(item.rating) : null,
           translations: item.translations
             .filter(t => t.title?.trim())
             .map(t => ({
@@ -246,6 +251,7 @@ export class ContentAdminService {
               title: t.title.trim(),
               description: blank(t.description),
               badgeLabel: fields.badge ? blank(t.badge_label) : null,
+              subtitle: fields.subtitle ? blank(t.subtitle) : null,
             })),
         })
       }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { BLOCK_RULES, isFeatureIcon, normaliseAnchor, sectionProblem, sectionSettings } from './content.blocks'
+import { BLOCK_RULES, isFeatureIcon, normaliseAnchor, ratingOf, sectionProblem, sectionSettings } from './content.blocks'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -137,6 +137,36 @@ describe('home blocks', () => {
   it('keeps only the photo of a search hero', () => {
     expect(sectionSettings('search', { image_url: ' https://x/h.jpg ', tone: 'dark' })).toEqual({ image_url: 'https://x/h.jpg' })
     expect(sectionSettings('contact', { image_url: 'https://x/h.jpg' })).toEqual({})
+  })
+})
+
+describe('reviews', () => {
+  it('fills a reviews block only from a reviews list', () => {
+    const kinds = new Map([['reviews-list', 'reviews'], ['cards-list', 'cards']])
+    const titled = [{ title: 'Отзывы' }]
+
+    expect(sectionProblem([{ kind: 'reviews', source: 'list', list_id: 'reviews-list', translations: titled }], kinds, 'home')).toBeNull()
+    expect(sectionProblem([{ kind: 'reviews', source: 'list', list_id: 'reviews-list', translations: titled }], kinds, 'blog')).toBeNull()
+    expect(sectionProblem([{ kind: 'reviews', source: 'list', list_id: 'reviews-list', translations: [{ title: '' }] }], kinds, 'home')).toBeNull()
+    expect(sectionProblem([{ kind: 'reviews', source: 'list', list_id: 'cards-list', translations: titled }], kinds, 'home'))
+      .toBe('Section 1: a "cards" list cannot fill a "reviews" section')
+    expect(sectionProblem([{ kind: 'reviews', source: 'posts', translations: titled }], kinds, 'home'))
+      .toBe('Section 1: "reviews" cannot show "posts"')
+  })
+
+  it('lets only a review carry a rating and a trip line', () => {
+    expect(BLOCK_RULES.reviews.item.rating).toBe(true)
+    expect(BLOCK_RULES.reviews.item.subtitle).toBe(true)
+    expect(BLOCK_RULES.cards.item.rating).toBeFalsy()
+  })
+
+  it('keeps a rating of one to five whole stars', () => {
+    expect(ratingOf(5)).toBe(5)
+    expect(ratingOf('4')).toBe(4)
+    expect(ratingOf(0)).toBeNull()
+    expect(ratingOf(6)).toBeNull()
+    expect(ratingOf(4.5)).toBeNull()
+    expect(ratingOf(null)).toBeNull()
   })
 })
 

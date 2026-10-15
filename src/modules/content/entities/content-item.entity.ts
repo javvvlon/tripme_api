@@ -33,6 +33,9 @@ export class ContentItemEntity {
   @Column({ type: 'text', nullable: true })
   icon!: string | null
 
+  @Column({ type: 'smallint', nullable: true })
+  rating!: number | null
+
   @OneToMany(() => ContentItemTranslationEntity, translation => translation.item, { cascade: true })
   translations!: ContentItemTranslationEntity[]
 }

@@ -28,4 +28,7 @@ export class ContentItemTranslationEntity {
 
   @Column({ name: 'badge_label', type: 'text', nullable: true })
   badgeLabel!: string | null
+
+  @Column({ type: 'text', nullable: true })
+  subtitle!: string | null
 }

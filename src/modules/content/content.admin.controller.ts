@@ -234,6 +234,7 @@ function parseList(body: Record<string, unknown>): IListInput {
         link: typeof item.link === 'string' ? item.link : null,
         badge_type: typeof item.badge_type === 'string' ? item.badge_type : null,
         icon: typeof item.icon === 'string' ? item.icon : null,
+        rating: typeof item.rating === 'number' ? item.rating : null,
         translations: translations.map((t) => {
           const translation = t as Record<string, unknown>
 
@@ -242,6 +243,7 @@ function parseList(body: Record<string, unknown>): IListInput {
             title: typeof translation.title === 'string' ? translation.title : '',
             description: typeof translation.description === 'string' ? translation.description : null,
             badge_label: typeof translation.badge_label === 'string' ? translation.badge_label : null,
+            subtitle: typeof translation.subtitle === 'string' ? translation.subtitle : null,
           }
         }),
       }

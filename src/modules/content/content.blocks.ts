@@ -5,11 +5,11 @@ export const PAGES = ['home', 'blog'] as const
 
 export type ContentPage = typeof PAGES[number]
 
-export const LIST_KINDS = ['cards', 'features', 'faq'] as const
+export const LIST_KINDS = ['cards', 'features', 'faq', 'reviews'] as const
 
 export type ListKind = typeof LIST_KINDS[number]
 
-export const SECTION_KINDS = ['hero', 'featured', 'cards', 'features', 'faq', 'feed', 'banner', 'media', 'cta', 'quote', 'text', 'spotlight', 'search', 'contact', 'carousel'] as const
+export const SECTION_KINDS = ['hero', 'featured', 'cards', 'features', 'faq', 'feed', 'banner', 'media', 'cta', 'quote', 'text', 'spotlight', 'search', 'contact', 'carousel', 'reviews'] as const
 
 export type SectionKind = typeof SECTION_KINDS[number]
 
@@ -40,6 +40,8 @@ export interface IItemFields {
   link: boolean
   badge: boolean
   icon: boolean
+  rating?: boolean
+  subtitle?: boolean
 }
 
 export interface IBlockRule {
@@ -138,6 +140,25 @@ export const BLOCK_RULES: Record<SectionKind, IBlockRule> = {
     titleRequired: false,
     item: { image: true, link: true, badge: true, icon: false },
   },
+  reviews: {
+    bodyRequired: false,
+    pages: BOTH,
+    sources: ['list'],
+    layout: false,
+    link: false,
+    titleRequired: false,
+    item: { image: true, link: false, badge: false, icon: false, rating: true, subtitle: true },
+  },
+}
+
+export const RATING_MIN = 1
+
+export const RATING_MAX = 5
+
+export const ratingOf = (value: unknown): number | null => {
+  const rating = Number(value)
+
+  return Number.isInteger(rating) && rating >= RATING_MIN && rating <= RATING_MAX ? rating : null
 }
 
 const LIST_FOR: Partial<Record<SectionKind, ListKind>> = { carousel: 'cards' }
