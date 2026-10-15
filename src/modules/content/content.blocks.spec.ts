@@ -135,7 +135,9 @@ describe('home blocks', () => {
   })
 
   it('keeps only the photo of a search hero', () => {
-    expect(sectionSettings('search', { image_url: ' https://x/h.jpg ', tone: 'dark' })).toEqual({ image_url: 'https://x/h.jpg' })
+    expect(sectionSettings('search', { image_url: ' https://x/h.jpg ', tone: 'dark' })).toEqual({ image_url: 'https://x/h.jpg', accent: 'pill' })
+    expect(sectionSettings('search', { accent: 'gold' })).toEqual({ image_url: null, accent: 'gold' })
+    expect(sectionSettings('search', { accent: 'neon' })).toEqual({ image_url: null, accent: 'pill' })
     expect(sectionSettings('contact', { image_url: 'https://x/h.jpg' })).toEqual({})
   })
 })

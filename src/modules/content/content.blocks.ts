@@ -35,6 +35,8 @@ export const BLOCK_TONES = ['light', 'brand', 'dark'] as const
 
 export const IMAGE_SIDES = ['left', 'right'] as const
 
+export const HERO_ACCENTS = ['pill', 'none', 'color', 'underline', 'marker', 'shadow', 'frame', 'gold'] as const
+
 export interface IItemFields {
   image: boolean
   link: boolean
@@ -175,6 +177,7 @@ export interface ISectionSettings {
   tone?: typeof BLOCK_TONES[number]
   image_side?: typeof IMAGE_SIDES[number]
   list_size?: number
+  accent?: typeof HERO_ACCENTS[number]
 }
 
 const oneOf = <T extends string>(options: readonly T[], value: unknown): T =>
@@ -186,7 +189,9 @@ const imageOf = (input: Record<string, unknown>): string | null =>
 export function sectionSettings(kind: SectionKind, raw: unknown): ISectionSettings {
   const input = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>
 
-  if (kind === 'hero' || kind === 'quote' || kind === 'search') return { image_url: imageOf(input) }
+  if (kind === 'search') return { image_url: imageOf(input), accent: oneOf(HERO_ACCENTS, input.accent) }
+
+  if (kind === 'hero' || kind === 'quote') return { image_url: imageOf(input) }
 
   if (kind === 'banner') {
     return { image_url: imageOf(input), style: oneOf(BANNER_STYLES, input.style), tone: oneOf(BLOCK_TONES, input.tone) }
