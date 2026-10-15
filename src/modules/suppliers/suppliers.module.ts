@@ -11,6 +11,7 @@ import { MalvaSupplier } from './malva/malva.supplier'
 import { RightflightSupplier } from './rightflight/rightflight.supplier'
 import { AquatravelSupplier } from './aquatravel/aquatravel.supplier'
 import { CrystalbaySupplier } from './crystalbay/crystalbay.supplier'
+import { KazunionSupplier } from './kazunion/kazunion.supplier'
 import { FixtureTransport, HttpTransport } from './base/transport'
 import { SUPPLIER_TRANSPORT, SUPPLIERS } from './base/tokens'
 import type { ISupplier } from './base/contracts'
@@ -40,6 +41,7 @@ import type { ISupplier } from './base/contracts'
     RightflightSupplier,
     AquatravelSupplier,
     CrystalbaySupplier,
+    KazunionSupplier,
     {
       provide: SUPPLIERS,
       useFactory: (
@@ -53,8 +55,9 @@ import type { ISupplier } from './base/contracts'
         rightflight: RightflightSupplier,
         aquatravel: AquatravelSupplier,
         crystalbay: CrystalbaySupplier,
-      ): ISupplier[] => [kompas, easybooking, selfie, fstravel, prestige, flykhiva, malva, rightflight, aquatravel, crystalbay],
-      inject: [KompastourSupplier, EasybookingSupplier, SelfietravelSupplier, FstravelSupplier, PrestigeSupplier, FlykhivaSupplier, MalvaSupplier, RightflightSupplier, AquatravelSupplier, CrystalbaySupplier],
+        kazunion: KazunionSupplier,
+      ): ISupplier[] => [kompas, easybooking, selfie, fstravel, prestige, flykhiva, malva, rightflight, aquatravel, crystalbay, kazunion],
+      inject: [KompastourSupplier, EasybookingSupplier, SelfietravelSupplier, FstravelSupplier, PrestigeSupplier, FlykhivaSupplier, MalvaSupplier, RightflightSupplier, AquatravelSupplier, CrystalbaySupplier, KazunionSupplier],
     },
   ],
   exports: [SUPPLIERS, RoutesService],

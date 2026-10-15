@@ -55,7 +55,7 @@ export class SupplierDictionary {
         const html = await this.loadPage()
         const parsed = new Map<string, RefOption[]>()
 
-        for (const field of ['TOWNFROMINC', 'STATEINC', 'NIGHTS_FROM', 'ADULT', 'CHILD']) {
+        for (const field of ['TOWNFROMINC', 'STATEINC', 'NIGHTS_FROM', 'ADULT', 'CHILD', 'CURRENCY']) {
           const options = parseSelect(html, field)
           if (options.length) parsed.set(field, options)
         }
@@ -146,6 +146,18 @@ export class SupplierDictionary {
       maxAdults: adults.length ? Math.max(...adults) : 1,
       maxChildren: children.length ? Math.max(...children) : 0,
     }
+  }
+
+  uzsRate(sourceCurrency: string, fallbackCode?: string): number | null {
+    const codeOf = (label: string) =>
+      (this.options.get('CURRENCY') ?? []).find(option => option.label.trim().toUpperCase() === label)?.value
+
+    const uzs = codeOf('UZS')
+    const source = codeOf(sourceCurrency.toUpperCase()) ?? fallbackCode
+
+    if (!uzs || !source) return null
+
+    return this.rate(source, uzs)
   }
 
   rate(fromCode: string, toCode: string): number | null {

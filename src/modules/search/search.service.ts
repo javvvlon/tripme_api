@@ -6,7 +6,12 @@ import { SupplierState } from './contracts/search'
 import type { ISupplier } from '~/modules/suppliers/base/contracts'
 import { Observable } from 'rxjs'
 import { buildFacets } from './facets'
-import type { Offer } from './models/Offer'
+import { Offer } from './models/Offer'
+import type { IOffer } from './models/Offer'
+import { CacheService } from '~/shared/cache/cache.service'
+import { RatesService } from '~/modules/references/rates.service'
+import { uzsByCbu } from './uzs'
+import { SEARCH_CACHE_TTL_MS, SEARCH_FAILURE_TTL_MS, failureKey, searchCacheKey } from './search.cache'
 import type { SearchFacets } from './facets'
 import type { SearchCriteria, SupplierStatus } from './contracts/search'
 import { activeLocalFacets, localFilter } from './local-filters'
@@ -65,7 +70,25 @@ export class SearchService {
   constructor(
     @Inject(SUPPLIERS) private readonly suppliers: ISupplier[],
     private readonly operators: OperatorsService,
+    private readonly cache: CacheService,
+    private readonly rates: RatesService,
   ) {}
+
+  private async withCbuUzs(offers: Offer[]): Promise<Offer[]> {
+    if (offers.every(offer => offer.get('price').uzs)) return offers
+
+    const cbu = await this.rates.current().catch(() => null)
+
+    return offers.map((offer) => {
+      const price = offer.get('price')
+
+      if (price.uzs || price.source.currency === 'UZS') return offer
+
+      const uzs = uzsByCbu(price.source.amount, cbu?.rates[price.source.currency])
+
+      return uzs ? new Offer({ ...offer.payload(), price: { ...price, uzs } }) : offer
+    })
+  }
 
   private async live(): Promise<ISupplier[]> {
     const enabled = new Set(await this.operators.enabledSlugs())
@@ -88,13 +111,54 @@ export class SearchService {
     signal?: AbortSignal,
   ): Promise<SupplierRun> {
     const started = Date.now()
+    const key = searchCacheKey(supplier.ref.id, criteria, page)
+    const stored = await this.cache.getJson<{ offers: IOffer[], hasMore: boolean }>(key)
+
+    if (stored) {
+      const offers = await this.withCbuUzs(stored.offers.map(offer => new Offer(offer)))
+
+      return {
+        offers,
+        hasMore: stored.hasMore,
+        status: {
+          supplier: supplier.ref,
+          state: SupplierState.Done,
+          offers: offers.length,
+          tookMs: Date.now() - started,
+          cached: true,
+        },
+      }
+    }
+
+    const failed = await this.cache.getText(failureKey(key))
+
+    if (failed) {
+      return {
+        offers: [],
+        hasMore: false,
+        status: {
+          supplier: supplier.ref,
+          state: SupplierState.Failed,
+          offers: 0,
+          reason: failed,
+          tookMs: Date.now() - started,
+          cached: true,
+        },
+      }
+    }
 
     try {
       const result = await supplier.fetchPage(criteria, page, signal)
       const offers = cheapestOnSale(result.offers)
 
+      if (!signal?.aborted) {
+        const raw = offers.map(offer => offer.payload())
+
+        void this.cache.setJson(key, { offers: raw, hasMore: result.hasMore }, SEARCH_CACHE_TTL_MS)
+      }
+
       return {
-        offers,
+        offers: await this.withCbuUzs(offers),
         hasMore: result.hasMore,
         status: {
           supplier: supplier.ref,
@@ -109,6 +173,10 @@ export class SearchService {
 
       if (!unsupported && !signal?.aborted) {
         this.logger.error(`${supplier.ref.id} failed: ${String(error)}`)
+
+        const reason = error instanceof Error ? error.message : 'unknown error'
+
+        void this.cache.setText(failureKey(key), reason, SEARCH_FAILURE_TTL_MS)
       }
 
       return {
@@ -136,7 +204,7 @@ export class SearchService {
 
     const merged = results
       .flatMap(r => r.offers)
-      .sort((a, b) => a.sortPrice() - b.sortPrice())
+      .sort((a, b) => a.comparePrice() - b.comparePrice())
 
     const { offers, appliedLocally } = this.applyLocalFilters(merged, criteria)
 
@@ -180,7 +248,7 @@ export class SearchService {
           appliedLocally = local.appliedLocally
           raw = [...raw, ...run.offers]
           hasMore = hasMore || run.hasMore
-          all = [...all, ...local.offers].sort((a, b) => a.sortPrice() - b.sortPrice())
+          all = [...all, ...local.offers].sort((a, b) => a.comparePrice() - b.comparePrice())
           statuses.set(supplier.ref.id, { ...run.status, offers: local.offers.length })
 
           subscriber.next({

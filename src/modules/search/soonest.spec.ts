@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { SearchService } from './search.service'
+import { CacheService } from '~/shared/cache/cache.service'
 import { SoonestCache, SOONEST_TTL_MS } from './soonest.cache'
 import type { SearchCriteria } from './contracts/search'
 
@@ -21,7 +22,7 @@ const criteria = (over: Partial<SearchCriteria> = {}): SearchCriteria => ({
 })
 
 const serviceSelling = (days: string[]) => {
-  const service = new SearchService([], { enabledSlugs: async () => [] } as never)
+  const service = new SearchService([], { enabledSlugs: async () => [] } as never, new CacheService(), { current: async () => ({ rates: {} }) } as never)
   const asked: Array<{ from: string, to: string }> = []
 
   vi.spyOn(service, 'fetchPage').mockImplementation(async (want) => {

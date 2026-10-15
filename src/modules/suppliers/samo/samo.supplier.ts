@@ -1,4 +1,6 @@
+import { Inject, Optional } from '@nestjs/common'
 import { BaseSupplier } from '~/modules/suppliers/base/supplier'
+import { CacheService } from '~/shared/cache/cache.service'
 import { RoutesService } from '~/modules/suppliers/dictionary/routes.service'
 import { Unsupported, isUnsupported } from '~/modules/suppliers/base/contracts'
 import { SamoSearchIntention } from './samo.intention'
@@ -13,6 +15,7 @@ import type { SearchCriteria } from '~/modules/search/contracts/search'
 import { Offer } from '~/modules/search/models/Offer'
 import type { SamoQuery, SamoRow } from './samo.contracts'
 import { hotelKey } from '~/modules/search/hotel-key'
+import { uzsByOperator } from '~/modules/search/uzs'
 import type { ISupplierHotel } from '~/modules/suppliers/base/contracts'
 
 /**
@@ -24,6 +27,10 @@ const SAMO_USER_AGENT =
 
 const CATALOG_TTL_MS = 12 * 60 * 60 * 1000
 const CATALOG_RETRY_MS = 10 * 60 * 1000
+const FORM_PAGE_TTL_MS = 8 * 60 * 60 * 1000
+
+const looksLikeForm = (html: string): boolean => html.includes('TOWNFROMINC')
+const looksLikeCatalog = (html: string): boolean => html.includes('samo.hotelDynamic')
 
 export const SAMO_CAPABILITIES: SupplierCapabilities = {
     nativeFilters: ['hotels', 'priceMin', 'priceMax'],
@@ -45,10 +52,25 @@ export abstract class SamoSupplier extends BaseSupplier<SamoQuery, SamoRow> {
 
   private readonly catalogs = new Map<string, { at: number, ttl: number, hotels: Promise<Map<string, ISamoHotelPlace>> }>()
 
+  @Optional() @Inject(CacheService) protected readonly cache?: CacheService
+
+  private async page(url: string, ttlMs: number, valid: (html: string) => boolean): Promise<string> {
+    const key = `samo:page:v1:${url}`
+    const stored = await this.cache?.getText(key)
+
+    if (stored) return stored
+
+    const html = await this.transport.fetch(url, { headers: this.pageHeaders })
+
+    if (valid(html)) void this.cache?.setText(key, html, ttlMs)
+
+    return html
+  }
+
   protected get dictionary(): SupplierDictionary {
     return (this.cachedDictionary ??= new SupplierDictionary(
       this.ref.id,
-      () => this.transport.fetch(this.baseUrl, { headers: this.pageHeaders }),
+      () => this.page(this.baseUrl, FORM_PAGE_TTL_MS, looksLikeForm),
       this.seedPath,
     ))
   }
@@ -78,7 +100,7 @@ export abstract class SamoSupplier extends BaseSupplier<SamoQuery, SamoRow> {
       this.ref.id,
       departureCode,
       this.baseUrl,
-      (url: string) => this.transport.fetch(url, { headers: this.pageHeaders }),
+      (url: string) => this.page(url, FORM_PAGE_TTL_MS, looksLikeForm),
     )
 
     this.dictionary.rememberCountries(items)
@@ -157,7 +179,7 @@ export abstract class SamoSupplier extends BaseSupplier<SamoQuery, SamoRow> {
       departureCode,
       countryCode,
       this.baseUrl,
-      (url: string) => this.transport.fetch(url, { headers: this.pageHeaders }),
+      (url: string) => this.page(url, FORM_PAGE_TTL_MS, looksLikeForm),
     )
   }
 
@@ -194,7 +216,7 @@ export abstract class SamoSupplier extends BaseSupplier<SamoQuery, SamoRow> {
 
     const entry = { at: Date.now(), ttl: CATALOG_TTL_MS, hotels: Promise.resolve(new Map<string, ISamoHotelPlace>()) }
 
-    entry.hotels = this.transport.fetch(`${this.baseUrl}?${params.toString()}`, { headers: this.pageHeaders })
+    entry.hotels = this.page(`${this.baseUrl}?${params.toString()}`, CATALOG_TTL_MS, looksLikeCatalog)
       .then(parseHotelCatalog)
       .then((catalog) => {
         if (!catalog.size) entry.ttl = CATALOG_RETRY_MS
@@ -225,7 +247,15 @@ export abstract class SamoSupplier extends BaseSupplier<SamoQuery, SamoRow> {
   protected map(row: SamoRow, criteria: SearchCriteria): Offer | null {
     const offer = mapSamoRow(row, criteria, this.ref, this.baseUrl)
 
-    return offer ? this.withConvertedPrice(offer, criteria) : null
+    return offer ? this.withUzs(this.withConvertedPrice(offer, criteria)) : null
+  }
+
+  private withUzs(offer: Offer): Offer {
+    const price = offer.get('price')
+    const currency = price.source.currency
+    const uzs = uzsByOperator(price.source.amount, this.dictionary.uzsRate(currency, CURRENCY_CODES[currency]))
+
+    return uzs ? new Offer({ ...offer.payload(), price: { ...price, uzs } }) : offer
   }
 
   private withConvertedPrice(offer: Offer, criteria: SearchCriteria): Offer {

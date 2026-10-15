@@ -55,8 +55,16 @@ export class Offer extends Model<IOffer> {
     return price.converted?.amount ?? price.source.amount
   }
 
+  public comparePrice(): number {
+    return this.get('price').uzs?.amount ?? this.sortPrice()
+  }
+
   public resolveMealPlan(): MealPlan | null {
     return mealPlanOf(this.get('mealCode'), this.get('mealName'))
+  }
+
+  public payload(): IOffer {
+    return super.toObject()
   }
 
   public override toObject(): IOffer & { mealPlan: MealPlan | null, hotelKey: string } {

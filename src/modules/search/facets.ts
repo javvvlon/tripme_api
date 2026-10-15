@@ -50,7 +50,7 @@ export function cheapestByDay(offers: Offer[]): DayPrice[] {
     if (!entry) days.set(date, { offer, count: 1 })
     else {
       entry.count += 1
-      if (offer.sortPrice() < entry.offer.sortPrice()) entry.offer = offer
+      if (offer.comparePrice() < entry.offer.comparePrice()) entry.offer = offer
     }
   }
 
@@ -149,7 +149,7 @@ export function buildFacets(offers: Offer[], pageSize: number, scopes: IFacetSco
       Number(a.value === Availability.Stopped) - Number(b.value === Availability.Stopped)),
 
     priceFrom: (() => {
-      const price = [...offers].sort((a, b) => a.sortPrice() - b.sortPrice())[0]?.get('price')
+      const price = [...offers].sort((a, b) => a.comparePrice() - b.comparePrice())[0]?.get('price')
       const cheapest = price ? (price.converted ?? price.source) : null
 
       return cheapest ? { amount: cheapest.amount, currency: cheapest.currency } : null

@@ -52,6 +52,7 @@ export interface SupplierStatus {
   offers: number
   reason?: string
   tookMs?: number
+  cached?: boolean
 }
 
 export interface SearchEvent {
@@ -61,9 +62,19 @@ export interface SearchEvent {
   offers?: unknown[]
 }
 
+export type UzsBasis = 'operator' | 'cbu'
+
+export interface UzsPrice {
+  amount: number
+  currency: 'UZS'
+  basis: UzsBasis
+  rate: number
+}
+
 export interface PriceBreakdown {
   source: Money
   converted?: Money
+  uzs?: UzsPrice
 }
 
 export type { Money, CurrencyCode }

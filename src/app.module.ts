@@ -22,6 +22,7 @@ import { StorageModule } from '~/shared/storage/storage.module'
 import { RevalidationModule } from '~/shared/revalidation/revalidation.module'
 import { HealthModule } from '~/shared/health/health.module'
 import { MessagingModule } from '~/shared/messaging/messaging.module'
+import { CacheModule } from '~/shared/cache/cache.module'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -30,6 +31,7 @@ import { MessagingModule } from '~/shared/messaging/messaging.module'
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     HealthModule,
+    CacheModule,
     MessagingModule,
     DatabaseModule,
     StorageModule,
