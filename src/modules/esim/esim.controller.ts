@@ -23,6 +23,11 @@ export class EsimController {
     return this.esim.plans(code)
   }
 
+  @Get('mode')
+  mode() {
+    return this.esim.mode()
+  }
+
   @Get('methods')
   methods() {
     return this.esim.methods()

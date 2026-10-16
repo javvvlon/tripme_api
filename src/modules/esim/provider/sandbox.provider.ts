@@ -12,6 +12,7 @@ const titleOf = (dataMb: number | null, days: number): string =>
  */
 export class SandboxEsimProvider implements IEsimProvider {
   readonly name = 'sandbox'
+  readonly canIssue = true
 
   private readonly catalog: IEsimPlan[] = SANDBOX_COUNTRIES.flatMap(country => SANDBOX_PLANS.map(plan => ({
     id: `sbx-${country.code.toLowerCase()}-${plan.dataMb ?? 'unl'}-${plan.days}`,

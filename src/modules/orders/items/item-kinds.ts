@@ -12,6 +12,7 @@ export enum ItemKind {
   Insurance = 'insurance',
   Excursion = 'excursion',
   Visa = 'visa',
+  Esim = 'esim',
 }
 
 export const ITEM_KINDS = Object.values(ItemKind)
@@ -42,7 +43,14 @@ export const ITEM_DEFINITIONS: Record<ItemKind, IItemKindDefinition> = {
   [ItemKind.Insurance]: logged(ItemKind.Insurance),
   [ItemKind.Excursion]: logged(ItemKind.Excursion),
   [ItemKind.Visa]: logged(ItemKind.Visa),
+  [ItemKind.Esim]: tracked(ItemKind.Esim),
 }
+
+export const MAIN_KINDS: string[] = [ItemKind.Package, ItemKind.Esim]
+
+export const isMainItem = (kind: string): boolean => MAIN_KINDS.includes(kind)
+
+export const isEsimOrder = (order: Pick<OrderEntity, 'trip'>): boolean => order.trip?.product === 'esim'
 
 export const isTracked = (kind: string): boolean => ITEM_DEFINITIONS[kind as ItemKind]?.tracked ?? false
 
@@ -79,7 +87,7 @@ export function followOrderForExtra(current: string, orderStatus: string, kind?:
   return current as ItemStatus
 }
 
-export const MANUAL_KINDS: ItemKind[] = ITEM_KINDS.filter(kind => kind !== ItemKind.Package)
+export const MANUAL_KINDS: ItemKind[] = ITEM_KINDS.filter(kind => !isMainItem(kind))
 
 export const CONFIRMED_ITEM: string[] = [ItemStatus.Confirmed, ItemStatus.Issued]
 
@@ -104,6 +112,7 @@ export interface IPackageItemFields {
 const PACKAGE_TRIP_KEYS = [
   'hotel_stars', 'hotel_code', 'meal_name', 'room_name', 'district',
   'programme', 'fare', 'booking_url', 'hotel_url', 'route_from', 'route_to', 'kid_ages',
+  'esim_country', 'esim_plan_id', 'esim_days', 'esim_data_gb',
 ] as const
 
 const endOf = (order: Pick<OrderEntity, 'returnDate' | 'checkIn' | 'nights'>): string | null => {
@@ -130,8 +139,10 @@ export function packageFromOrder(order: OrderEntity): IPackageItemFields {
     if (trip[key] !== undefined && trip[key] !== null && trip[key] !== '') details[key] = trip[key]
   }
 
+  const kind = isEsimOrder(order) ? ItemKind.Esim : ItemKind.Package
+
   return {
-    kind: ItemKind.Package,
+    kind,
     position: 0,
     status: itemStatusFor(order.status),
     title: order.hotelName ?? '',
@@ -142,7 +153,7 @@ export function packageFromOrder(order: OrderEntity): IPackageItemFields {
     serviceEnd: endOf(order),
     priceAmount: order.priceAmount,
     priceCurrency: order.priceCurrency ?? '',
-    requiredForConfirmation: ITEM_DEFINITIONS[ItemKind.Package].requiredForConfirmation,
+    requiredForConfirmation: ITEM_DEFINITIONS[kind].requiredForConfirmation,
     details,
   }
 }

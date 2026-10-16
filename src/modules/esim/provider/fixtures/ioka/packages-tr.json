@@ -1,0 +1,199 @@
+{
+  "items": [
+    {
+      "id": "globi:tr-001gb-007d",
+      "name": "1GB - 7 days",
+      "country_codes": [
+        "tr"
+      ],
+      "data_volume_mb": 1024,
+      "is_unlimited": false,
+      "validity": 7,
+      "price": "1.61",
+      "price_usd": "1.61",
+      "price_uzs": "19550.00",
+      "coverage": [
+        {
+          "country_code": "tr",
+          "networks": [
+            {
+              "id": null,
+              "name": "TURKTELEKOM",
+              "types": []
+            }
+          ]
+        }
+      ],
+      "provider": "globi"
+    },
+    {
+      "id": "globi:tr-003gb-030d",
+      "name": "3GB - 30 days",
+      "country_codes": [
+        "tr"
+      ],
+      "data_volume_mb": 3072,
+      "is_unlimited": false,
+      "validity": 30,
+      "price": "3.45",
+      "price_usd": "3.45",
+      "price_uzs": "41745.00",
+      "coverage": [
+        {
+          "country_code": "tr",
+          "networks": [
+            {
+              "id": null,
+              "name": "Turk Telekom (Avea)",
+              "types": [
+                "5G"
+              ]
+            }
+          ]
+        }
+      ],
+      "provider": "globi"
+    },
+    {
+      "id": "globi:tr-005gb-030d",
+      "name": "5GB - 30 days",
+      "country_codes": [
+        "tr"
+      ],
+      "data_volume_mb": 5120,
+      "is_unlimited": false,
+      "validity": 30,
+      "price": "4.60",
+      "price_usd": "4.60",
+      "price_uzs": "55660.00",
+      "coverage": [
+        {
+          "country_code": "tr",
+          "networks": [
+            {
+              "id": null,
+              "name": "Turk Telekom (Avea)",
+              "types": [
+                "5G"
+              ]
+            }
+          ]
+        }
+      ],
+      "provider": "globi"
+    },
+    {
+      "id": "globi:tr-010gb-030d",
+      "name": "10GB - 30 days",
+      "country_codes": [
+        "tr"
+      ],
+      "data_volume_mb": 10240,
+      "is_unlimited": false,
+      "validity": 30,
+      "price": "8.51",
+      "price_usd": "8.51",
+      "price_uzs": "103040.00",
+      "coverage": [
+        {
+          "country_code": "tr",
+          "networks": [
+            {
+              "id": null,
+              "name": "Turk Telekom (Avea)",
+              "types": [
+                "5G"
+              ]
+            }
+          ]
+        }
+      ],
+      "provider": "globi"
+    },
+    {
+      "id": "globi:tr-020gb-030d",
+      "name": "20GB - 30 days",
+      "country_codes": [
+        "tr"
+      ],
+      "data_volume_mb": 20480,
+      "is_unlimited": false,
+      "validity": 30,
+      "price": "10.12",
+      "price_usd": "10.12",
+      "price_uzs": "122475.00",
+      "coverage": [
+        {
+          "country_code": "tr",
+          "networks": [
+            {
+              "id": null,
+              "name": "Turk Telekom (Avea)",
+              "types": [
+                "5G"
+              ]
+            }
+          ]
+        }
+      ],
+      "provider": "globi"
+    },
+    {
+      "id": "globi:tr-unlim-010d",
+      "name": "Unlim - 10 days",
+      "country_codes": [
+        "tr"
+      ],
+      "data_volume_mb": 102400,
+      "is_unlimited": false,
+      "validity": 10,
+      "price": "16.10",
+      "price_usd": "16.10",
+      "price_uzs": "194810.00",
+      "coverage": [
+        {
+          "country_code": "tr",
+          "networks": [
+            {
+              "id": null,
+              "name": "Turk Telekom (Avea)",
+              "types": [
+                "5G"
+              ]
+            }
+          ]
+        }
+      ],
+      "provider": "globi"
+    },
+    {
+      "id": "globi:tr-050gb-030d",
+      "name": "50GB - 30 days",
+      "country_codes": [
+        "tr"
+      ],
+      "data_volume_mb": 51200,
+      "is_unlimited": false,
+      "validity": 30,
+      "price": "24.61",
+      "price_usd": "24.61",
+      "price_uzs": "297850.00",
+      "coverage": [
+        {
+          "country_code": "tr",
+          "networks": [
+            {
+              "id": null,
+              "name": "Turk Telekom (Avea)",
+              "types": [
+                "5G"
+              ]
+            }
+          ]
+        }
+      ],
+      "provider": "globi"
+    }
+  ],
+  "totals": 7
+}

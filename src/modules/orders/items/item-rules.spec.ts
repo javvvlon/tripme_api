@@ -74,12 +74,12 @@ describe('manual order services', () => {
     expect(removalOf({ kind: 'hotel', status: 'confirmed' })).toBe('cancel')
     expect(removalOf({ kind: 'flight', status: 'issued' })).toBe('cancel')
     expect(removalOf({ kind: 'visa', status: 'confirmed' })).toBe('delete')
-    expect(() => removalOf({ kind: 'package', status: 'draft' })).toThrow('tour package')
+    expect(() => removalOf({ kind: 'package', status: 'draft' })).toThrow('main service')
     expect(() => removalOf({ kind: 'visa', status: 'cancelled' })).toThrow('already cancelled')
   })
 
   it('locks the package, issued and cancelled services', () => {
-    expect(() => assertEditable({ kind: 'package', status: 'draft' })).toThrow('tour package')
+    expect(() => assertEditable({ kind: 'package', status: 'draft' })).toThrow('main service')
     expect(() => assertEditable({ kind: 'insurance', status: 'issued' })).toThrow('issued')
     expect(() => assertEditable({ kind: 'insurance', status: 'cancelled' })).toThrow('cancelled')
     expect(() => assertEditable({ kind: 'insurance', status: 'confirmed' })).not.toThrow()

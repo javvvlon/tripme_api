@@ -8,6 +8,7 @@ export interface IEsimPlan {
   dataMb: number | null
   days: number
   wholesaleUsd: number
+  retailUzs?: number
   networks: string[]
 }
 
@@ -15,6 +16,7 @@ export interface IEsimCountry {
   code: string
   plans: number
   fromUsd: number
+  fromUzs?: number
 }
 
 export interface IIssuedEsim {
@@ -29,6 +31,7 @@ export interface IIssuedEsim {
 
 export interface IEsimProvider {
   readonly name: string
+  readonly canIssue: boolean
   countries(): Promise<IEsimCountry[]>
   plans(country: string): Promise<IEsimPlan[]>
   plan(id: string): Promise<IEsimPlan | null>

@@ -10,6 +10,10 @@ export const confirmationMode = (): ConfirmationMode =>
 
 export type ConfirmationCheck = 'suppliers' | 'contract' | 'deposit' | 'passport'
 
+export const TOUR_CHECKS: ConfirmationCheck[] = ['suppliers', 'contract', 'deposit', 'passport']
+
+export const ESIM_CHECKS: ConfirmationCheck[] = ['suppliers', 'deposit']
+
 export interface IConfirmationItem {
   title: string
   kind: string
@@ -33,12 +37,17 @@ export interface IConfirmation {
   contract: { ok: boolean, signed_at: string | null }
   deposit: { ok: boolean, received_uzs: number, deposit_uzs: number, legacy: boolean }
   passport: { ok: boolean, problem: 'missing' | 'expired' | 'short' | null }
+  checks: ConfirmationCheck[]
   missing: ConfirmationCheck[]
   ready: boolean
   mode: ConfirmationMode
 }
 
-export function confirmationOf(facts: IConfirmationFacts, mode: ConfirmationMode = confirmationMode()): IConfirmation {
+export function confirmationOf(
+  facts: IConfirmationFacts,
+  mode: ConfirmationMode = confirmationMode(),
+  applies: ConfirmationCheck[] = TOUR_CHECKS,
+): IConfirmation {
   const pending = facts.items
     .filter(item => item.required && !INACTIVE_ITEM.includes(item.status) && !CONFIRMED_ITEM.includes(item.status))
     .map(item => item.title || item.kind)
@@ -52,13 +61,14 @@ export function confirmationOf(facts: IConfirmationFacts, mode: ConfirmationMode
     passport: passportProblem === null,
   }
 
-  const missing = (Object.keys(checks) as ConfirmationCheck[]).filter(key => !checks[key])
+  const missing = applies.filter(key => !checks[key])
 
   return {
     suppliers: { ok: checks.suppliers, pending },
     contract: { ok: checks.contract, signed_at: facts.contractSignedAt ? facts.contractSignedAt.toISOString() : null },
     deposit: { ok: checks.deposit, received_uzs: facts.receivedUzs, deposit_uzs: facts.depositUzs, legacy: facts.legacyPaid },
     passport: { ok: checks.passport, problem: passportProblem },
+    checks: applies,
     missing,
     ready: missing.length === 0,
     mode,

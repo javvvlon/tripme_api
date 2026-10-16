@@ -22,8 +22,8 @@ import {
 import { OrderEventEntity } from './order-event.entity'
 import { DocumentsService } from './documents/documents.service'
 import { OrderItemsService } from './items/order-items.service'
-import { ItemKind } from './items/item-kinds'
-import { advanceTarget, confirmationOf } from './confirmation.rules'
+import { isEsimOrder, isMainItem } from './items/item-kinds'
+import { ESIM_CHECKS, TOUR_CHECKS, advanceTarget, confirmationOf } from './confirmation.rules'
 import { assertOrderTakesServices } from './items/item-rules'
 import type { IOrderItemInput } from './items/item-rules'
 import type { IConfirmation } from './confirmation.rules'
@@ -276,7 +276,7 @@ export class OrdersService {
 
       if (!found) throw new NotFoundException('Order not found')
 
-      if (item.kind === ItemKind.Package) {
+      if (isMainItem(item.kind)) {
         found.supplierOrderId = ref
         found.updatedAt = new Date()
         await orders.save(found)
@@ -298,7 +298,7 @@ export class OrdersService {
     const items = await this.itemsService.byOrder([orderId])
     const money = await this.moneyOf([order], items)
     const confirmation = this.confirmationFor(order, items.get(orderId) ?? [], money.get(orderId))
-    const target = advanceTarget(order.status, confirmation, passportProblem(order))
+    const target = advanceTarget(order.status, confirmation, isEsimOrder(order) ? null : passportProblem(order))
 
     if (!target) return false
 
@@ -587,6 +587,7 @@ export class OrdersService {
       priceAmount: Number.isFinite(amount) && amount > 0 ? String(amount) : null,
       priceCurrency: text(trip.price_currency, 8),
       trip: trip as Record<string, unknown>,
+      ...(trip.product === 'esim' ? { depositPercent: 100 } : {}),
     })
 
     const saved = await this.dataSource.transaction(async (manager) => {
@@ -865,7 +866,7 @@ export class OrdersService {
       legacyPaid: row.legacyPaid,
       passportExpiresAt: row.passportExpiresAt,
       passportProblem: passportProblem(row),
-    })
+    }, undefined, isEsimOrder(row) ? ESIM_CHECKS : TOUR_CHECKS)
   }
 
   private toPayload(

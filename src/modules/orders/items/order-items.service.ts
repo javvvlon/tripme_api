@@ -5,7 +5,7 @@ import type { EntityManager } from 'typeorm'
 import { RatesService } from '~/modules/references/rates.service'
 import { itemUzs, rateFor } from '~/modules/finance/finance.rules'
 import { OrderItemEntity } from './order-item.entity'
-import { CONFIRMED_ITEM, INACTIVE_ITEM, ItemKind, ItemStatus, followOrderForExtra, followOrderStatus, isTracked, packageFromOrder } from './item-kinds'
+import { CONFIRMED_ITEM, INACTIVE_ITEM, ItemKind, ItemStatus, MAIN_KINDS, followOrderForExtra, followOrderStatus, isMainItem, isTracked, packageFromOrder } from './item-kinds'
 import { assertEditable, assertIssuable, firstStatusFor, itemFieldsOf, removalOf } from './item-rules'
 import type { IItemFields, IOrderItemInput, ItemRemoval } from './item-rules'
 import type { OrderEntity } from '../order.entity'
@@ -50,7 +50,7 @@ export class OrderItemsService {
     const repository = manager.getRepository(OrderItemEntity)
     const fields = packageFromOrder(order)
     const existing = await repository.findOne({
-      where: { orderId: order.id, kind: ItemKind.Package },
+      where: { orderId: order.id, kind: In(MAIN_KINDS) },
       order: { position: 'ASC' },
     })
 
@@ -75,7 +75,7 @@ export class OrderItemsService {
 
   async syncExtras(manager: EntityManager, order: OrderEntity): Promise<void> {
     const repository = manager.getRepository(OrderItemEntity)
-    const extras = (await repository.find({ where: { orderId: order.id } })).filter(item => item.kind !== ItemKind.Package)
+    const extras = (await repository.find({ where: { orderId: order.id } })).filter(item => !isMainItem(item.kind))
 
     for (const item of extras) {
       const next = followOrderForExtra(item.status, order.status, item.kind)

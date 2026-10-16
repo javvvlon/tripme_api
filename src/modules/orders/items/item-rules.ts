@@ -1,7 +1,7 @@
 import { BadRequestException, ConflictException } from '@nestjs/common'
 import { PAYMENT_CURRENCIES } from '~/modules/finance/finance.rules'
 import { OrderStatus } from '../order.entity'
-import { CONFIRMED_ITEM, INACTIVE_ITEM, ITEM_DEFINITIONS, ItemKind, ItemStatus, MANUAL_KINDS, isTracked } from './item-kinds'
+import { CONFIRMED_ITEM, INACTIVE_ITEM, ITEM_DEFINITIONS, ItemKind, ItemStatus, MANUAL_KINDS, isMainItem, isTracked } from './item-kinds'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -98,7 +98,7 @@ export function firstStatusFor(orderStatus: string, kind: string): ItemStatus {
 }
 
 export function assertEditable(item: IItemState): void {
-  if (item.kind === ItemKind.Package) throw new ConflictException('The tour package follows the order details')
+  if (isMainItem(item.kind)) throw new ConflictException('The main service follows the order details')
   if (INACTIVE_ITEM.includes(item.status)) throw new ConflictException('A cancelled service cannot be changed')
   if (item.status === ItemStatus.Issued) throw new ConflictException('An issued service cannot be changed')
 }
@@ -106,7 +106,7 @@ export function assertEditable(item: IItemState): void {
 export type ItemRemoval = 'delete' | 'cancel'
 
 export function removalOf(item: IItemState): ItemRemoval {
-  if (item.kind === ItemKind.Package) throw new ConflictException('The tour package follows the order details')
+  if (isMainItem(item.kind)) throw new ConflictException('The main service follows the order details')
   if (INACTIVE_ITEM.includes(item.status)) throw new ConflictException('This service is already cancelled')
   if (!isTracked(item.kind)) return 'delete'
 
@@ -114,7 +114,7 @@ export function removalOf(item: IItemState): ItemRemoval {
 }
 
 export function assertIssuable(item: IItemState): void {
-  if (item.kind === ItemKind.Package) throw new ConflictException('The tour package is issued with the order')
+  if (isMainItem(item.kind)) throw new ConflictException('The main service is issued with the order')
   if (!isTracked(item.kind)) throw new ConflictException('This service has no issuing step')
   if (INACTIVE_ITEM.includes(item.status)) throw new ConflictException('A cancelled service cannot be issued')
   if (item.status === ItemStatus.Issued) throw new ConflictException('This service is already issued')

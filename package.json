@@ -14,7 +14,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
-    "copy:fixtures": "mkdir -p dist/modules/suppliers/fixtures dist/modules/content/fixtures && cp src/modules/suppliers/fixtures/* dist/modules/suppliers/fixtures/ && cp src/modules/content/fixtures/* dist/modules/content/fixtures/",
+    "copy:fixtures": "mkdir -p dist/modules/suppliers/fixtures dist/modules/content/fixtures && cp src/modules/suppliers/fixtures/* dist/modules/suppliers/fixtures/ && cp src/modules/content/fixtures/* dist/modules/content/fixtures/ && mkdir -p dist/modules/esim/provider/fixtures/ioka && cp src/modules/esim/provider/fixtures/ioka/* dist/modules/esim/provider/fixtures/ioka/",
     "start:live": "SUPPLIER_LIVE=1 node dist/main.js",
     "migrate": "node dist/shared/database/migrate.js",
     "user:create": "./scripts/create-user.sh",

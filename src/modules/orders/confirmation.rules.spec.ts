@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { advanceTarget, confirmationOf } from './confirmation.rules'
+import { ESIM_CHECKS, advanceTarget, confirmationOf } from './confirmation.rules'
 import type { IConfirmationFacts } from './confirmation.rules'
 
 /**
@@ -18,6 +18,26 @@ const facts = (patch: Partial<IConfirmationFacts> = {}): IConfirmationFacts => (
   passportExpiresAt: '2029-01-01',
   passportProblem: null,
   ...patch,
+})
+
+describe('eSIM order confirmation', () => {
+  it('needs only the supplier and the payment', () => {
+    const result = confirmationOf(facts({
+      items: [{ title: 'eSIM Турция · 10 ГБ · 30 дней', kind: 'esim', status: 'confirmed', required: true }],
+      contractSignedAt: null,
+      passportExpiresAt: null,
+    }), 'enforce', ESIM_CHECKS)
+
+    expect(result.checks).toEqual(['suppliers', 'deposit'])
+    expect(result.missing).toEqual([])
+    expect(result.ready).toBe(true)
+  })
+
+  it('still waits for the payment', () => {
+    const result = confirmationOf(facts({ depositMet: false, contractSignedAt: null, passportExpiresAt: null }), 'enforce', ESIM_CHECKS)
+
+    expect(result.missing).toEqual(['deposit'])
+  })
 })
 
 describe('order confirmation rule', () => {

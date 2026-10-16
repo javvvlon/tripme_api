@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { OrderStatus } from '../order.entity'
 import type { OrderEntity } from '../order.entity'
-import { ITEM_DEFINITIONS, ITEM_KINDS, ItemKind, ItemStatus, followOrderStatus, itemStatusFor, packageFromOrder } from './item-kinds'
+import { ITEM_DEFINITIONS, ITEM_KINDS, ItemKind, ItemStatus, MANUAL_KINDS, followOrderStatus, isEsimOrder, itemStatusFor, packageFromOrder } from './item-kinds'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -68,5 +68,22 @@ describe('order item kinds', () => {
   it('prefers the stored return date and copes with a missing check-in', () => {
     expect(packageFromOrder(order({ returnDate: '2026-11-05' })).serviceEnd).toBe('2026-11-05')
     expect(packageFromOrder(order({ checkIn: null })).serviceEnd).toBeNull()
+  })
+})
+
+describe('eSIM as the main service', () => {
+  it('turns an eSIM order into an eSIM service the supplier must confirm', () => {
+    const esim = order({ checkIn: null, trip: { product: 'esim', esim_plan_id: 'globi:tr-010gb-030d', esim_days: 30, room_name: 'Turk Telekom (Avea)' } })
+    const item = packageFromOrder(esim)
+
+    expect(isEsimOrder(esim)).toBe(true)
+    expect(item.kind).toBe(ItemKind.Esim)
+    expect(item.requiredForConfirmation).toBe(true)
+    expect(item.details).toMatchObject({ esim_plan_id: 'globi:tr-010gb-030d', esim_days: 30 })
+    expect(item.serviceStart).toBeNull()
+  })
+
+  it('keeps eSIM out of the services a manager adds by hand', () => {
+    expect(MANUAL_KINDS).not.toContain(ItemKind.Esim)
   })
 })

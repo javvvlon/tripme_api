@@ -99,7 +99,7 @@ export class EsimService implements IPurchasePayments {
     const [countries, rate] = await Promise.all([this.provider.countries(), this.usdRate()])
     const margin = marginPercent()
 
-    return countries.map(country => ({ code: country.code, plans: country.plans, from_uzs: retailUzs(country.fromUsd, rate, margin) }))
+    return countries.map(country => ({ code: country.code, plans: country.plans, from_uzs: country.fromUzs ?? retailUzs(country.fromUsd, rate, margin) }))
   }
 
   async plans(country: string): Promise<IEsimPlanPayload[]> {
@@ -112,8 +112,16 @@ export class EsimService implements IPurchasePayments {
     const margin = marginPercent()
 
     return plans
-      .map(plan => this.planPayload(plan, retailUzs(plan.wholesaleUsd, rate, margin)))
+      .map(plan => this.planPayload(plan, plan.retailUzs ?? retailUzs(plan.wholesaleUsd, rate, margin)))
       .sort((a, b) => a.price_uzs - b.price_uzs)
+  }
+
+  mode(): { mode: 'catalog' | 'checkout', provider: string | null } {
+    return { mode: this.catalogOnly() ? 'catalog' : 'checkout', provider: this.source?.name ?? null }
+  }
+
+  private catalogOnly(): boolean {
+    return !this.source?.canIssue || process.env.ESIM_MODE === 'catalog'
   }
 
   methods(): Array<{ method: string, sandbox: boolean }> {
@@ -121,6 +129,8 @@ export class EsimService implements IPurchasePayments {
   }
 
   async checkout(input: ICheckoutInput, userId: string | null = null): Promise<IEsimPurchasePayload> {
+    if (this.catalogOnly()) throw new ConflictException('Online eSIM purchase is not available yet — leave a request instead')
+
     const checkout = checkoutOf(input ?? {})
     const plan = await this.provider.plan(checkout.planId)
 
@@ -140,7 +150,7 @@ export class EsimService implements IPurchasePayments {
       wholesaleUsd: String(plan.wholesaleUsd),
       fxRate: String(rate),
       marginPercent: String(margin),
-      priceUzs: String(retailUzs(plan.wholesaleUsd, rate, margin)),
+      priceUzs: String(plan.retailUzs ?? retailUzs(plan.wholesaleUsd, rate, margin)),
       email: checkout.email,
       userId,
       phone: checkout.phone,

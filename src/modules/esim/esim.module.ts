@@ -8,11 +8,11 @@ import { EsimController } from './esim.controller'
 import { EsimCmsController } from './esim-cms.controller'
 import { EsimWebhooksController } from './esim-webhooks.controller'
 import { ESIM_PROVIDER } from './provider/esim-provider'
-import { SandboxEsimProvider } from './provider/sandbox.provider'
+import { esimProviderFromEnv } from './provider/provider.factory'
+import { CacheService } from '~/shared/cache/cache.service'
 import { PAYMENT_GATEWAYS } from './payments/gateway'
 import { PURCHASE_PAYMENTS } from './payments/purchase-payments.port'
 import { gatewaysFromEnv } from './payments/gateways'
-import { esimSandbox } from './esim.links'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -22,7 +22,7 @@ import { esimSandbox } from './esim.links'
   controllers: [EsimController, EsimCmsController, EsimWebhooksController],
   providers: [
     EsimService,
-    { provide: ESIM_PROVIDER, useFactory: () => (esimSandbox() ? new SandboxEsimProvider() : null) },
+    { provide: ESIM_PROVIDER, inject: [CacheService], useFactory: esimProviderFromEnv },
     { provide: PAYMENT_GATEWAYS, useFactory: gatewaysFromEnv },
     { provide: PURCHASE_PAYMENTS, useExisting: EsimService },
   ],
