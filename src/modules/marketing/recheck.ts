@@ -28,7 +28,7 @@ export function checkGroups(tours: IAdTour[], today: string): ICheckGroup[] {
   const groups = new Map<string, ICheckGroup>()
 
   for (const tour of tours) {
-    if (!canCheck(tour) || departed(tour, today)) continue
+    if (tour.source === 'own' || !canCheck(tour) || departed(tour, today)) continue
 
     const ages = agesOf(tour)
     const key = [tour.route_from, tour.route_to, tour.check_in, tour.nights, tour.adults, ages.join('.')].join('|')
@@ -111,6 +111,7 @@ export function judge(tour: IAdTour, offer: IOffer | null, statuses: SupplierSta
 }
 
 export function settle(tour: IAdTour, today: string): IAdTour | null {
+  if (tour.source === 'own') return departed(tour, today) ? { ...tour, check_state: 'gone', check_was: null } : { ...tour, check_state: undefined, check_was: null }
   if (departed(tour, today)) return { ...tour, check_state: 'gone', check_was: null }
   if (!canCheck(tour)) return { ...tour, check_state: 'unknown', check_was: null }
 

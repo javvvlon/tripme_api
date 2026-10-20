@@ -5,7 +5,7 @@ import type { IOffer } from '~/modules/search/models/Offer'
 import { isCode, isHot, languagesOf, liveTours, MAX_TOURS, newCode, titleOf, tourOf, toursOf } from './marketing.rules'
 import { cleanCopy, DEFAULT_VOICE, editedCopy, factsOf, fallbackCopy, systemPrompt, variantsOf } from './ai/copywriter'
 import { contactsOf, designOf, pickedContacts } from './marketing.rules'
-import { keyboardOf, usernameOf } from './telegram.publisher'
+import { keyboardOf, mediaOf, usernameOf } from './telegram.publisher'
 import { DEFAULT_TEMPLATE, DEFAULT_VISUAL, templateOf, templatesOf, templateSystem } from './templates'
 import { checkGroups, judge, matchOffer, settle } from './recheck'
 import type { IAdTour } from './selection.entity'
@@ -193,11 +193,12 @@ describe('the public view', () => {
 describe('brand voice and versions', () => {
   const facts = factsOf(toursOf([trip()]), '2026-10-20')
 
-  it('refuses emoji even when the model sneaks them in', () => {
-    const copy = cleanCopy({ kicker: 'Подборка', headline: 'Дубай ✨', intro: 'Тёплый город 🌴', cta: 'Выбрать' }, fallbackCopy(facts, 'ru'))
+  it('keeps emoji out of banner fields but lets the voice use them in the intro', () => {
+    const copy = cleanCopy({ kicker: 'Подборка', headline: 'Дубай ✨', intro: 'Тёплый город 🌴', cta: 'Выбрать 👉' }, fallbackCopy(facts, 'ru'))
 
     expect(copy.headline).toBe('ОАЭ')
-    expect(copy.intro).toBe(fallbackCopy(facts, 'ru').intro)
+    expect(copy.cta).toBe(fallbackCopy(facts, 'ru').cta)
+    expect(copy.intro).toBe('Тёплый город 🌴')
   })
 
   it('returns four versions in angle order, filling gaps from the brand templates', () => {
@@ -211,7 +212,7 @@ describe('brand voice and versions', () => {
   it('puts the editable voice into the prompt and falls back to the house voice', () => {
     expect(systemPrompt('Пишем строго и коротко.')).toContain('Пишем строго и коротко.')
     expect(systemPrompt('')).toContain(DEFAULT_VOICE)
-    expect(systemPrompt('')).toContain('Never use emoji')
+    expect(systemPrompt('')).toContain('Emoji follow the TripMe voice')
   })
 })
 
@@ -225,6 +226,30 @@ describe('banner design', () => {
   it('keeps earlier choices when a patch changes one thing', () => {
     expect(designOf({ stars: false }, { backdrop: 'type', rows: 3 })).toMatchObject({ backdrop: 'type', rows: 3, stars: false })
     expect(designOf({}, { backdrop: 'sunset' as never }).backdrop).toBe('scene')
+  })
+
+  it('keeps a known video mood and falls back to warm', () => {
+    expect(designOf({ mood: 'drive' }).mood).toBe('drive')
+    expect(designOf({ mood: 'disco' }, { mood: 'calm' }).mood).toBe('calm')
+    expect(designOf({}, { mood: 'rave' as never }).mood).toBe('warm')
+  })
+})
+
+describe('published media', () => {
+  const file = (mimetype: string, size = 10) => ({ buffer: Buffer.alloc(size, 1), mimetype, originalname: 'x', size })
+
+  it('sends an MP4 as a video with sane dimensions', () => {
+    const media = mediaOf({ video: [file('video/mp4')] }, { width: '1080', height: '1350', duration: '15' })
+
+    expect(media).toMatchObject({ kind: 'video', mimeType: 'video/mp4', width: 1080, height: 1350, duration: 15 })
+    expect(mediaOf({ video: [file('video/mp4')] }, { width: '-4', height: 'tall' })).toMatchObject({ width: undefined, height: undefined })
+  })
+
+  it('still takes a PNG banner and refuses anything else', () => {
+    expect(mediaOf({ image: [file('image/png')] }, {}).kind).toBe('photo')
+    expect(() => mediaOf({ video: [file('video/webm')] }, {})).toThrow('MP4')
+    expect(() => mediaOf({ image: [file('image/gif')] }, {})).toThrow('PNG or JPEG')
+    expect(() => mediaOf({}, {})).toThrow('PNG or JPEG')
   })
 })
 

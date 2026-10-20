@@ -12,6 +12,6 @@ import { RatesService } from './rates.service'
   imports: [SuppliersModule],
   controllers: [ReferencesController],
   providers: [CalendarService, RouteLookupService, RatesService],
-  exports: [RatesService],
+  exports: [RatesService, RouteLookupService],
 })
 export class ReferencesModule {}

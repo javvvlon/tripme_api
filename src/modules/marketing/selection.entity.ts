@@ -1,5 +1,6 @@
 import { Column, Entity, Index, PrimaryColumn, PrimaryGeneratedColumn } from 'typeorm'
 import type { IAdTemplate } from './templates'
+import type { IIntakeReport, IPostFacts } from './intake/post'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -44,7 +45,21 @@ export interface IAdDesign {
   hotel: string
   footer: boolean
   buttons: AdButtons
+  mood: AdMood
+  post_style: PostStyle
 }
+
+export const AD_INCLUDES = ['flight', 'hotel', 'breakfast', 'meals', 'transfer', 'insurance', 'visa', 'excursions', 'guide'] as const
+
+export type AdInclude = typeof AD_INCLUDES[number]
+
+export const AD_MOODS = ['warm', 'drive', 'calm'] as const
+
+export type AdMood = typeof AD_MOODS[number]
+
+export const POST_STYLES = ['plain', 'emoji'] as const
+
+export type PostStyle = typeof POST_STYLES[number]
 
 export const AD_BUTTONS = ['both', 'managers', 'link', 'none'] as const
 
@@ -60,10 +75,12 @@ export const DEFAULT_DESIGN: IAdDesign = {
   party: true,
   cta: true,
   caps: true,
-  price: 'total',
+  price: 'person',
   hotel: '',
   footer: true,
   buttons: 'both',
+  mood: 'warm',
+  post_style: 'plain',
 }
 
 export interface IAdContact {
@@ -78,9 +95,31 @@ export interface IAdPublication {
   message_id: number
   language: AdLanguage
   by: string | null
+  kind?: AdMedia
 }
 
+export type AdMedia = 'photo' | 'video'
+
 export type CheckState = 'same' | 'changed' | 'gone' | 'unknown'
+
+export type IntakeVia = 'studio' | 'telegram'
+
+export interface IAdIntake {
+  via: IntakeVia
+  text: string
+  origin: string
+  link?: string
+  facts: IPostFacts
+  report: IIntakeReport
+  at: string
+  by: string | null
+}
+
+export interface IAdLeg {
+  place: string
+  nights: number
+  hotel: string
+}
 
 export interface IAdTour {
   [key: string]: unknown
@@ -147,6 +186,12 @@ export class MarketingSelectionEntity {
 
   @Column({ name: 'template_drafts', type: 'jsonb', default: () => `'[]'` })
   templateDrafts!: IAdTemplate[]
+
+  @Column({ type: 'jsonb', nullable: true })
+  intake!: IAdIntake | null
+
+  @Column({ type: 'jsonb', default: () => `'[]'` })
+  includes!: AdInclude[]
 
   @Column({ name: 'checked_at', type: 'timestamptz', nullable: true })
   checkedAt!: Date | null
@@ -216,4 +261,22 @@ export class MarketingTemplateEntity {
 
   @Column({ name: 'archived_by', type: 'uuid', nullable: true })
   archivedBy!: string | null
+}
+
+@Entity('marketing_bot_links')
+export class MarketingBotLinkEntity {
+  @PrimaryColumn({ name: 'telegram_id', type: 'bigint' })
+  telegramId!: string
+
+  @Column({ name: 'user_id', type: 'uuid' })
+  userId!: string
+
+  @Column({ type: 'text', default: '' })
+  username!: string
+
+  @Column({ name: 'linked_at', type: 'timestamptz', default: () => 'now()' })
+  linkedAt!: Date
+
+  @Column({ name: 'archived_at', type: 'timestamptz', nullable: true })
+  archivedAt!: Date | null
 }

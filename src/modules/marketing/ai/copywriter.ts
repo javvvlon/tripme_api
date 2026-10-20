@@ -61,11 +61,12 @@ export const COPY_RULES = [
   'You get facts about a selection of package tours as JSON and return JSON only.',
   'Hard rules that override everything else:',
   '- Never write any digit, price, date, number of nights or number of stars: the system adds every number itself.',
-  '- Never use emoji or pictographs.',
+  '- Emoji follow the TripMe voice: use them only when the voice asks for them, and only in "intro". Never put emoji in "kicker", "headline", "cta" or hashtags, because those are drawn on banners.',
   '- Use only the facts given. Never invent hotel features, flights, discounts or availability.',
   `- "kicker": a tiny label above the headline, at most ${COPY_LIMITS.kicker} characters.`,
   `- "headline": only the place name — the destination or one resort, one to three words, at most ${COPY_LIMITS.headline} characters, no colon, no slogan, no final punctuation.`,
   '- When "hot" is true the system already shows a «Горящий тур» badge: never repeat that idea in the headline.',
+  '- When "own" is true this is TripMe\'s own package with its own prices: never claim that TripMe compared operators or searched every operator. The "compare" angle then talks about clear value for the price and what the package includes.',
   `- "intro": one or two sentences for a Telegram post, at most ${COPY_LIMITS.intro} characters.`,
   `- "cta": a button label, at most ${COPY_LIMITS.cta} characters.`,
   `- "hashtags": ${COPY_LIMITS.hashtags} or fewer single lowercase words without "#" and without spaces.`,
@@ -88,6 +89,7 @@ export interface ICopyFacts {
   hot: boolean
   party: { adults: number, children: number }
   hotels: Array<{ name: string, stars: number | null, meal: string, resort: string }>
+  own: boolean
 }
 
 export function factsOf(tours: IAdTour[], today: string): ICopyFacts {
@@ -103,6 +105,7 @@ export function factsOf(tours: IAdTour[], today: string): ICopyFacts {
       meal: String(tour.meal_name ?? tour.meal_code ?? ''),
       resort: String(tour.district ?? ''),
     })),
+    own: tours.length > 0 && tours.every(tour => tour.source === 'own'),
   }
 }
 
@@ -122,11 +125,13 @@ type Fallback = (facts: ICopyFacts) => Omit<IAdCopy, 'ai' | 'angle' | 'headline'
 
 const FALLBACK: Record<AdLanguage, Record<AdAngle, Fallback>> = {
   ru: {
-    compare: () => ({
-      kicker: 'Подборка TripMe',
-      intro: 'Мы сравнили цены всех туроператоров и собрали лучшие варианты в одной подборке. Менеджер TripMe проверит места и забронирует.',
-      cta: 'Выбрать тур',
-    }),
+    compare: facts => (facts.own
+      ? { kicker: 'Предложение TripMe', intro: 'Мы собрали тур с понятной ценой и всем необходимым в пакете. Менеджер TripMe ответит на вопросы и забронирует.', cta: 'Выбрать тур' }
+      : {
+          kicker: 'Подборка TripMe',
+          intro: 'Мы сравнили цены всех туроператоров и собрали лучшие варианты в одной подборке. Менеджер TripMe проверит места и забронирует.',
+          cta: 'Выбрать тур',
+        }),
     escape: () => ({
       kicker: 'Время отдыха',
       intro: 'Перелёт, отель и трансфер — в одной цене. Выберите отель, остальное TripMe возьмёт на себя.',
@@ -142,11 +147,13 @@ const FALLBACK: Record<AdLanguage, Record<AdAngle, Fallback>> = {
     }),
   },
   uz: {
-    compare: () => ({
-      kicker: 'TripMe to‘plami',
-      intro: 'Barcha turoperatorlar narxlarini solishtirib, eng yaxshi variantlarni bitta to‘plamga jamladik. TripMe menejeri joylarni tekshirib, bron qiladi.',
-      cta: 'Turni tanlash',
-    }),
+    compare: facts => (facts.own
+      ? { kicker: 'TripMe taklifi', intro: 'Tushunarli narx va kerakli hamma narsa paketga kiritilgan turni tayyorladik. TripMe menejeri savollarga javob berib, bron qiladi.', cta: 'Turni tanlash' }
+      : {
+          kicker: 'TripMe to‘plami',
+          intro: 'Barcha turoperatorlar narxlarini solishtirib, eng yaxshi variantlarni bitta to‘plamga jamladik. TripMe menejeri joylarni tekshirib, bron qiladi.',
+          cta: 'Turni tanlash',
+        }),
     escape: () => ({
       kicker: 'Dam olish vaqti',
       intro: 'Parvoz, mehmonxona va transfer — bitta narxda. Mehmonxonani tanlang, qolganini TripMe o‘z zimmasiga oladi.',
@@ -180,12 +187,12 @@ const HAS_DIGIT = /\p{Nd}/u
 
 const HAS_EMOJI = /\p{Extended_Pictographic}/u
 
-const field = (value: unknown, max: number): string | null => {
+const field = (value: unknown, max: number, emoji = false): string | null => {
   if (typeof value !== 'string') return null
 
   const text = value.replace(/\s+/g, ' ').trim().replace(/^["«]|["»]$/g, '').replace(/!{2,}/g, '!')
 
-  if (!text || HAS_DIGIT.test(text) || HAS_EMOJI.test(text) || text.length > max) return null
+  if (!text || HAS_DIGIT.test(text) || (!emoji && HAS_EMOJI.test(text)) || text.length > max) return null
 
   return text
 }
@@ -204,7 +211,7 @@ export function cleanCopy(raw: unknown, fallback: IAdCopy): IAdCopy {
   const input = raw && typeof raw === 'object' ? raw as Record<string, unknown> : {}
   const kicker = field(input.kicker, COPY_LIMITS.kicker)
   const headline = field(typeof input.headline === 'string' ? input.headline.split(':')[0] : input.headline, COPY_LIMITS.headline)
-  const intro = field(input.intro, COPY_LIMITS.intro)
+  const intro = field(input.intro, COPY_LIMITS.intro, true)
   const cta = field(input.cta, COPY_LIMITS.cta)
   const hashtags = hashtagsOf(input.hashtags)
 

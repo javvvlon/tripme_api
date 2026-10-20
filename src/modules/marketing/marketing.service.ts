@@ -11,19 +11,27 @@ import { MediaService } from '~/shared/storage/media.service'
 import { pageOf } from '~/shared/helpers/pagination'
 import type { IPage, IPageRequest } from '~/shared/helpers/pagination'
 import { AD_ANGLES, AD_LANGUAGES, MarketingSelectionEntity, MarketingSettingsEntity, MarketingTemplateEntity } from './selection.entity'
-import type { AdLanguage, IAdBackground, IAdContact, IAdCopy, IAdDesign, IAdPublication, IAdTour } from './selection.entity'
+import type { AdInclude, AdLanguage, IAdBackground, IAdContact, IAdCopy, IAdDesign, IAdIntake, IAdPublication, IAdTour, IntakeVia } from './selection.entity'
 import {
   cheapestOf, contactsOf, designOf, destinationOf, isCode, isHot, languagesOf, liveTours, MAX_BACKGROUNDS, MAX_BUTTONS, newCode,
-  pickedContacts, resortsOf, styleOf, titleOf, toursOf,
+  editedTours, includesOf, pickedContacts, resortsOf, styleOf, titleOf, toursOf,
 } from './marketing.rules'
-import { GeminiClient } from './ai/gemini.client'
+import { GeminiClient } from '~/shared/ai/gemini.client'
 import { copyPrompt, DEFAULT_FOOTER, DEFAULT_VOICE, editedCopy, factsOf, fallbackCopy, fallbackVariants, systemPrompt, variantsOf, voiceOf } from './ai/copywriter'
 import { BACKDROP_FOLDER, BACKDROP_RATIO, backdropPrompt, backdropTitle } from './ai/backdrop'
 import { checkGroups, judge, matchOffer, settle } from './recheck'
-import { TelegramPublisher, telegramUrl } from './telegram.publisher'
+import { mediaOf, TelegramPublisher, telegramUrl } from './telegram.publisher'
+import type { IPublishFiles } from './telegram.publisher'
 import { tashkentToday } from '~/modules/search/hot'
 import { DEFAULT_VISUAL, templateOf, templatePrompt, templatesOf, templateSystem } from './templates'
 import type { IAdTemplate } from './templates'
+import { IntakeService } from './intake/intake.service'
+import type { IIntakeInput } from './intake/intake.service'
+import { MAX_POST_CHARS } from './intake/post'
+import { postLinkOf } from './intake/link'
+import { looksLikeOffer, marketingPrompt, marketingSystem } from './intake/assistant'
+import { historyOf, replyOf } from '~/shared/ai/chat'
+import type { IIntakeReport } from './intake/post'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -43,6 +51,8 @@ export interface ISelectionPayload {
   published: IAdPublication[]
   template: IAdTemplate | null
   template_drafts: IAdTemplate[]
+  intake: IAdIntake | null
+  includes: AdInclude[]
   checked_at: string | null
   created_at: string
   updated_at: string
@@ -51,6 +61,15 @@ export interface ISelectionPayload {
   leads: number
   ai: boolean
 }
+
+export interface IIntakeAnswer {
+  selection: ISelectionPayload | null
+  report: IIntakeReport
+}
+
+export type IAssistantAnswer =
+  | ({ kind: 'selection' } & IIntakeAnswer)
+  | { kind: 'reply', reply: string, suggestions: string[] }
 
 export interface ISavedTemplate {
   id: string
@@ -111,6 +130,9 @@ export interface IPublishInput {
   language?: unknown
   link?: unknown
   cta?: unknown
+  width?: unknown
+  height?: unknown
+  duration?: unknown
 }
 
 const MAX_CODE_ATTEMPTS = 5
@@ -137,6 +159,7 @@ export class MarketingService {
     private readonly telegram: TelegramPublisher,
     private readonly storage: StorageService,
     private readonly media: MediaService,
+    private readonly intake: IntakeService,
   ) {}
 
   async create(input: { title?: unknown, tours?: unknown }, actorId: string): Promise<ISelectionPayload> {
@@ -144,6 +167,56 @@ export class MarketingService {
 
     if (!tours.length) throw new BadRequestException('Pick at least one tour')
 
+    return this.one(await this.make(tours, text(input.title, 120), actorId, null))
+  }
+
+  async fromPost(input: IIntakeInput, actorId: string, via: IntakeVia): Promise<IIntakeAnswer> {
+    const post = input.text.trim().slice(0, MAX_POST_CHARS)
+
+    if (post.length < 15 && !input.image && !postLinkOf(post)) throw new BadRequestException('Paste the operator\'s post or attach a screenshot')
+
+    const result = await this.intake.run({ ...input, text: post })
+    const tours = toursOf(result.tours)
+
+    if (!tours.length) return { selection: null, report: result.report }
+
+    const title = result.report.own ? String(tours[0]?.route_to_label ?? '') || result.facts.country : result.facts.country
+    const id = await this.make(tours, title, actorId, {
+      via,
+      text: result.post.text.slice(0, MAX_POST_CHARS),
+      origin: result.post.origin.slice(0, 120),
+      link: result.post.link,
+      facts: result.facts,
+      report: result.report,
+      at: new Date().toISOString(),
+      by: actorId,
+    }, includesOf(result.facts.includes))
+
+    if (this.gemini.configured) {
+      await this.write(id, {}).catch((error: unknown) => this.logger.warn(`intake copy ${id}: ${String(error)}`))
+    }
+
+    return { selection: await this.one(id), report: result.report }
+  }
+
+  async assist(input: IIntakeInput & { history?: unknown }, actorId: string): Promise<IAssistantAnswer> {
+    if (looksLikeOffer(input.text, Boolean(input.image))) {
+      return { kind: 'selection', ...await this.fromPost(input, actorId, 'studio') }
+    }
+
+    if (!this.gemini.configured) throw new ServiceUnavailableException('GEMINI_API_KEY is not set')
+
+    const settings = await this.stored()
+    const raw = await this.gemini.json<unknown>(
+      marketingSystem(settings.voice.trim() || DEFAULT_VOICE),
+      marketingPrompt(input.text.trim().slice(0, MAX_POST_CHARS), historyOf(input.history)),
+      { temperature: 0.5 },
+    )
+
+    return { kind: 'reply', ...replyOf(raw, { emoji: true }) }
+  }
+
+  private async make(tours: IAdTour[], title: string, actorId: string, intake: IAdIntake | null, includes: AdInclude[] = []): Promise<string> {
     const facts = factsOf(tours, today())
     const settings = await this.stored()
     const copy = Object.fromEntries(AD_LANGUAGES.map(language => [language, fallbackCopy(facts, language)]))
@@ -153,7 +226,7 @@ export class MarketingService {
       try {
         const saved = await this.selections.save(this.selections.create({
           code: newCode(),
-          title: text(input.title, 120) || titleOf(tours),
+          title: title || titleOf(tours),
           tours,
           copy,
           variants,
@@ -163,11 +236,13 @@ export class MarketingService {
           background: null,
           backgrounds: [],
           published: [],
+          intake,
+          includes,
           checkedAt: new Date(),
           createdBy: actorId,
         }))
 
-        return this.one(saved.id)
+        return saved.id
       }
       catch (error) {
         if (!isUniqueViolation(error) || attempt >= MAX_CODE_ATTEMPTS) throw error
@@ -269,6 +344,10 @@ export class MarketingService {
 
       selection.tours = [...new Map(kept.map(tour => [tour.offer_id, tour])).values()]
     }
+
+    if (input.includes !== undefined) selection.includes = includesOf(input.includes)
+
+    if (input.tours !== undefined) selection.tours = editedTours(input.tours, selection.tours)
 
     if (input.copy && typeof input.copy === 'object') {
       const changes = input.copy as Record<string, unknown>
@@ -494,10 +573,10 @@ export class MarketingService {
     return this.one(id)
   }
 
-  async publish(id: string, file: IUploadedFile | undefined, input: IPublishInput, actorId: string): Promise<ISelectionPayload> {
+  async publish(id: string, files: IPublishFiles, input: IPublishInput, actorId: string): Promise<ISelectionPayload> {
     if (!this.telegram.configured) throw new ServiceUnavailableException('The Telegram bot is not connected')
-    if (!file?.buffer?.length || !['image/png', 'image/jpeg'].includes(file.mimetype)) throw new BadRequestException('Attach the banner as a PNG or JPEG')
 
+    const media = mediaOf(files, input)
     const selection = await this.find(id)
     const caption = typeof input.caption === 'string' ? input.caption.trim().slice(0, 4096) : ''
     const language = AD_LANGUAGES.includes(input.language as AdLanguage) ? input.language as AdLanguage : 'ru'
@@ -517,10 +596,10 @@ export class MarketingService {
       ...managers.map(contact => ({ text: contact.name, url: telegramUrl(contact.telegram) })),
     ]
 
-    const messageId = await this.telegram.publish(file.buffer, file.mimetype, caption, buttons)
+    const messageId = await this.telegram.publish(media, caption, buttons)
 
     selection.published = [
-      { at: new Date().toISOString(), channel: this.telegram.channel, message_id: messageId, language, by: actorId },
+      { at: new Date().toISOString(), channel: this.telegram.channel, message_id: messageId, language, by: actorId, kind: media.kind },
       ...(selection.published ?? []),
     ].slice(0, 20)
     selection.updatedAt = new Date()
@@ -656,6 +735,8 @@ export class MarketingService {
       published: selection.published ?? [],
       template: selection.template ? templateOf(selection.template) : null,
       template_drafts: templatesOf(selection.templateDrafts),
+      intake: selection.intake ?? null,
+      includes: selection.includes ?? [],
       checked_at: selection.checkedAt?.toISOString() ?? null,
       created_at: selection.createdAt.toISOString(),
       updated_at: selection.updatedAt.toISOString(),

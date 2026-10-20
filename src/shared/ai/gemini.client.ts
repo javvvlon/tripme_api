@@ -9,6 +9,8 @@ const TIMEOUT_MS = 60_000
 
 const TEXT_TIMEOUT_MS = 30_000
 
+const LONG_TEXT_TIMEOUT_MS = 90_000
+
 const MAX_TEXT_TOKENS = 2048
 
 interface IGeminiBlob {
@@ -32,6 +34,12 @@ interface IGeminiResponse {
 export interface IGeminiImage {
   mimeType: string
   data: Buffer
+}
+
+export interface IJsonOptions {
+  images?: IGeminiImage[]
+  temperature?: number
+  maxTokens?: number
 }
 
 export class GeminiBusy extends BadGatewayException {}
@@ -60,11 +68,12 @@ export class GeminiClient {
     return Boolean(this.key)
   }
 
-  async json<T>(system: string, prompt: string): Promise<T> {
+  async json<T>(system: string, prompt: string, options: IJsonOptions = {}): Promise<T> {
+    const images = (options.images ?? []).map(image => ({ inline_data: { mime_type: image.mimeType, data: image.data.toString('base64') } }))
     const body = {
       systemInstruction: { parts: [{ text: system }] },
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      generationConfig: { responseMimeType: 'application/json', temperature: 0.9, maxOutputTokens: MAX_TEXT_TOKENS },
+      contents: [{ role: 'user', parts: [...images, { text: prompt }] }],
+      generationConfig: { responseMimeType: 'application/json', temperature: options.temperature ?? 0.9, maxOutputTokens: options.maxTokens ?? MAX_TEXT_TOKENS },
     }
 
     let parts: IGeminiPart[] | null = null
@@ -72,7 +81,7 @@ export class GeminiClient {
 
     for (const model of this.textModels) {
       try {
-        parts = await this.generate(model, body, TEXT_TIMEOUT_MS)
+        parts = await this.generate(model, body, options.maxTokens && options.maxTokens > MAX_TEXT_TOKENS ? LONG_TEXT_TIMEOUT_MS : TEXT_TIMEOUT_MS)
         break
       }
       catch (error) {

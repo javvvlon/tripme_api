@@ -1,7 +1,8 @@
+import { BadRequestException } from '@nestjs/common'
 import { randomBytes } from 'node:crypto'
 import { randomUUID } from 'node:crypto'
-import { AD_BACKDROPS, AD_BUTTONS, AD_LANGUAGES, AD_STYLES, DEFAULT_DESIGN } from './selection.entity'
-import type { AdBackdrop, AdButtons, AdLanguage, AdStyle, IAdContact, IAdDesign, IAdTour } from './selection.entity'
+import { AD_BACKDROPS, AD_BUTTONS, AD_INCLUDES, AD_LANGUAGES, AD_MOODS, AD_STYLES, DEFAULT_DESIGN, POST_STYLES } from './selection.entity'
+import type { AdBackdrop, AdButtons, AdInclude, AdLanguage, AdMood, AdStyle, IAdContact, IAdDesign, IAdLeg, IAdTour, PostStyle } from './selection.entity'
 import { usernameOf } from './telegram.publisher'
 import { isHotDeparture } from '~/modules/search/hot'
 
@@ -43,6 +44,8 @@ const TEXT_FIELDS: Record<string, number> = {
   route_from: 120,
   route_to: 120,
   route_to_label: 120,
+  source: 16,
+  post_basis: 16,
 }
 
 const NUMBER_FIELDS = ['hotel_stars', 'price_uzs', 'price_uzs_rate'] as const
@@ -101,12 +104,78 @@ export function tourOf(raw: unknown): IAdTour | null {
   }
 
   if (typeof input.refundable === 'boolean') tour.refundable = input.refundable
+  if (input.tier === true && Number(tour.hotel_stars) > 0) tour.tier = true
+
+  const legs = legsOf(input.legs)
+
+  if (legs.length) tour.legs = legs
+
+  const countries = Array.isArray(input.countries) ? [...new Set(input.countries.filter((slug): slug is string => typeof slug === 'string' && /^[a-z][a-z-]{1,40}$/.test(slug)))].slice(0, MAX_LEGS) : []
+
+  if (countries.length) tour.countries = countries
 
   if (Array.isArray(input.kid_ages)) {
     tour.kid_ages = input.kid_ages.map(Number).filter(age => Number.isInteger(age) && age >= 0 && age < 18).slice(0, tour.children)
   }
 
   return tour
+}
+
+export const MAX_LEGS = 6
+
+export const MAX_INCLUDES = 8
+
+export function legsOf(raw: unknown): IAdLeg[] {
+  if (!Array.isArray(raw)) return []
+
+  return raw.flatMap((item) => {
+    const input = item && typeof item === 'object' ? item as Record<string, unknown> : {}
+    const place = textOf(input.place, 60)
+
+    return place ? [{ place, nights: countOf(input.nights, 60), hotel: textOf(input.hotel, 120) }] : []
+  }).slice(0, MAX_LEGS)
+}
+
+export function includesOf(raw: unknown): AdInclude[] {
+  if (!Array.isArray(raw)) return []
+
+  return AD_INCLUDES.filter(key => raw.includes(key)).slice(0, MAX_INCLUDES)
+}
+
+export const isOwn = (tour: IAdTour): boolean => tour.source === 'own'
+
+const EDITABLE = ['hotel_name', 'hotel_stars', 'tier', 'meal_plan', 'district', 'check_in', 'nights', 'price_amount', 'price_currency', 'legs'] as const
+
+const sameEdit = (a: IAdTour, b: IAdTour): boolean => EDITABLE.every(key => JSON.stringify(a[key] ?? null) === JSON.stringify(b[key] ?? null))
+
+export function editedTours(raw: unknown, current: IAdTour[]): IAdTour[] {
+  if (!Array.isArray(raw)) throw new BadRequestException('tours must be a list')
+
+  const known = new Map(current.map(tour => [tour.offer_id, tour]))
+  const next: IAdTour[] = []
+
+  for (const item of raw) {
+    const input = item && typeof item === 'object' ? item as Record<string, unknown> : {}
+    const id = typeof input.offer_id === 'string' ? input.offer_id : ''
+    const stored = known.get(id)
+
+    if (stored && stored.source !== 'own' && stored.source !== 'post') {
+      next.push(stored)
+      continue
+    }
+
+    const tour = tourOf({ ...stored, ...input, meal_code: input.meal_plan ?? stored?.meal_code, offer_id: id || `own:${randomUUID().slice(0, 16)}` })
+
+    if (!tour) throw new BadRequestException('Every line needs a name, a departure date and a price')
+
+    next.push(stored && sameEdit(tour, stored) ? stored : { ...tour, source: 'own', check_state: undefined, check_was: null })
+  }
+
+  const unique = [...new Map(next.map(tour => [tour.offer_id, tour])).values()].slice(0, MAX_TOURS)
+
+  if (!unique.length) throw new BadRequestException('A selection needs at least one tour')
+
+  return unique
 }
 
 export function toursOf(raw: unknown): IAdTour[] {
@@ -192,6 +261,8 @@ export function designOf(raw: unknown, current: Partial<IAdDesign> = {}): IAdDes
     hotel: typeof input.hotel === 'string' ? input.hotel.slice(0, 400) : base.hotel,
     footer: flag('footer'),
     buttons: AD_BUTTONS.includes(input.buttons as AdButtons) ? input.buttons as AdButtons : base.buttons,
+    mood: AD_MOODS.includes(input.mood as AdMood) ? input.mood as AdMood : AD_MOODS.includes(base.mood) ? base.mood : DEFAULT_DESIGN.mood,
+    post_style: POST_STYLES.includes(input.post_style as PostStyle) ? input.post_style as PostStyle : POST_STYLES.includes(base.post_style) ? base.post_style : DEFAULT_DESIGN.post_style,
   }
 }
 

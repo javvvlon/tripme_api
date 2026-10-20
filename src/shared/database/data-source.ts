@@ -24,7 +24,7 @@ import { OrderDocumentEntity } from '~/modules/orders/order-document.entity'
 import { OrderItemEntity } from '~/modules/orders/items/order-item.entity'
 import { PaymentEntity } from '~/modules/finance/payment.entity'
 import { EsimPurchaseEntity } from '~/modules/esim/purchase.entity'
-import { MarketingSelectionEntity, MarketingSettingsEntity, MarketingTemplateEntity } from '~/modules/marketing/selection.entity'
+import { MarketingBotLinkEntity, MarketingSelectionEntity, MarketingSettingsEntity, MarketingTemplateEntity } from '~/modules/marketing/selection.entity'
 import { TravellerEntity } from '~/modules/account/traveller.entity'
 import { ConversationEntity, MessageEntity } from '~/modules/messages/message.entities'
 import { PointsSettingsEntity, PointsTierEntity, PointsTransactionEntity } from '~/modules/points/points.entities'
@@ -79,6 +79,8 @@ import { ReviewFields1755900047000 } from './migrations/1755900047000-ReviewFiel
 import { MarketingSelections1755900048000 } from './migrations/1755900048000-MarketingSelections'
 import { MarketingStudio1755900049000 } from './migrations/1755900049000-MarketingStudio'
 import { MarketingTemplates1755900050000 } from './migrations/1755900050000-MarketingTemplates'
+import { MarketingIntake1755900051000 } from './migrations/1755900051000-MarketingIntake'
+import { MarketingOwnOffers1755900052000 } from './migrations/1755900052000-MarketingOwnOffers'
 import { SamoOperators1755900045000 } from './migrations/1755900045000-SamoOperators'
 import { KazunionOperator1755900046000 } from './migrations/1755900046000-KazunionOperator'
 
@@ -104,7 +106,7 @@ export const databaseOptions = (): DataSourceOptions => {
       ContentBannerEntity, ContentBannerTranslationEntity, ContentPageEntity,
       PostEntity, PostTranslationEntity, ContactMessageEntity, LeadEntity, LeadEventEntity, OrderEntity, OrderEventEntity, OrderDocumentEntity, OrderItemEntity, PaymentEntity, EsimPurchaseEntity, TravellerEntity, ConversationEntity, MessageEntity, OperatorEntity,
       PointsTierEntity, PointsSettingsEntity, PointsTransactionEntity,
-      MediaFileEntity, MediaFolderEntity, MarketingSelectionEntity, MarketingSettingsEntity, MarketingTemplateEntity,
+      MediaFileEntity, MediaFolderEntity, MarketingSelectionEntity, MarketingSettingsEntity, MarketingTemplateEntity, MarketingBotLinkEntity,
     ],
     migrations: [
       Auth1755900000000, Content1755900001000, ItemBadges1755900002000, Banner1755900003000,
@@ -135,7 +137,7 @@ export const databaseOptions = (): DataSourceOptions => {
       LeadOwnership1755900029000,
       OrderItems1755900030000,
       Payments1755900031000,
-      ConfirmationRule1755900032000, EsimPurchases1755900033000, LeadCustomerLink1755900034000, Archive1755900035000, ClientAccount1755900036000, Messages1755900037000, PaymentRates1755900038000, LeadTrips1755900039000, LeadParty1755900040000, MessageQuotes1755900041000, FlykhivaOperator1755900042000, StaffArchive1755900043000, ContentItemIcon1755900044000, SamoOperators1755900045000, KazunionOperator1755900046000, ReviewFields1755900047000, MarketingSelections1755900048000, MarketingStudio1755900049000, MarketingTemplates1755900050000,
+      ConfirmationRule1755900032000, EsimPurchases1755900033000, LeadCustomerLink1755900034000, Archive1755900035000, ClientAccount1755900036000, Messages1755900037000, PaymentRates1755900038000, LeadTrips1755900039000, LeadParty1755900040000, MessageQuotes1755900041000, FlykhivaOperator1755900042000, StaffArchive1755900043000, ContentItemIcon1755900044000, SamoOperators1755900045000, KazunionOperator1755900046000, ReviewFields1755900047000, MarketingSelections1755900048000, MarketingStudio1755900049000, MarketingTemplates1755900050000, MarketingIntake1755900051000, MarketingOwnOffers1755900052000,
     ],
     synchronize: false,
     migrationsRun: false,
