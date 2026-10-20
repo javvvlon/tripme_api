@@ -9,6 +9,8 @@ import { phoneKey } from '~/shared/helpers/phone'
 import { UserEntity } from '~/modules/auth/entities'
 import { isRejectReason, LEAD_STATUSES, LEAD_TRANSITIONS, LeadEntity, LeadSource, LeadStatus } from './lead.entity'
 import { LeadEventEntity, LeadEventKind } from './lead-event.entity'
+import { autoPath } from './lead.flow'
+import type { LeadTrigger } from './lead.flow'
 import { agesOf, partyOf } from './lead.party'
 import { QUEUE_STATUSES, STAFF_ROLES, canSeeLead, seesEveryone } from './lead.access'
 import type { IViewer } from './lead.access'
@@ -184,6 +186,10 @@ const displayName = (user: Pick<UserEntity, 'firstName' | 'lastName' | 'email'>)
 
 const PHONE_FRAGMENT_MIN = 4
 
+const responded = (lead: LeadEntity): void => {
+  if (!lead.firstResponseAt) lead.firstResponseAt = new Date()
+}
+
 const text = (value: unknown, limit = 160): string =>
   typeof value === 'string' ? value.trim().slice(0, limit) : ''
 
@@ -356,8 +362,11 @@ export class LeadsService {
     const ages = agesOf(input.children_ages ?? trip.kid_ages)
     const adults = count(input.adults) || count(trip.adults) || (ages.length ? 0 : count(input.party_size))
 
+    const manual = source === LeadSource.Manual && Boolean(actorId)
+
     const lead = this.leads.create({
-      status: LeadStatus.New,
+      status: manual ? LeadStatus.InProgress : LeadStatus.New,
+      firstResponseAt: manual ? new Date() : null,
       source,
       firstName,
       lastName: text(input.last_name, 120),
@@ -485,9 +494,16 @@ export class LeadsService {
       throw new BadRequestException('Choose a refusal reason from the list')
     }
 
+    const noted = input.comment !== undefined && Boolean(text(input.comment, MAX_COMMENT)) && text(input.comment, MAX_COMMENT) !== lead.comment
+
     return this.leads.manager.transaction(async (manager) => {
+      let handed = false
+      let moved = false
+
       if (input.manager_id !== undefined && (input.manager_id || null) !== lead.managerId) {
         await this.reassign(manager, lead, input.manager_id || null, viewer)
+
+        handed = Boolean(lead.managerId)
       }
 
       if (input.status !== undefined && input.status !== lead.status) {
@@ -514,6 +530,18 @@ export class LeadsService {
         })
 
         lead.status = input.status
+        moved = true
+      }
+
+      if (!moved && noted && autoPath(lead.status, 'noted').length) {
+        if (!lead.managerId) await this.assign(manager, lead, viewer.id, LeadEventKind.Taken, viewer.id)
+
+        responded(lead)
+
+        await this.follow(manager, lead, 'noted', viewer.id)
+      }
+      else if (!moved && handed) {
+        await this.follow(manager, lead, 'taken', viewer.id)
       }
 
       if (input.comment !== undefined) lead.comment = text(input.comment, MAX_COMMENT)
@@ -567,6 +595,10 @@ export class LeadsService {
       await this.leads.manager.transaction(async (manager) => {
         await this.assign(manager, lead, viewer.id, LeadEventKind.Taken, viewer.id)
 
+        responded(lead)
+
+        await this.follow(manager, lead, 'taken', viewer.id)
+
         lead.updatedAt = new Date()
 
         await manager.getRepository(LeadEntity).save(lead)
@@ -576,14 +608,47 @@ export class LeadsService {
     return (await this.present([lead]))[0]
   }
 
-  async claimForOrder(manager: EntityManager, lead: LeadEntity, viewer: IViewer): Promise<void> {
-    if (lead.managerId) return
+  async orderPlaced(manager: EntityManager, lead: LeadEntity, viewer: IViewer): Promise<void> {
+    if (!lead.managerId) await this.assign(manager, lead, viewer.id, LeadEventKind.Taken, viewer.id)
 
-    await this.assign(manager, lead, viewer.id, LeadEventKind.Taken, viewer.id)
+    responded(lead)
+
+    await this.follow(manager, lead, 'ordered', viewer.id)
 
     lead.updatedAt = new Date()
 
     await manager.getRepository(LeadEntity).save(lead)
+  }
+
+  async quoted(leadId: string, viewer: IViewer): Promise<void> {
+    await this.leads.manager.transaction(async (manager) => {
+      const repository = manager.getRepository(LeadEntity)
+      const lead = await repository.findOne({ where: { id: leadId } })
+
+      if (!lead || lead.archivedAt || !autoPath(lead.status, 'quoted').length) return
+
+      if (!lead.managerId) await this.assign(manager, lead, viewer.id, LeadEventKind.Taken, viewer.id)
+
+      responded(lead)
+
+      await this.follow(manager, lead, 'quoted', viewer.id)
+
+      lead.updatedAt = new Date()
+
+      await repository.save(lead)
+    })
+  }
+
+  async follow(manager: EntityManager, lead: LeadEntity, trigger: LeadTrigger, actorId: string | null): Promise<boolean> {
+    const path = autoPath(lead.status, trigger)
+
+    for (const next of path) {
+      await this.record(manager, lead.id, LeadEventKind.Status, { from: lead.status, to: next, actorId })
+
+      lead.status = next
+    }
+
+    return path.length > 0
   }
 
   async history(id: string, viewer: IViewer): Promise<ILeadEventPayload[]> {
@@ -722,6 +787,8 @@ export class LeadsService {
     await this.leads.manager.transaction(async (manager) => {
       for (const lead of rows) {
         await this.assign(manager, lead, toId, LeadEventKind.Assigned, actorId)
+
+        if (toId) await this.follow(manager, lead, 'taken', actorId)
 
         lead.updatedAt = new Date()
 

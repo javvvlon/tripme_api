@@ -9,6 +9,7 @@ import { LeadsService } from '~/modules/leads/leads.service'
 import { LeadEntity } from '~/modules/leads/lead.entity'
 import { OrdersController } from './orders.controller'
 import { OrdersService } from './orders.service'
+import { OrderClockService } from './order-clock.service'
 import { OrderEntity } from './order.entity'
 import { OrderEventEntity } from './order-event.entity'
 import { OrderDocumentEntity } from './order-document.entity'
@@ -22,7 +23,7 @@ import { OrderItemsService } from './items/order-items.service'
 @Module({
   imports: [AuthModule, LeadsModule, PointsModule, ReferencesModule, TypeOrmModule.forFeature([OrderEntity, OrderEventEntity, OrderDocumentEntity, OrderItemEntity, LeadEntity])],
   controllers: [OrdersController],
-  providers: [OrdersService, DocumentsService, OrderItemsService],
+  providers: [OrdersService, DocumentsService, OrderItemsService, OrderClockService],
   exports: [OrdersService, DocumentsService, OrderItemsService],
 })
 export class OrdersModule implements OnModuleInit {

@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm'
 import { DataSource, In, IsNull, Repository } from 'typeorm'
 import type { EntityManager } from 'typeorm'
 import { PointsService } from '~/modules/points/points.service'
-import { LEAD_TRANSITIONS, LeadEntity, LeadStatus } from '~/modules/leads/lead.entity'
+import { LeadEntity, LeadStatus } from '~/modules/leads/lead.entity'
 import { LeadsService } from '~/modules/leads/leads.service'
 import { LeadEventKind } from '~/modules/leads/lead-event.entity'
 import { canSeeLead, canSeeOrder, seesEveryone } from '~/modules/leads/lead.access'
@@ -16,10 +16,10 @@ import {
   OrderStatus,
   PASSPORT_CHECKED_STATUSES,
   PASSPORT_MARGIN_MONTHS,
-  SETTLED_STATUSES,
   COMMITTED_STATUSES,
 } from './order.entity'
 import { OrderEventEntity } from './order-event.entity'
+import { CLOCK_STATUSES, clockPath, leadTriggerOf, tashkentDay } from './order-flow'
 import { DocumentsService } from './documents/documents.service'
 import { OrderItemsService } from './items/order-items.service'
 import { isEsimOrder, isMainItem } from './items/item-kinds'
@@ -337,7 +337,7 @@ export class OrdersService {
 
     order.status = next
 
-    if (actorId) await this.followOrder(manager, order.leadId, next, actorId)
+    if (actorId) await this.followOrder(manager, order, next, actorId)
   }
 
   async addItem(orderId: string, input: IOrderItemInput, viewer: IViewer): Promise<IOrderPayload> {
@@ -591,7 +591,7 @@ export class OrdersService {
     })
 
     const saved = await this.dataSource.transaction(async (manager) => {
-      await this.leadsService.claimForOrder(manager, lead, viewer)
+      await this.leadsService.orderPlaced(manager, lead, viewer)
 
       order.managerId = lead.managerId
 
@@ -790,30 +790,85 @@ export class OrdersService {
     return to as OrderStatus
   }
 
-  private async followOrder(manager: EntityManager, leadId: string, status: OrderStatus, actorId: string): Promise<void> {
+  private async followOrder(manager: EntityManager, order: OrderEntity, status: OrderStatus, actorId: string): Promise<void> {
+    const trigger = leadTriggerOf(status)
+
+    if (!trigger) return
+
     const leads = manager.getRepository(LeadEntity)
-    const lead = await leads.findOne({ where: { id: leadId } })
+    const lead = await leads.findOne({ where: { id: order.leadId } })
 
     if (!lead) return
 
-    const wanted = status === OrderStatus.Requested && lead.status === LeadStatus.New
-      ? LeadStatus.InProgress
-      : SETTLED_STATUSES.includes(status) || status === OrderStatus.Confirmed
-        ? LeadStatus.Won
-        : null
+    if (trigger === 'reopened') {
+      const live = await manager.getRepository(OrderEntity)
+        .createQueryBuilder('o')
+        .where('o.leadId = :leadId', { leadId: lead.id })
+        .andWhere('o.id != :id', { id: order.id })
+        .andWhere('o.status != :cancelled', { cancelled: OrderStatus.Cancelled })
+        .getCount()
 
-    if (!wanted || wanted === lead.status) return
+      if (live) return
+    }
 
-    if (!(LEAD_TRANSITIONS[lead.status as LeadStatus] ?? []).includes(wanted)) return
+    const fresh = lead.status === LeadStatus.New
 
-    if (lead.status === LeadStatus.New && !lead.firstResponseAt) lead.firstResponseAt = new Date()
+    if (!(await this.leadsService.follow(manager, lead, trigger, actorId))) return
 
-    await this.leadsService.record(manager, lead.id, LeadEventKind.Status, { from: lead.status, to: wanted, actorId })
+    if (fresh && !lead.firstResponseAt) lead.firstResponseAt = new Date()
 
-    lead.status = wanted
     lead.updatedAt = new Date()
 
     await leads.save(lead)
+  }
+
+  async tickClock(now = new Date()): Promise<number> {
+    const today = tashkentDay(now)
+    const due = await this.orders
+      .createQueryBuilder('o')
+      .select(['o.id'])
+      .where('o.status in (:...statuses)', { statuses: CLOCK_STATUSES })
+      .andWhere('o.archivedAt is null')
+      .andWhere('o.checkIn is not null')
+      .andWhere('o.checkIn <= :today', { today })
+      .getMany()
+
+    let moved = 0
+
+    for (const { id } of due) {
+      if (await this.clock(id, today)) moved += 1
+    }
+
+    return moved
+  }
+
+  private async clock(orderId: string, today: string): Promise<boolean> {
+    const to = await this.dataSource.transaction(async (manager) => {
+      const repository = manager.getRepository(OrderEntity)
+      const order = await repository.findOne({ where: { id: orderId }, lock: { mode: 'pessimistic_write' } })
+
+      if (!order || order.archivedAt) return null
+
+      const path = clockPath(order, today)
+
+      if (!path.length) return null
+
+      for (const next of path) await this.moveTo(manager, order, next, null)
+
+      order.updatedAt = new Date()
+
+      await repository.save(order)
+      await this.itemsService.syncPackage(manager, order)
+      await this.itemsService.syncExtras(manager, order)
+
+      if (order.status === OrderStatus.Completed) await this.points.awardFor(order, manager)
+
+      return path.at(-1)!
+    })
+
+    if (to) this.emit({ type: 'status', orderId, to })
+
+    return Boolean(to)
   }
 
   private async visible(id: string, viewer: IViewer): Promise<OrderEntity> {

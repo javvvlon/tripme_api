@@ -120,6 +120,7 @@ export class MessagesService {
 
     const message = await this.post(clientId, AuthorRole.Staff, viewer.id, messageBody(input.body), null, MessageKind.Quote, data)
 
+    await this.leadsService.quoted(lead.id, viewer)
     await this.markRead(clientId, 'staff')
     void this.alertClient(clientId).catch(() => undefined)
 
