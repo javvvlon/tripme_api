@@ -10,6 +10,7 @@ import { LeadsModule } from '~/modules/leads/leads.module'
 import { OrdersModule } from '~/modules/orders/orders.module'
 import { FinanceModule } from '~/modules/finance/finance.module'
 import { EsimModule } from '~/modules/esim/esim.module'
+import { MarketingModule } from '~/modules/marketing/marketing.module'
 import { NotificationsModule } from '~/modules/notifications/notifications.module'
 import { MessagesModule } from '~/modules/messages/messages.module'
 import { TeamModule } from '~/modules/team/team.module'
@@ -46,6 +47,7 @@ import { CacheModule } from '~/shared/cache/cache.module'
     OrdersModule,
     FinanceModule,
     EsimModule,
+    MarketingModule,
     NotificationsModule,
     MessagesModule,
     TeamModule,

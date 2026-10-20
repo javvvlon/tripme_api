@@ -13,5 +13,6 @@ import { SoonestCache } from './soonest.cache'
   imports: [SuppliersModule, OperatorsModule, ReferencesModule],
   controllers: [SearchController],
   providers: [SearchService, SoonestCache],
+  exports: [SearchService],
 })
 export class SearchModule {}
