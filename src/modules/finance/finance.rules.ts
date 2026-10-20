@@ -3,6 +3,8 @@
  */
 export const DEFAULT_DEPOSIT_PERCENT = 30
 
+export const MIN_DEPOSIT_PERCENT = 30
+
 export enum PaymentDirection {
   CustomerIn = 'customer_in',
   CustomerRefund = 'customer_refund',

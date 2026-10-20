@@ -14,6 +14,8 @@ export const TOUR_CHECKS: ConfirmationCheck[] = ['suppliers', 'contract', 'depos
 
 export const ESIM_CHECKS: ConfirmationCheck[] = ['suppliers', 'deposit']
 
+export const REQUEST_CHECKS: ConfirmationCheck[] = ['contract', 'deposit']
+
 export interface IConfirmationItem {
   title: string
   kind: string
@@ -41,6 +43,7 @@ export interface IConfirmation {
   missing: ConfirmationCheck[]
   ready: boolean
   mode: ConfirmationMode
+  request: { ready: boolean, missing: ConfirmationCheck[] }
 }
 
 export function confirmationOf(
@@ -62,6 +65,7 @@ export function confirmationOf(
   }
 
   const missing = applies.filter(key => !checks[key])
+  const unsecured = REQUEST_CHECKS.filter(key => applies.includes(key) && !checks[key])
 
   return {
     suppliers: { ok: checks.suppliers, pending },
@@ -72,6 +76,7 @@ export function confirmationOf(
     missing,
     ready: missing.length === 0,
     mode,
+    request: { ready: unsecured.length === 0, missing: unsecured },
   }
 }
 
@@ -83,6 +88,8 @@ export function advanceTarget(
   passportProblem: 'expired' | 'short' | null,
 ): 'requested' | 'confirmed' | null {
   if (!OPEN_STATUSES.includes(status) || !confirmation.suppliers.ok) return null
+
+  if (status === 'draft' && !confirmation.request.ready) return null
 
   const confirmable = passportProblem === null && (confirmation.mode !== 'enforce' || confirmation.ready)
 

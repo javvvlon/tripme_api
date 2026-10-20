@@ -30,6 +30,7 @@ import type { IConfirmation } from './confirmation.rules'
 import type { IOrderItemPayload } from './items/order-items.service'
 import { documentMoneyOf } from './documents/document-lines'
 import type { IDocumentMoney } from './documents/document-lines'
+import { MIN_DEPOSIT_PERCENT } from '~/modules/finance/finance.rules'
 import { pageOf } from '~/shared/helpers/pagination'
 import type { IPage, IPageRequest } from '~/shared/helpers/pagination'
 
@@ -436,8 +437,8 @@ export class OrdersService {
     const order = await this.visible(orderId, viewer)
     const value = percent === null ? null : Number(percent)
 
-    if (value !== null && (!Number.isInteger(value) || value < 0 || value > 100)) {
-      throw new BadRequestException('The deposit must be a whole percent from 0 to 100')
+    if (value !== null && (!Number.isInteger(value) || value < MIN_DEPOSIT_PERCENT || value > 100)) {
+      throw new BadRequestException(`The deposit must be a whole percent from ${MIN_DEPOSIT_PERCENT} to 100`)
     }
 
     order.depositPercent = value
@@ -668,6 +669,7 @@ export class OrdersService {
 
         this.assertMayEnter(order, next, input.cancel_reason)
 
+        if (next === OrderStatus.Requested && order.status === OrderStatus.Draft) await this.assertRequestable(order)
         if (next === OrderStatus.Confirmed) await this.assertConfirmable(order)
 
         await this.moveTo(manager, order, next, actorId)
@@ -742,6 +744,20 @@ export class OrdersService {
     if (settled) {
       throw new ConflictException('This lead has a confirmed order and cannot be rejected')
     }
+  }
+
+  private async assertRequestable(order: OrderEntity): Promise<void> {
+    const items = await this.itemsService.byOrder([order.id])
+    const money = await this.moneyOf([order], items)
+    const { request } = this.confirmationFor(order, items.get(order.id) ?? [], money.get(order.id))
+
+    if (request.ready) return
+
+    throw new ConflictException({
+      message: `The booking cannot be sent to the operator yet: ${request.missing.join(', ')}`,
+      code: 'request_unsecured',
+      missing: request.missing,
+    })
   }
 
   private async assertConfirmable(order: OrderEntity): Promise<void> {

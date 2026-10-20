@@ -94,14 +94,17 @@ describe('moving the order on by itself', () => {
     ...over,
   })
 
+  const secured = (over: Partial<IConfirmationFacts> = {}): IConfirmationFacts =>
+    base({ contractSignedAt: new Date(), depositMet: true, ...over })
+
   it('confirms the order once the supplier confirms, while the rule only warns', () => {
     expect(advanceTarget('requested', confirmationOf(base(), 'warn'), null)).toBe('confirmed')
-    expect(advanceTarget('draft', confirmationOf(base(), 'warn'), null)).toBe('confirmed')
+    expect(advanceTarget('draft', confirmationOf(secured(), 'warn'), null)).toBe('confirmed')
   })
 
   it('waits for every check when the rule is enforced', () => {
     expect(advanceTarget('requested', confirmationOf(base(), 'enforce'), null)).toBeNull()
-    expect(advanceTarget('draft', confirmationOf(base(), 'enforce'), null)).toBe('requested')
+    expect(advanceTarget('draft', confirmationOf(secured(), 'enforce'), null)).toBe('requested')
 
     const ready = base({ contractSignedAt: new Date(), depositMet: true, passportExpiresAt: '2030-01-01' })
 
@@ -113,8 +116,39 @@ describe('moving the order on by itself', () => {
 
     expect(advanceTarget('requested', confirmationOf(pending, 'warn'), null)).toBeNull()
     expect(advanceTarget('requested', confirmationOf(base(), 'warn'), 'short')).toBeNull()
-    expect(advanceTarget('draft', confirmationOf(base(), 'warn'), 'expired')).toBe('requested')
+    expect(advanceTarget('draft', confirmationOf(secured(), 'warn'), 'expired')).toBe('requested')
     expect(advanceTarget('issued', confirmationOf(base(), 'warn'), null)).toBeNull()
     expect(advanceTarget('cancelled', confirmationOf(base(), 'warn'), null)).toBeNull()
+  })
+})
+
+describe('sending the request to the operator', () => {
+  it('needs the signed contract and the deposit before a tour leaves the draft', () => {
+    expect(confirmationOf(facts()).request).toEqual({ ready: true, missing: [] })
+    expect(confirmationOf(facts({ contractSignedAt: null })).request).toEqual({ ready: false, missing: ['contract'] })
+    expect(confirmationOf(facts({ depositMet: false })).request).toEqual({ ready: false, missing: ['deposit'] })
+  })
+
+  it('ignores the passport and the supplier, which come later', () => {
+    const later = facts({ passportExpiresAt: null, items: [{ title: 'Rixos', kind: 'package', status: 'draft', required: true }] })
+
+    expect(confirmationOf(later).request.ready).toBe(true)
+    expect(confirmationOf(later).ready).toBe(false)
+  })
+
+  it('needs only the full payment for eSIM', () => {
+    expect(confirmationOf(facts({ contractSignedAt: null }), 'warn', ESIM_CHECKS).request.ready).toBe(true)
+    expect(confirmationOf(facts({ depositMet: false }), 'warn', ESIM_CHECKS).request.missing).toEqual(['deposit'])
+  })
+
+  it('counts orders paid before the payment log as secured', () => {
+    expect(confirmationOf(facts({ depositMet: false, legacyPaid: true })).request.ready).toBe(true)
+  })
+
+  it('keeps an unsecured draft where it is, even when the operator already confirmed', () => {
+    const facts = { items: [{ title: 'Rixos', kind: 'package', status: 'confirmed', required: true }], contractSignedAt: null, depositMet: false, receivedUzs: 0, depositUzs: 1000, legacyPaid: false, passportExpiresAt: '2030-01-01', passportProblem: null }
+
+    expect(advanceTarget('draft', confirmationOf(facts, 'warn'), null)).toBeNull()
+    expect(advanceTarget('draft', confirmationOf({ ...facts, depositMet: true }, 'warn'), null)).toBeNull()
   })
 })
