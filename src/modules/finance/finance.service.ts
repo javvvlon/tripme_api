@@ -5,7 +5,6 @@ import { OrdersService } from '~/modules/orders/orders.service'
 import type { IOrderMoney, IOrderMoneyInput } from '~/modules/orders/orders.service'
 import type { IOrderItemPayload } from '~/modules/orders/items/order-items.service'
 import { DocumentsService } from '~/modules/orders/documents/documents.service'
-import { RatesService } from '~/modules/references/rates.service'
 import { LeadsService } from '~/modules/leads/leads.service'
 import { seesEveryone } from '~/modules/leads/lead.access'
 import type { IViewer } from '~/modules/leads/lead.access'
@@ -13,10 +12,12 @@ import type { IUploadedFile } from '~/shared/storage/storage.service'
 import { PaymentEntity } from './payment.entity'
 import {
   CUSTOMER_DIRECTIONS, PAYMENT_CURRENCIES, PAYMENT_DIRECTIONS, PAYMENT_METHODS,
-  PaymentStatus, rateFor, summarize, toUzs,
+  PaymentStatus, basisOf, rateFor, summarize, toUzs,
 } from './finance.rules'
+import { OperatorRatesService } from './operator-rates.service'
+import type { IOrderRates } from './operator-rates.service'
 import { PaymentDirection } from './finance.rules'
-import type { ILedgerEntry, IPricedItem, RateTable } from './finance.rules'
+import type { ILedgerEntry, IPricedItem, RateBasis, RateTable } from './finance.rules'
 
 export interface IPaymentInput {
   direction?: string
@@ -61,6 +62,8 @@ export interface IFinancePayload {
   deposit_met: boolean
   payment_status: string
   rates_date: string | null
+  rates_basis: RateBasis | null
+  rates: RateTable
   legacy_paid: boolean
   can_reverse: boolean
   payments: IPaymentPayload[]
@@ -86,6 +89,17 @@ const ledgerOf = (rows: PaymentEntity[]): ILedgerEntry[] => rows.map(row => ({
 
 const SETTLED: string[] = [PaymentStatus.Paid, PaymentStatus.Overpaid]
 
+const mainCurrency = (currency: string, items: IOrderItemPayload[]): string =>
+  currency || items.find(item => item.price_currency && item.price_currency !== 'UZS')?.price_currency || 'UZS'
+
+const ratesWith = (table: IOrderRates, currency: string, rate: number): RateTable | null => {
+  const rates: RateTable = { ...table.rates }
+
+  if (currency !== 'UZS') rates[currency] = rate
+
+  return Object.keys(rates).length ? rates : null
+}
+
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
  */
@@ -96,8 +110,8 @@ export class FinanceService {
     private readonly payments: Repository<PaymentEntity>,
     private readonly orders: OrdersService,
     private readonly documents: DocumentsService,
-    private readonly rates: RatesService,
     private readonly leads: LeadsService,
+    private readonly operatorRates: OperatorRatesService,
   ) {}
 
   async overview(orderId: string, viewer: IViewer): Promise<IFinancePayload> {
@@ -125,8 +139,10 @@ export class FinanceService {
       throw new ForbiddenException('Only a manager records money paid to suppliers')
     }
 
-    const rate = await this.rateOf(currency, input.fx_rate)
-    const rates = await this.ratesOn(paidAt, currency, rate)
+    const { supplierId } = await this.orders.moneyContextOf(orderId)
+    const table = paidAt === today() ? await this.operatorRates.today(supplierId) : await this.operatorRates.past(paidAt)
+    const rate = this.rateOf(currency, input.fx_rate, table)
+    const rates = ratesWith(table, currency, rate)
     const itemId = await this.itemOf(orderId, input.item_id)
     const receipt = file ? await this.documents.attach(orderId, file, viewer.id) : null
 
@@ -202,12 +218,15 @@ export class FinanceService {
 
     if (!orders.length) return money
 
-    const [rows, today] = await Promise.all([
+    const suppliers = [...new Set(orders.map(order => order.supplierId))]
+    const [rows, tables] = await Promise.all([
       this.payments.find({ where: { orderId: In(orders.map(order => order.id)) }, order: { createdAt: 'ASC' } }),
-      this.todayRates(),
+      Promise.all(suppliers.map(async supplierId => [supplierId, await this.operatorRates.today(supplierId)] as const)),
     ])
+    const tableOf = new Map<string | null, IOrderRates>(tables)
 
     for (const order of orders) {
+      const today = tableOf.get(order.supplierId)!
       const entries = ledgerOf(rows.filter(row => row.orderId === order.id))
       const summary = summarize(priced(order.items), entries, order.depositPercent, order.legacyPaid, today.rates)
 
@@ -221,6 +240,8 @@ export class FinanceService {
         settled: order.legacyPaid || SETTLED.includes(summary.paymentStatus),
         rates: today.rates,
         ratesDate: today.date,
+        ratesBasis: basisOf(today, mainCurrency(order.currency, order.items)),
+        currency: mainCurrency(order.currency, order.items),
       })
     }
 
@@ -253,13 +274,13 @@ export class FinanceService {
   }
 
   private async build(orderId: string, viewer: IViewer): Promise<IFinancePayload> {
-    const [items, rows, context, documents, today] = await Promise.all([
+    const [items, rows, context, documents] = await Promise.all([
       this.orders.itemsOf(orderId),
       this.payments.find({ where: { orderId }, order: { createdAt: 'ASC' } }),
       this.orders.moneyContextOf(orderId),
       this.documents.list(orderId),
-      this.todayRates(),
     ])
+    const today = await this.operatorRates.today(context.supplierId)
 
     const summary = summarize(priced(items), ledgerOf(rows), context.depositPercent, context.legacyPaid, today.rates)
     const elevated = seesEveryone(viewer)
@@ -280,6 +301,8 @@ export class FinanceService {
       deposit_met: summary.depositMet,
       payment_status: summary.paymentStatus,
       rates_date: today.date,
+      rates_basis: basisOf(today, mainCurrency(context.currency, items)),
+      rates: today.rates,
       legacy_paid: context.legacyPaid,
       can_reverse: elevated,
       payments: rows
@@ -305,32 +328,14 @@ export class FinanceService {
     }
   }
 
-  private async todayRates(): Promise<{ rates: RateTable, date: string | null }> {
-    const current = await this.rates.current().catch(() => null)
-
-    return { rates: current?.rates ?? {}, date: current?.date ?? null }
-  }
-
-  private async ratesOn(day: string, currency: string, rate: number): Promise<RateTable | null> {
-    const source = day === today()
-      ? await this.rates.current().catch(() => null)
-      : await this.rates.on(day) ?? await this.rates.current().catch(() => null)
-    const rates: RateTable = { ...(source?.rates ?? {}) }
-
-    if (currency !== 'UZS') rates[currency] = rate
-
-    return Object.keys(rates).length ? rates : null
-  }
-
-  private async rateOf(currency: string, given: unknown): Promise<number> {
+  private rateOf(currency: string, given: unknown, table: IOrderRates): number {
     if (currency === 'UZS') return 1
 
     const typed = Number(String(given ?? '').replace(/\s/g, '').replace(',', '.'))
 
     if (given !== undefined && given !== '' && Number.isFinite(typed) && typed > 0) return typed
 
-    const current = await this.rates.current().catch(() => null)
-    const rate = current ? rateFor(currency, current.rates) : null
+    const rate = rateFor(currency, table.rates)
 
     if (!rate) throw new BadRequestException('No exchange rate available — enter the rate used')
 

@@ -52,6 +52,7 @@ export interface ICustomerOrderDetail extends ICustomerOrder {
   received_uzs: number
   balance_uzs: number
   rates_date: string | null
+  rates_basis: 'operator' | 'cbu' | null
   payment_status: string
 }
 
@@ -182,6 +183,7 @@ export class AccountService {
       received_uzs: money.receivedUzs,
       balance_uzs: money.balanceUzs,
       rates_date: money.ratesDate,
+      rates_basis: money.ratesBasis,
       payment_status: money.paymentStatus,
       history: events.map(event => ({
         from: event.fromStatus,

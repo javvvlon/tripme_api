@@ -1,3 +1,5 @@
+import { CBU_BUFFER } from '~/modules/search/uzs'
+
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
  */
@@ -68,6 +70,41 @@ export interface IFinanceSummary {
 const INACTIVE_ITEMS = ['cancelled', 'rejected']
 
 export const toUzs = (amount: number, rate: number): number => Math.round(amount * rate)
+
+export type RateBasis = 'operator' | 'cbu'
+
+export const RATE_TOLERANCE = 0.15
+
+export interface IRateTable {
+  rates: RateTable
+  operator: string[]
+}
+
+const positive = (rate: unknown): rate is number => typeof rate === 'number' && Number.isFinite(rate) && rate > 0
+
+export const bufferedRates = (cbu: RateTable): RateTable =>
+  Object.fromEntries(Object.entries(cbu)
+    .filter(([, rate]) => positive(rate))
+    .map(([currency, rate]) => [currency, Math.round(rate * (1 + CBU_BUFFER) * 100) / 100]))
+
+export function operatorTable(operator: RateTable, cbu: RateTable): IRateTable {
+  const trusted = Object.entries(operator).filter(([currency, rate]) => {
+    const reference = cbu[currency]
+
+    return currency !== 'UZS' && positive(rate) && (!positive(reference) || Math.abs(rate / reference - 1) <= RATE_TOLERANCE)
+  })
+
+  return {
+    rates: { ...bufferedRates(cbu), ...Object.fromEntries(trusted) },
+    operator: trusted.map(([currency]) => currency),
+  }
+}
+
+export function basisOf(table: IRateTable, currency: string): RateBasis | null {
+  if (!currency || currency === 'UZS') return null
+
+  return table.operator.includes(currency) ? 'operator' : 'cbu'
+}
 
 export const rateFor = (currency: string, rates: Record<string, number>): number | null => {
   if (!currency || currency === 'UZS') return 1

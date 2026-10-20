@@ -223,6 +223,13 @@ function services(doc: PDFKit.PDFDocument, data: IDocumentData): void {
   doc.y += 6
 }
 
+function rateRow(summary: IDocumentMoney): [string, string] {
+  const date = (summary.ratesDate ?? '').split('-').reverse().join('.')
+  const label = summary.ratesBasis === 'operator' ? `Курс туроператора на ${date}` : `Курс ЦБ + 2% на ${date}`
+
+  return summary.rate ? [label, `1 ${summary.rate.currency} = ${formatAmount(summary.rate.value, 'сум')}`] : [label, '']
+}
+
 function totals(doc: PDFKit.PDFDocument, flavour: DocumentFlavour, data: IDocumentData): void {
   doc.y += 10
 
@@ -234,7 +241,7 @@ function totals(doc: PDFKit.PDFDocument, flavour: DocumentFlavour, data: IDocume
           ['Итого', formatAmount(summary.totalUzs, 'сум')],
           ['Оплачено', formatAmount(summary.receivedUzs, 'сум')],
           ...(summary.ratesDate && summary.balanceUzs > 0
-            ? [['Курс ЦБ на', summary.ratesDate.split('-').reverse().join('.')] as [string, string]]
+            ? [rateRow(summary)]
             : []),
         ]
       : []

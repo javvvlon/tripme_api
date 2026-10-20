@@ -27,7 +27,7 @@ const SAMO_USER_AGENT =
 
 const CATALOG_TTL_MS = 12 * 60 * 60 * 1000
 const CATALOG_RETRY_MS = 10 * 60 * 1000
-const FORM_PAGE_TTL_MS = 8 * 60 * 60 * 1000
+const FORM_PAGE_TTL_MS = 60 * 60 * 1000
 
 const looksLikeForm = (html: string): boolean => html.includes('TOWNFROMINC')
 const looksLikeCatalog = (html: string): boolean => html.includes('samo.hotelDynamic')
@@ -81,6 +81,10 @@ export abstract class SamoSupplier extends BaseSupplier<SamoQuery, SamoRow> {
     private readonly seedPath?: string,
   ) {
     super(transport)
+  }
+
+  uzsRates(): Promise<Record<string, number>> {
+    return this.dictionary.uzsRates(CURRENCY_CODES)
   }
 
   async departures() {

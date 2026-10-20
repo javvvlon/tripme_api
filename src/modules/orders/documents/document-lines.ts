@@ -18,6 +18,19 @@ export interface IDocumentMoney {
   receivedUzs: number
   balanceUzs: number
   ratesDate: string | null
+  ratesBasis: 'operator' | 'cbu' | null
+  rate: { currency: string, value: number } | null
+}
+
+export interface IDocumentMoneyInput {
+  receivedUzs: number
+  balanceUzs: number
+  totalUzs: number
+  ratesDate: string | null
+  settled: boolean
+  ratesBasis?: 'operator' | 'cbu' | null
+  rates?: Record<string, number>
+  currency?: string
 }
 
 const KIND_LABELS: Record<string, string> = {
@@ -57,9 +70,12 @@ export function documentLinesOf(items: IOrderItemPayload[]): IDocumentLine[] {
 
 export function documentMoneyOf(
   items: IOrderItemPayload[],
-  money?: { receivedUzs: number, balanceUzs: number, totalUzs: number, ratesDate: string | null, settled: boolean },
+  money?: IDocumentMoneyInput,
 ): IDocumentMoney {
   const lines = documentLinesOf(items)
+  const open = Boolean(money && !money.settled)
+  const currency = money?.currency ?? ''
+  const value = currency && currency !== 'UZS' ? money?.rates?.[currency] : undefined
 
   return {
     lines,
@@ -67,6 +83,8 @@ export function documentMoneyOf(
     missingRates: lines.filter(line => line.uzs === null).length,
     receivedUzs: money?.receivedUzs ?? 0,
     balanceUzs: money?.balanceUzs ?? 0,
-    ratesDate: money && !money.settled ? money.ratesDate : null,
+    ratesDate: open ? money!.ratesDate : null,
+    ratesBasis: open ? money!.ratesBasis ?? null : null,
+    rate: open && value ? { currency, value } : null,
   }
 }

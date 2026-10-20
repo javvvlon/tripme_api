@@ -53,6 +53,8 @@ export interface ISupplier {
   routeFacts: (departureSlug: string, countrySlug: string) => Promise<RouteFacts | null>
 
   hotels?: (departureSlug: string, countrySlug: string) => Promise<ISupplierHotel[]>
+
+  uzsRates?: () => Promise<Record<string, number>>
 }
 
 export interface ISupplierHotel {

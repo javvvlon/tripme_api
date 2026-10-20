@@ -109,6 +109,7 @@ export interface IOrderPayload {
   items: IOrderItemPayload[]
   payment_status: string
   balance_uzs: number
+  rates_basis: 'operator' | 'cbu' | null
   deposit_percent: number | null
   legacy_paid: boolean
   contract_signed_at: string | null
@@ -169,6 +170,8 @@ export interface IOrderMoneyInput {
   id: string
   depositPercent: number | null
   legacyPaid: boolean
+  supplierId: string | null
+  currency: string
   items: IOrderItemPayload[]
 }
 
@@ -182,7 +185,12 @@ export interface IOrderMoney {
   settled: boolean
   rates: Record<string, number>
   ratesDate: string | null
+  ratesBasis: 'operator' | 'cbu' | null
+  currency: string
 }
+
+export const supplierOf = (order: Pick<OrderEntity, 'trip'>): string | null =>
+  typeof order.trip?.supplier_id === 'string' && order.trip.supplier_id ? order.trip.supplier_id : null
 
 const valued = (items: IOrderItemPayload[], money: IOrderMoney | undefined): IOrderItemPayload[] => {
   if (!money || money.settled) return items
@@ -257,11 +265,17 @@ export class OrdersService {
     return (await this.itemsService.byOrder([orderId])).get(orderId) ?? []
   }
 
-  async moneyContextOf(orderId: string): Promise<{ depositPercent: number | null, legacyPaid: boolean }> {
+  async moneyContextOf(orderId: string): Promise<{ depositPercent: number | null, legacyPaid: boolean, supplierId: string | null, currency: string }> {
     const order = await this.orders.findOne({ where: { id: orderId } })
 
-    return { depositPercent: order?.depositPercent ?? null, legacyPaid: order?.legacyPaid ?? false }
+    return {
+      depositPercent: order?.depositPercent ?? null,
+      legacyPaid: order?.legacyPaid ?? false,
+      supplierId: order ? supplierOf(order) : null,
+      currency: order?.priceCurrency ?? '',
+    }
   }
+
 
   async confirmItem(orderId: string, itemId: string, supplierRef: unknown, viewer: IViewer): Promise<IOrderPayload> {
     await this.visible(orderId, viewer)
@@ -923,6 +937,8 @@ export class OrdersService {
       id: row.id,
       depositPercent: row.depositPercent,
       legacyPaid: row.legacyPaid,
+      supplierId: supplierOf(row),
+      currency: row.priceCurrency,
       items: items.get(row.id) ?? [],
     })))
   }
@@ -974,6 +990,7 @@ export class OrdersService {
       items: valued(items, money),
       payment_status: money?.paymentStatus ?? 'unpaid',
       balance_uzs: money?.balanceUzs ?? 0,
+      rates_basis: money?.ratesBasis ?? null,
       deposit_percent: row.depositPercent,
       legacy_paid: row.legacyPaid,
       contract_signed_at: row.contractSignedAt ? row.contractSignedAt.toISOString() : null,

@@ -10,7 +10,7 @@ import type { RouteConstraints } from '~/modules/suppliers/base/contracts'
  */
 interface RefOption { value: string, label: string }
 
-const TTL_MS = 8 * 60 * 60 * 1000
+const TTL_MS = 60 * 60 * 1000
 
 export class SupplierDictionary {
   private readonly logger: Logger
@@ -18,6 +18,8 @@ export class SupplierDictionary {
   private options = new Map<string, RefOption[]>()
 
   private rates = new Map<string, Map<string, number>>()
+
+  private currencyCodes = new Map<string, string>()
   private fetchedAt = 0
   private hydrating: Promise<void> | null = null
 
@@ -66,7 +68,10 @@ export class SupplierDictionary {
 
         for (const [field, options] of parsed) this.options.set(field, options)
 
-        this.rates = parseCrossRates(html)
+        const cross = parseCrossRates(html)
+
+        this.rates = cross.rates
+        this.currencyCodes = cross.codes
 
         this.fetchedAt = Date.now()
         this.logger.log(
@@ -150,7 +155,8 @@ export class SupplierDictionary {
 
   uzsRate(sourceCurrency: string, fallbackCode?: string): number | null {
     const codeOf = (label: string) =>
-      (this.options.get('CURRENCY') ?? []).find(option => option.label.trim().toUpperCase() === label)?.value
+      this.currencyCodes.get(label)
+      ?? (this.options.get('CURRENCY') ?? []).find(option => option.label.trim().toUpperCase() === label)?.value
 
     const uzs = codeOf('UZS')
     const source = codeOf(sourceCurrency.toUpperCase()) ?? fallbackCode
@@ -158,6 +164,16 @@ export class SupplierDictionary {
     if (!uzs || !source) return null
 
     return this.rate(source, uzs)
+  }
+
+  async uzsRates(currencies: Record<string, string>): Promise<Record<string, number>> {
+    await this.hydrate()
+
+    return Object.fromEntries(Object.entries(currencies).flatMap(([currency, code]) => {
+      const rate = currency === 'UZS' ? null : this.uzsRate(currency, code)
+
+      return rate && Number.isFinite(rate) && rate > 0 ? [[currency, rate]] : []
+    }))
   }
 
   rate(fromCode: string, toCode: string): number | null {
@@ -171,11 +187,12 @@ export class SupplierDictionary {
   }
 }
 
-function parseCrossRates(html: string): Map<string, Map<string, number>> {
-  const table = new Map<string, Map<string, number>>()
+export function parseCrossRates(html: string): { rates: Map<string, Map<string, number>>, codes: Map<string, string> } {
+  const rates = new Map<string, Map<string, number>>()
+  const codes = new Map<string, string>()
   const match = /samo\.CROSS_RATES\s*=\s*(\{[\s\S]*?\});/.exec(html)
 
-  if (!match) return table
+  if (!match) return { rates, codes }
 
   try {
     const parsed = JSON.parse(match[1]) as Record<string, Record<string, unknown>>
@@ -187,13 +204,15 @@ function parseCrossRates(html: string): Map<string, Map<string, number>> {
         if (typeof value === 'number' && /^\d+$/.test(key)) to.set(key, value)
       }
 
-      table.set(from, to)
+      rates.set(from, to)
+
+      if (typeof row.Name === 'string' && row.Name.trim()) codes.set(row.Name.trim().toUpperCase(), from)
     }
   }
   catch {
   }
 
-  return table
+  return { rates, codes }
 }
 
 function parseSelect(html: string, name: string): RefOption[] {
