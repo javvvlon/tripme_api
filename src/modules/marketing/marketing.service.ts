@@ -213,7 +213,7 @@ export class MarketingService {
       { temperature: 0.5 },
     )
 
-    return { kind: 'reply', ...replyOf(raw, { emoji: true }) }
+    return { kind: 'reply', ...replyOf(raw) }
   }
 
   private async make(tours: IAdTour[], title: string, actorId: string, intake: IAdIntake | null, includes: AdInclude[] = []): Promise<string> {

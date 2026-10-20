@@ -21,7 +21,7 @@ export const isRejectReason = (value: unknown): value is RejectReason =>
   REJECT_REASONS.includes(value as RejectReason)
 
 export const LEAD_CHANNELS = [
-  'site', 'contact', 'telegram', 'call', 'referral', 'instagram', 'walk_in', 'manual',
+  'site', 'contact', 'beta', 'telegram', 'call', 'referral', 'instagram', 'walk_in', 'manual',
 ] as const
 
 export const LEAD_TRANSITIONS: Record<LeadStatus, LeadStatus[]> = {

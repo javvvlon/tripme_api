@@ -1,3 +1,4 @@
+import { withoutEmoji } from '~/shared/ai/chat'
 import { TRUTH_RULES } from '~/shared/ai/truth'
 import { destinationOf, isHot, resortsOf } from '../marketing.rules'
 import { AD_ANGLES } from '../selection.entity'
@@ -62,7 +63,7 @@ export const COPY_RULES = [
   'You get facts about a selection of package tours as JSON and return JSON only.',
   'Hard rules that override everything else:',
   '- Never write any digit, price, date, number of nights or number of stars: the system adds every number itself.',
-  '- Emoji follow the TripMe voice: use them only when the voice asks for them, and only in "intro". Never put emoji in "kicker", "headline", "cta" or hashtags, because those are drawn on banners.',
+  '- Never use emoji in any field, even when the TripMe voice asks for them: TripMe has a zero-emoji policy (KNB-MKT-004).',
   '- Use only the facts given. Never invent hotel features, flights, discounts or availability.',
   `- "kicker": a tiny label above the headline, at most ${COPY_LIMITS.kicker} characters.`,
   `- "headline": only the place name — the destination or one resort, one to three words, at most ${COPY_LIMITS.headline} characters, no colon, no slogan, no final punctuation.`,
@@ -189,12 +190,12 @@ const HAS_DIGIT = /\p{Nd}/u
 
 const HAS_EMOJI = /\p{Extended_Pictographic}/u
 
-const field = (value: unknown, max: number, emoji = false): string | null => {
+const field = (value: unknown, max: number, strip = false): string | null => {
   if (typeof value !== 'string') return null
 
-  const text = value.replace(/\s+/g, ' ').trim().replace(/^["«]|["»]$/g, '').replace(/!{2,}/g, '!')
+  const text = (strip ? withoutEmoji(value) : value).replace(/\s+/g, ' ').trim().replace(/^["«]|["»]$/g, '').replace(/!{2,}/g, '!')
 
-  if (!text || HAS_DIGIT.test(text) || (!emoji && HAS_EMOJI.test(text)) || text.length > max) return null
+  if (!text || HAS_DIGIT.test(text) || HAS_EMOJI.test(text) || text.length > max) return null
 
   return text
 }

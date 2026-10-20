@@ -48,15 +48,13 @@ export function historyOf(raw: unknown): IChatTurn[] {
 export const transcriptOf = (turns: IChatTurn[]): string =>
   turns.map(turn => `${turn.role === 'user' ? 'Staff' : 'Assistant'}: ${turn.text}`).join('\n\n')
 
-export function replyOf(raw: unknown, options: { emoji?: boolean } = {}): { reply: string, suggestions: string[] } {
+export function replyOf(raw: unknown): { reply: string, suggestions: string[] } {
   const input = raw && typeof raw === 'object' ? raw as Record<string, unknown> : {}
   const suggestions = (Array.isArray(input.suggestions) ? input.suggestions : [])
     .map(item => plain(item, 90))
     .filter(Boolean)
     .slice(0, MAX_SUGGESTIONS)
-  const reply = options.emoji
-    ? (typeof input.reply === 'string' ? input.reply.trim().slice(0, 3000) : '')
-    : plain(input.reply, 3000)
+  const reply = plain(input.reply, 3000)
 
   return { reply, suggestions }
 }

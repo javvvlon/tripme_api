@@ -57,7 +57,7 @@ export const AD_MOODS = ['warm', 'drive', 'calm'] as const
 
 export type AdMood = typeof AD_MOODS[number]
 
-export const POST_STYLES = ['plain', 'emoji'] as const
+export const POST_STYLES = ['plain'] as const
 
 export type PostStyle = typeof POST_STYLES[number]
 

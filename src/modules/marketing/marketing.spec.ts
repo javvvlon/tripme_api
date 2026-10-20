@@ -193,12 +193,12 @@ describe('the public view', () => {
 describe('brand voice and versions', () => {
   const facts = factsOf(toursOf([trip()]), '2026-10-20')
 
-  it('keeps emoji out of banner fields but lets the voice use them in the intro', () => {
+  it('keeps every field free of emoji, as the zero-emoji policy asks', () => {
     const copy = cleanCopy({ kicker: 'Подборка', headline: 'Дубай ✨', intro: 'Тёплый город 🌴', cta: 'Выбрать 👉' }, fallbackCopy(facts, 'ru'))
 
     expect(copy.headline).toBe('ОАЭ')
     expect(copy.cta).toBe(fallbackCopy(facts, 'ru').cta)
-    expect(copy.intro).toBe('Тёплый город 🌴')
+    expect(copy.intro).toBe('Тёплый город')
   })
 
   it('returns four versions in angle order, filling gaps from the brand templates', () => {
@@ -212,7 +212,7 @@ describe('brand voice and versions', () => {
   it('puts the editable voice into the prompt and falls back to the house voice', () => {
     expect(systemPrompt('Пишем строго и коротко.')).toContain('Пишем строго и коротко.')
     expect(systemPrompt('')).toContain(DEFAULT_VOICE)
-    expect(systemPrompt('')).toContain('Emoji follow the TripMe voice')
+    expect(systemPrompt('')).toContain('zero-emoji policy')
   })
 })
 

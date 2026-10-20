@@ -8,7 +8,10 @@ export interface IContactInput {
   message?: string
   locale?: string
   consent?: boolean
+  topic?: string
 }
+
+export const CONTACT_TOPICS: Record<string, string> = { beta: 'beta' }
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -24,7 +27,7 @@ export class ContactService {
       phone: input.phone,
       comment: input.message,
       locale: input.locale,
-      channel: 'contact',
+      channel: CONTACT_TOPICS[String(input.topic ?? '')] ?? 'contact',
       consent: input.consent,
     }, undefined, userId, null, signedIn)
 
