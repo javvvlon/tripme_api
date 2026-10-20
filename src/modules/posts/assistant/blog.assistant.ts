@@ -1,5 +1,6 @@
 import { transcriptOf, withoutEmoji } from '~/shared/ai/chat'
 import type { IChatTurn } from '~/shared/ai/chat'
+import { TRUTH_RULES } from '~/shared/ai/truth'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -93,6 +94,7 @@ export const blogSystem = (voice: string): string => [
   '- "reply": anything else — topic ideas, advice on an article plan, questions about the blog, feedback on an article they paste. Do not write an article then.',
   'Always fill "reply" (it is never empty) and talk back in the language of the last staff message. For article or revise, say in two to four sentences what you wrote and give two or three concrete recommendations: a cover photo idea, a tour or selection worth attaching, what to check before publishing. For reply, answer the question; when suggesting topics, avoid the existing articles listed below and explain each idea in one line.',
   'Use the formal «Вы». No emoji anywhere.',
+  TRUTH_RULES,
   BLOG_RULES,
   `TripMe voice:\n${voice}`,
   'suggestions: up to 3 short next messages the staff member might send, in the same language.',

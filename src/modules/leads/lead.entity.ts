@@ -13,6 +13,13 @@ export enum LeadStatus {
 
 export const LEAD_STATUSES = Object.values(LeadStatus)
 
+export const REJECT_REASONS = ['expensive', 'bought_elsewhere', 'changed_mind', 'unreachable'] as const
+
+export type RejectReason = typeof REJECT_REASONS[number]
+
+export const isRejectReason = (value: unknown): value is RejectReason =>
+  REJECT_REASONS.includes(value as RejectReason)
+
 export const LEAD_CHANNELS = [
   'site', 'contact', 'telegram', 'call', 'referral', 'instagram', 'walk_in', 'manual',
 ] as const

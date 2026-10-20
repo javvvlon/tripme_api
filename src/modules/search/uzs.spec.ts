@@ -9,8 +9,8 @@ describe('uzs prices', () => {
     expect(uzsByOperator(1166, 12040)).toEqual({ amount: 14_039_000, currency: 'UZS', basis: 'operator', rate: 12040 })
   })
 
-  it('adds the 1.5% buffer on top of the central bank rate', () => {
-    expect(uzsByCbu(1000, 12000)).toEqual({ amount: 12_180_000, currency: 'UZS', basis: 'cbu', rate: 12180 })
+  it('adds the 2% buffer on top of the central bank rate', () => {
+    expect(uzsByCbu(1000, 12000)).toEqual({ amount: 12_240_000, currency: 'UZS', basis: 'cbu', rate: 12240 })
   })
 
   it('gives nothing without a usable rate', () => {

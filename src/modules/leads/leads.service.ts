@@ -7,7 +7,7 @@ import type { IPage, IPageRequest } from '~/shared/helpers/pagination'
 import { LEAD_PREFIX, numberFromReference, reference } from '~/shared/helpers/reference'
 import { phoneKey } from '~/shared/helpers/phone'
 import { UserEntity } from '~/modules/auth/entities'
-import { LEAD_STATUSES, LEAD_TRANSITIONS, LeadEntity, LeadSource, LeadStatus } from './lead.entity'
+import { isRejectReason, LEAD_STATUSES, LEAD_TRANSITIONS, LeadEntity, LeadSource, LeadStatus } from './lead.entity'
 import { LeadEventEntity, LeadEventKind } from './lead-event.entity'
 import { agesOf, partyOf } from './lead.party'
 import { QUEUE_STATUSES, STAFF_ROLES, canSeeLead, seesEveryone } from './lead.access'
@@ -476,6 +476,14 @@ export class LeadsService {
 
   async patch(id: string, input: ILeadPatch, viewer: IViewer): Promise<ILeadPayload> {
     const lead = await this.visible(id, viewer)
+
+    if (input.reject_reason !== undefined && input.reject_reason !== '' && !isRejectReason(input.reject_reason)) {
+      throw new BadRequestException('Choose a refusal reason from the list')
+    }
+
+    if (input.status === LeadStatus.Rejected && lead.status !== LeadStatus.Rejected && !isRejectReason(input.reject_reason ?? lead.rejectReason)) {
+      throw new BadRequestException('Choose a refusal reason from the list')
+    }
 
     return this.leads.manager.transaction(async (manager) => {
       if (input.manager_id !== undefined && (input.manager_id || null) !== lead.managerId) {

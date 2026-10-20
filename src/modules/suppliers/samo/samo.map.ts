@@ -11,6 +11,7 @@ import type { SamoRow } from './samo.contracts'
 export function toAvailability(row: SamoRow): Availability {
   if (row.saleState === 'stop') return Availability.Stopped
   if (row.availabilityCode.includes('N')) return Availability.Stopped
+  if (row.flightCode.includes('N')) return Availability.Stopped
   if (row.availabilityCode.includes('R')) return Availability.OnRequest
   if (row.saleState === 'bron') return Availability.Available
 

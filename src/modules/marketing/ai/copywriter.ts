@@ -1,3 +1,4 @@
+import { TRUTH_RULES } from '~/shared/ai/truth'
 import { destinationOf, isHot, resortsOf } from '../marketing.rules'
 import { AD_ANGLES } from '../selection.entity'
 import type { AdAngle, AdLanguage, IAdCopy, IAdTour } from '../selection.entity'
@@ -40,12 +41,12 @@ export const DEFAULT_FOOTER: Record<AdLanguage, string> = {
   ru: [
     'В стоимость тура включено: авиаперелёт, проживание, питание, трансфер, страховка.',
     'Бронирование: @tripmeuz • tripme.uz',
-    'Все расчёты производятся строго в сумах по курсу ЦБ РУз.',
+    'Оплата — в сумах по курсу туроператора на день оплаты.',
   ].join('\n'),
   uz: [
     'Tur narxiga kiradi: aviaparvoz, yashash, ovqatlanish, transfer, sug‘urta.',
     'Bron qilish: @tripmeuz • tripme.uz',
-    'Barcha hisob-kitoblar faqat so‘mda, O‘zR MB kursi bo‘yicha amalga oshiriladi.',
+    'To‘lov so‘mda, to‘lov kunidagi turoperator kursi bo‘yicha.',
   ].join('\n'),
 }
 
@@ -70,6 +71,7 @@ export const COPY_RULES = [
   `- "intro": one or two sentences for a Telegram post, at most ${COPY_LIMITS.intro} characters.`,
   `- "cta": a button label, at most ${COPY_LIMITS.cta} characters.`,
   `- "hashtags": ${COPY_LIMITS.hashtags} or fewer single lowercase words without "#" and without spaces.`,
+  TRUTH_RULES,
   'Write one variant per angle, in this order, each clearly different from the others:',
   ...AD_ANGLES.map((angle, index) => `${index + 1}. "${angle}" — ${ANGLE_BRIEFS[angle]}.`),
 ].join('\n')

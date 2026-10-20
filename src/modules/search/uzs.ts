@@ -3,7 +3,7 @@ import type { UzsPrice } from './contracts/search'
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
  */
-export const CBU_BUFFER = 0.015
+export const CBU_BUFFER = 0.02
 
 export const roundUzs = (amount: number): number => Math.round(amount / 1000) * 1000
 
