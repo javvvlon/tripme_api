@@ -84,6 +84,7 @@ export function parseSamoRows(payload: string): SamoRow[] {
       stars: /(\d)\*/.exec(hotelName)?.[1] ?? '',
 
       priceSource: priceSpan?.getAttribute('data-cat-price') ?? '',
+      priceOld: priceSpan?.getAttribute('data-cat-price_old') ?? '',
       currencySource: priceSpan?.getAttribute('data-cat-currency') ?? '',
       priceShown: priceSpan?.getAttribute('data-converted-price-number') ?? '',
       currencyShown: priceSpan?.getAttribute('data-currency_title') ?? '',
@@ -101,6 +102,8 @@ export function parseSamoRows(payload: string): SamoRow[] {
       roomText: clean(cells[7]?.textContent),
 
       flags: clean(tr.getAttribute('class')),
+      instantConfirm: /\bgreen_row\b/.test(tr.getAttribute('class') ?? ''),
+      bestPrice: Boolean(tr.querySelector('[class*="best_price"]')),
     }
   })
 }

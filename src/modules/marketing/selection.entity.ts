@@ -1,9 +1,10 @@
 import { Column, Entity, Index, PrimaryColumn, PrimaryGeneratedColumn } from 'typeorm'
+import type { IAdTemplate } from './templates'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
  */
-export const AD_STYLES = ['classic', 'board', 'ticket'] as const
+export const AD_STYLES = ['classic', 'board', 'ticket', 'custom'] as const
 
 export type AdStyle = typeof AD_STYLES[number]
 
@@ -141,6 +142,12 @@ export class MarketingSelectionEntity {
   @Column({ type: 'jsonb', default: () => `'[]'` })
   published!: IAdPublication[]
 
+  @Column({ type: 'jsonb', nullable: true })
+  template!: IAdTemplate | null
+
+  @Column({ name: 'template_drafts', type: 'jsonb', default: () => `'[]'` })
+  templateDrafts!: IAdTemplate[]
+
   @Column({ name: 'checked_at', type: 'timestamptz', nullable: true })
   checkedAt!: Date | null
 
@@ -174,6 +181,9 @@ export class MarketingSettingsEntity {
   @Column({ name: 'footer_uz', type: 'text', default: '' })
   footerUz!: string
 
+  @Column({ type: 'text', default: '' })
+  visual!: string
+
   @Column({ type: 'jsonb', default: () => `'[]'` })
   contacts!: IAdContact[]
 
@@ -182,4 +192,28 @@ export class MarketingSettingsEntity {
 
   @Column({ name: 'updated_by', type: 'uuid', nullable: true })
   updatedBy!: string | null
+}
+
+@Entity('marketing_templates')
+export class MarketingTemplateEntity {
+  @PrimaryGeneratedColumn('uuid')
+  id!: string
+
+  @Column({ type: 'text' })
+  name!: string
+
+  @Column({ type: 'jsonb' })
+  spec!: IAdTemplate
+
+  @Column({ name: 'created_by', type: 'uuid', nullable: true })
+  createdBy!: string | null
+
+  @Column({ name: 'created_at', type: 'timestamptz', default: () => 'now()' })
+  createdAt!: Date
+
+  @Column({ name: 'archived_at', type: 'timestamptz', nullable: true })
+  archivedAt!: Date | null
+
+  @Column({ name: 'archived_by', type: 'uuid', nullable: true })
+  archivedBy!: string | null
 }

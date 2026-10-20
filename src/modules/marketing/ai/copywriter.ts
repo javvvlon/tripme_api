@@ -64,7 +64,8 @@ export const COPY_RULES = [
   '- Never use emoji or pictographs.',
   '- Use only the facts given. Never invent hotel features, flights, discounts or availability.',
   `- "kicker": a tiny label above the headline, at most ${COPY_LIMITS.kicker} characters.`,
-  `- "headline": the destination or a resort, at most ${COPY_LIMITS.headline} characters, no final punctuation.`,
+  `- "headline": only the place name — the destination or one resort, one to three words, at most ${COPY_LIMITS.headline} characters, no colon, no slogan, no final punctuation.`,
+  '- When "hot" is true the system already shows a «Горящий тур» badge: never repeat that idea in the headline.',
   `- "intro": one or two sentences for a Telegram post, at most ${COPY_LIMITS.intro} characters.`,
   `- "cta": a button label, at most ${COPY_LIMITS.cta} characters.`,
   `- "hashtags": ${COPY_LIMITS.hashtags} or fewer single lowercase words without "#" and without spaces.`,
@@ -202,7 +203,7 @@ const hashtagsOf = (value: unknown): string[] | null => {
 export function cleanCopy(raw: unknown, fallback: IAdCopy): IAdCopy {
   const input = raw && typeof raw === 'object' ? raw as Record<string, unknown> : {}
   const kicker = field(input.kicker, COPY_LIMITS.kicker)
-  const headline = field(input.headline, COPY_LIMITS.headline)
+  const headline = field(typeof input.headline === 'string' ? input.headline.split(':')[0] : input.headline, COPY_LIMITS.headline)
   const intro = field(input.intro, COPY_LIMITS.intro)
   const cta = field(input.cta, COPY_LIMITS.cta)
   const hashtags = hashtagsOf(input.hashtags)

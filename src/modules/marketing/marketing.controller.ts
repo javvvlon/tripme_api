@@ -68,6 +68,12 @@ export class MarketingCmsController {
     return this.marketing.write(id, body ?? {})
   }
 
+  @Post(':id/templates')
+  @HttpCode(200)
+  designTemplates(@Param('id') id: string) {
+    return this.marketing.designTemplates(id)
+  }
+
   @Post(':id/background')
   @HttpCode(200)
   paint(@Param('id') id: string) {
@@ -117,7 +123,31 @@ export class MarketingSettingsController {
 
   @Put()
   @Roles(UserRole.Manager, UserRole.Admin)
-  save(@Body() body: { voice?: unknown, contacts?: unknown, footer?: unknown }, @CurrentUser() claims: IAccessTokenClaims) {
+  save(@Body() body: { voice?: unknown, contacts?: unknown, footer?: unknown, visual?: unknown }, @CurrentUser() claims: IAccessTokenClaims) {
     return this.marketing.saveSettings(body ?? {}, claims.sub)
+  }
+}
+
+@Controller('cms/marketing/templates')
+@UseGuards(AuthGuard, RolesGuard)
+@Roles(UserRole.Agent, UserRole.Manager, UserRole.Admin)
+export class MarketingTemplatesController {
+  constructor(private readonly marketing: MarketingService) {}
+
+  @Get()
+  list() {
+    return this.marketing.savedTemplates()
+  }
+
+  @Post()
+  @HttpCode(201)
+  save(@Body() body: { name?: unknown, spec?: unknown }, @CurrentUser() claims: IAccessTokenClaims) {
+    return this.marketing.saveTemplate(body ?? {}, claims.sub)
+  }
+
+  @Post(':id/archive')
+  @HttpCode(200)
+  archive(@Param('id') id: string, @CurrentUser() claims: IAccessTokenClaims) {
+    return this.marketing.archiveTemplate(id, claims.sub)
   }
 }

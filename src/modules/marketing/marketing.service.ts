@@ -1,6 +1,6 @@
-import { BadRequestException, Injectable, Logger, NotFoundException, ServiceUnavailableException } from '@nestjs/common'
+import { BadGatewayException, BadRequestException, Injectable, Logger, NotFoundException, ServiceUnavailableException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { Brackets, In } from 'typeorm'
+import { Brackets, In, IsNull } from 'typeorm'
 import type { Repository } from 'typeorm'
 import { LeadEntity } from '~/modules/leads/lead.entity'
 import { UserEntity } from '~/modules/auth/entities'
@@ -10,10 +10,10 @@ import type { IUploadedFile } from '~/shared/storage/storage.service'
 import { MediaService } from '~/shared/storage/media.service'
 import { pageOf } from '~/shared/helpers/pagination'
 import type { IPage, IPageRequest } from '~/shared/helpers/pagination'
-import { AD_LANGUAGES, MarketingSelectionEntity, MarketingSettingsEntity } from './selection.entity'
+import { AD_ANGLES, AD_LANGUAGES, MarketingSelectionEntity, MarketingSettingsEntity, MarketingTemplateEntity } from './selection.entity'
 import type { AdLanguage, IAdBackground, IAdContact, IAdCopy, IAdDesign, IAdPublication, IAdTour } from './selection.entity'
 import {
-  cheapestOf, contactsOf, designOf, destinationOf, isCode, languagesOf, liveTours, MAX_BACKGROUNDS, MAX_BUTTONS, newCode,
+  cheapestOf, contactsOf, designOf, destinationOf, isCode, isHot, languagesOf, liveTours, MAX_BACKGROUNDS, MAX_BUTTONS, newCode,
   pickedContacts, resortsOf, styleOf, titleOf, toursOf,
 } from './marketing.rules'
 import { GeminiClient } from './ai/gemini.client'
@@ -21,6 +21,9 @@ import { copyPrompt, DEFAULT_FOOTER, DEFAULT_VOICE, editedCopy, factsOf, fallbac
 import { BACKDROP_FOLDER, BACKDROP_RATIO, backdropPrompt, backdropTitle } from './ai/backdrop'
 import { checkGroups, judge, matchOffer, settle } from './recheck'
 import { TelegramPublisher, telegramUrl } from './telegram.publisher'
+import { tashkentToday } from '~/modules/search/hot'
+import { DEFAULT_VISUAL, templateOf, templatePrompt, templatesOf, templateSystem } from './templates'
+import type { IAdTemplate } from './templates'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -38,6 +41,8 @@ export interface ISelectionPayload {
   backgrounds: IAdBackground[]
   contacts: string[]
   published: IAdPublication[]
+  template: IAdTemplate | null
+  template_drafts: IAdTemplate[]
   checked_at: string | null
   created_at: string
   updated_at: string
@@ -45,6 +50,14 @@ export interface ISelectionPayload {
   author: string
   leads: number
   ai: boolean
+}
+
+export interface ISavedTemplate {
+  id: string
+  name: string
+  spec: IAdTemplate
+  author: string
+  created_at: string
 }
 
 export interface ISelectionRow {
@@ -74,6 +87,9 @@ export interface IPublicSelection {
 }
 
 export interface IMarketingSettings {
+  visual: string
+  default_visual: string
+  custom_visual: boolean
   footer: Record<AdLanguage, string>
   default_footer: Record<AdLanguage, string>
   voice: string
@@ -101,7 +117,7 @@ const MAX_CODE_ATTEMPTS = 5
 
 const text = (value: unknown, max: number): string => (typeof value === 'string' ? value.trim().slice(0, max) : '')
 
-const today = (): string => new Date().toISOString().slice(0, 10)
+const today = (): string => tashkentToday()
 
 const isUniqueViolation = (error: unknown): boolean =>
   typeof error === 'object' && error !== null && (error as { code?: string }).code === '23505'
@@ -113,6 +129,7 @@ export class MarketingService {
   constructor(
     @InjectRepository(MarketingSelectionEntity) private readonly selections: Repository<MarketingSelectionEntity>,
     @InjectRepository(MarketingSettingsEntity) private readonly settingsRepo: Repository<MarketingSettingsEntity>,
+    @InjectRepository(MarketingTemplateEntity) private readonly templates: Repository<MarketingTemplateEntity>,
     @InjectRepository(LeadEntity) private readonly leads: Repository<LeadEntity>,
     @InjectRepository(UserEntity) private readonly users: Repository<UserEntity>,
     private readonly search: SearchService,
@@ -228,9 +245,18 @@ export class MarketingService {
     if (input.style !== undefined) {
       const style = styleOf(input.style)
 
-      if (!style) throw new BadRequestException('Unknown style')
+      if (!style || (style === 'custom' && !selection.template)) throw new BadRequestException('Unknown style')
 
       selection.style = style
+    }
+
+    if (input.template !== undefined) {
+      const template = input.template === null ? null : templateOf(input.template)
+
+      if (input.template !== null && !template) throw new BadRequestException('Unknown template')
+
+      selection.template = template
+      selection.style = template ? 'custom' : selection.style === 'custom' ? 'classic' : selection.style
     }
 
     if (input.order !== undefined) {
@@ -338,10 +364,12 @@ export class MarketingService {
     const variants = { ...selection.variants }
     const copy = { ...selection.copy }
 
+    const lead = facts.hot ? AD_ANGLES.indexOf('timing') : 0
+
     for (const language of languages) {
       variants[language] = variantsOf(raw?.[language], facts, language)
 
-      if (!copy[language]?.ai) copy[language] = { ...variants[language]![0]! }
+      if (!copy[language]?.ai) copy[language] = { ...variants[language]![lead]! }
     }
 
     selection.variants = variants
@@ -350,6 +378,68 @@ export class MarketingService {
     await this.selections.save(selection)
 
     return this.one(id)
+  }
+
+  async designTemplates(id: string): Promise<ISelectionPayload> {
+    if (!this.gemini.configured) throw new ServiceUnavailableException('GEMINI_API_KEY is not set')
+
+    const selection = await this.find(id)
+    const stored = await this.settingsRepo.findOne({ where: { id: 1 } })
+    const saved = await this.templates.find({ where: { archivedAt: IsNull() }, select: { name: true } })
+    const raw = await this.gemini.json<{ templates?: unknown }>(templateSystem(stored?.visual ?? ''), templatePrompt({
+      destination: destinationOf(selection.tours) || selection.title,
+      hot: isHot(selection.tours, today()),
+      hotels: liveTours(selection.tours).length,
+      avoid: saved.map(template => template.name),
+    }))
+    const drafts = templatesOf(raw?.templates)
+
+    if (!drafts.length) throw new BadGatewayException('Gemini returned no templates')
+
+    selection.templateDrafts = drafts
+    selection.updatedAt = new Date()
+    await this.selections.save(selection)
+
+    return this.one(id)
+  }
+
+  async savedTemplates(): Promise<ISavedTemplate[]> {
+    const rows = await this.templates.find({ where: { archivedAt: IsNull() }, order: { createdAt: 'DESC' }, take: 40 })
+    const authors = await this.authors(rows.map(row => row.createdBy))
+
+    return rows.map(row => ({
+      id: row.id,
+      name: row.name,
+      spec: templateOf(row.spec) ?? row.spec,
+      author: authors.get(row.createdBy ?? '') ?? '',
+      created_at: row.createdAt.toISOString(),
+    }))
+  }
+
+  async saveTemplate(input: { name?: unknown, spec?: unknown }, actorId: string): Promise<ISavedTemplate[]> {
+    const spec = templateOf(input.spec)
+
+    if (!spec) throw new BadRequestException('Unknown template')
+
+    const name = text(input.name, 24) || spec.name
+
+    await this.templates.save(this.templates.create({ name, spec: { ...spec, name }, createdBy: actorId }))
+
+    return this.savedTemplates()
+  }
+
+  async archiveTemplate(id: string, actorId: string): Promise<ISavedTemplate[]> {
+    const template = /^[0-9a-f-]{36}$/i.test(id) ? await this.templates.findOne({ where: { id } }) : null
+
+    if (!template) throw new NotFoundException('Template not found')
+
+    if (!template.archivedAt) {
+      template.archivedAt = new Date()
+      template.archivedBy = actorId
+      await this.templates.save(template)
+    }
+
+    return this.savedTemplates()
   }
 
   async paint(id: string): Promise<ISelectionPayload> {
@@ -443,6 +533,9 @@ export class MarketingService {
     const stored = await this.settingsRepo.findOne({ where: { id: 1 } })
 
     return {
+      visual: stored?.visual || DEFAULT_VISUAL,
+      default_visual: DEFAULT_VISUAL,
+      custom_visual: Boolean(stored?.visual),
       footer: { ru: stored?.footer || DEFAULT_FOOTER.ru, uz: stored?.footerUz || DEFAULT_FOOTER.uz },
       default_footer: DEFAULT_FOOTER,
       voice: stored?.voice || DEFAULT_VOICE,
@@ -455,8 +548,14 @@ export class MarketingService {
     }
   }
 
-  async saveSettings(input: { voice?: unknown, contacts?: unknown, footer?: unknown }, actorId: string): Promise<IMarketingSettings> {
-    const stored = await this.settingsRepo.findOne({ where: { id: 1 } }) ?? this.settingsRepo.create({ id: 1, voice: '', footer: '', footerUz: '', contacts: [] })
+  async saveSettings(input: { voice?: unknown, contacts?: unknown, footer?: unknown, visual?: unknown }, actorId: string): Promise<IMarketingSettings> {
+    const stored = await this.settingsRepo.findOne({ where: { id: 1 } }) ?? this.settingsRepo.create({ id: 1, voice: '', footer: '', footerUz: '', visual: '', contacts: [] })
+
+    if (input.visual !== undefined) {
+      const visual = voiceOf(input.visual)
+
+      stored.visual = visual === DEFAULT_VISUAL ? '' : visual
+    }
 
     if (input.footer && typeof input.footer === 'object') {
       const footer = input.footer as Record<string, unknown>
@@ -555,6 +654,8 @@ export class MarketingService {
       backgrounds: selection.backgrounds ?? [],
       contacts: selection.contacts ?? [],
       published: selection.published ?? [],
+      template: selection.template ? templateOf(selection.template) : null,
+      template_drafts: templatesOf(selection.templateDrafts),
       checked_at: selection.checkedAt?.toISOString() ?? null,
       created_at: selection.createdAt.toISOString(),
       updated_at: selection.updatedAt.toISOString(),

@@ -6,6 +6,7 @@ import { isCode, isHot, languagesOf, liveTours, MAX_TOURS, newCode, titleOf, tou
 import { cleanCopy, DEFAULT_VOICE, editedCopy, factsOf, fallbackCopy, systemPrompt, variantsOf } from './ai/copywriter'
 import { contactsOf, designOf, pickedContacts } from './marketing.rules'
 import { keyboardOf, usernameOf } from './telegram.publisher'
+import { DEFAULT_TEMPLATE, DEFAULT_VISUAL, templateOf, templatesOf, templateSystem } from './templates'
 import { checkGroups, judge, matchOffer, settle } from './recheck'
 import type { IAdTour } from './selection.entity'
 
@@ -121,6 +122,10 @@ describe('AI copy', () => {
     expect(copy.kicker).toBe(fallback.kicker)
     expect(copy.intro).toBe(fallback.intro)
     expect(copy.headline).toBe('Дубай')
+  })
+
+  it('keeps only the place when the model adds a slogan after a colon', () => {
+    expect(cleanCopy({ headline: 'Стамбул: горящие туры' }, fallback).headline).toBe('Стамбул')
   })
 
   it('falls back entirely on garbage', () => {
@@ -247,5 +252,32 @@ describe('manager buttons', () => {
     const rows = keyboardOf([{ text: 'Выбрать тур', url: 'https://tripme.uz/p/x' }, { text: 'Азиз', url: 'a' }, { text: 'Лола', url: 'b' }, { text: 'Тимур', url: 'c' }])
 
     expect(rows.map(row => row.map(button => button.text))).toEqual([['Выбрать тур'], ['Азиз', 'Лола'], ['Тимур']])
+  })
+})
+
+describe('AI templates', () => {
+  it('keeps only known values and clamps the darkening', () => {
+    const template = templateOf({ name: 'Афиша', layout: 'poster', align: 'center', headline: 'xxl', accent: 'neon', dim: 200, cta: 'pill', colour: '#FF0000' })
+
+    expect(template).toMatchObject({ name: 'Афиша', layout: 'poster', align: 'center', headline: 'l', accent: 'none', dim: 90 })
+    expect(template).not.toHaveProperty('colour')
+  })
+
+  it('refuses emoji names and drops duplicates, four at most', () => {
+    const list = templatesOf([
+      { name: 'Огонь 🔥', layout: 'split' },
+      { name: 'Двойник', layout: 'split' },
+      { layout: 'card' }, { layout: 'poster' }, { layout: 'stack', align: 'center' }, { layout: 'stack', list: 'minimal' },
+    ])
+
+    expect(list).toHaveLength(4)
+    expect(list[0]?.name).toBe(DEFAULT_TEMPLATE.name)
+    expect(list.map(item => item.layout)).toEqual(['split', 'card', 'poster', 'stack'])
+  })
+
+  it('designs inside the editable visual style', () => {
+
+    expect(templateSystem('Минимализм, много воздуха')).toContain('Минимализм, много воздуха')
+    expect(templateSystem('')).toContain(DEFAULT_VISUAL)
   })
 })

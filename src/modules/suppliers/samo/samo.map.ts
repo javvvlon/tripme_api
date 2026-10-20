@@ -103,6 +103,10 @@ export function mapSamoRow(
 
     programme: row.tourName || null,
     fare: row.fare || null,
+
+    oldPrice: Number(row.priceOld) > amount ? Number(row.priceOld) : null,
+    instantConfirm: row.instantConfirm,
+    bestPrice: row.bestPrice,
   }
 
   return new Offer(properties)

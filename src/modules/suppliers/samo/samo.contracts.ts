@@ -25,6 +25,7 @@ export interface SamoRow {
   stars: string
 
   priceSource: string
+  priceOld: string
   currencySource: string
   priceShown: string
   currencyShown: string
@@ -42,6 +43,8 @@ export interface SamoRow {
   roomText: string
 
   flags: string
+  instantConfirm: boolean
+  bestPrice: boolean
 
   townKey?: string
   starKey?: string

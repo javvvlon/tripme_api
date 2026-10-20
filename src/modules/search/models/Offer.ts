@@ -4,6 +4,7 @@ import type { Money, PriceBreakdown, SupplierRef } from '~/modules/search/contra
 import { mealPlanOf } from '../meal-plans'
 import type { MealPlan } from '../meal-plans'
 import { hotelKey } from '../hotel-key'
+import { isHotDeparture, tashkentToday } from '../hot'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -38,6 +39,10 @@ export interface IOffer {
 
   programme: string | null
   fare: string | null
+
+  oldPrice?: number | null
+  instantConfirm?: boolean
+  bestPrice?: boolean
 }
 
 export class Offer extends Model<IOffer> {
@@ -67,8 +72,12 @@ export class Offer extends Model<IOffer> {
     return super.toObject()
   }
 
-  public override toObject(): IOffer & { mealPlan: MealPlan | null, hotelKey: string } {
-    return { ...super.toObject(), mealPlan: this.resolveMealPlan(), hotelKey: hotelKey(this.get('hotelName')) }
+  public isHot(today = tashkentToday()): boolean {
+    return isHotDeparture(this.get('checkIn'), this.isStopped(), today)
+  }
+
+  public override toObject(): IOffer & { mealPlan: MealPlan | null, hotelKey: string, hot: boolean } {
+    return { ...super.toObject(), mealPlan: this.resolveMealPlan(), hotelKey: hotelKey(this.get('hotelName')), hot: this.isHot() }
   }
 
   public dedupeKey(): string {

@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto'
 import { AD_BACKDROPS, AD_BUTTONS, AD_LANGUAGES, AD_STYLES, DEFAULT_DESIGN } from './selection.entity'
 import type { AdBackdrop, AdButtons, AdLanguage, AdStyle, IAdContact, IAdDesign, IAdTour } from './selection.entity'
 import { usernameOf } from './telegram.publisher'
+import { isHotDeparture } from '~/modules/search/hot'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -10,8 +11,6 @@ import { usernameOf } from './telegram.publisher'
 export const MAX_TOURS = 6
 
 export const CODE_LENGTH = 7
-
-export const HOT_DAYS = 10
 
 export const MAX_CONTACTS = 12
 
@@ -155,13 +154,8 @@ export function titleOf(tours: IAdTour[]): string {
 }
 
 export function isHot(tours: IAdTour[], today: string): boolean {
-  const start = new Date(`${today}T00:00:00Z`).getTime()
-
-  return tours.length > 0 && tours.every((tour) => {
-    const days = (new Date(`${tour.check_in}T00:00:00Z`).getTime() - start) / 86_400_000
-
-    return days >= 0 && days <= HOT_DAYS
-  })
+  return tours.length > 0 && tours.every(tour =>
+    isHotDeparture(tour.check_in, tour.check_state === 'gone' || tour.availability === 'stopped', today))
 }
 
 export const cheapestOf = (tours: IAdTour[]): IAdTour | null =>

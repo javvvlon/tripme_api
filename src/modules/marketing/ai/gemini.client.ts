@@ -54,7 +54,7 @@ export class GeminiClient {
   readonly textModels = (process.env.GEMINI_TEXT_MODELS || 'gemini-3.1-flash-lite,gemini-3.5-flash-lite')
     .split(',').map(model => model.trim()).filter(Boolean)
 
-  readonly imageModel = process.env.GEMINI_IMAGE_MODEL || 'gemini-3.1-flash-image'
+  readonly imageModel = process.env.GEMINI_IMAGE_MODEL || 'gemini-nano-banana-2.1'
 
   get configured(): boolean {
     return Boolean(this.key)

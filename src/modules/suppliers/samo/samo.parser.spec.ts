@@ -80,4 +80,14 @@ describe('parseSamoRows', () => {
     expect(parseSamoRows('')).toEqual([])
     expect(parseSamoRows('not a samo response')).toEqual([])
   })
+
+  it('reads instant confirmation, the best-price mark and an old price', () => {
+    const row = '<tr class="price_info green_row" data-checkin="20261101" data-nights="7" data-hotel="1"><td class="attributes"><span class="icon best_price_img"></span></td>'
+      + '<td class="td_price"><span data-cat-price="900" data-cat-price_old="1000" data-cat-currency="2" class="price bron"></span></td></tr>'
+    const [parsed] = parseSamoRows(`samo.jQuery(x).ehtml("${row.replace(/"/g, '\\"')}")`)
+
+    expect(parsed).toMatchObject({ instantConfirm: true, bestPrice: true, priceOld: '1000', priceSource: '900' })
+    expect(rows[0]).toMatchObject({ instantConfirm: false, bestPrice: false, priceOld: '' })
+  })
 })
+
