@@ -20,5 +20,6 @@ import { BotIntakeService } from './intake/bot.service'
   imports: [TypeOrmModule.forFeature([MarketingSelectionEntity, MarketingSettingsEntity, MarketingTemplateEntity, MarketingBotLinkEntity, LeadEntity, UserEntity]), AuthModule, SearchModule, ReferencesModule],
   controllers: [MarketingController, MarketingTelegramController, MarketingBotController, MarketingSettingsController, MarketingTemplatesController, MarketingCmsController],
   providers: [MarketingService, GeminiClient, TelegramPublisher, IntakeService, BotIntakeService],
+  exports: [MarketingService],
 })
 export class MarketingModule {}

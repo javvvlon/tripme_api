@@ -20,6 +20,6 @@ import { BlogAssistantService } from './assistant/blog.assistant.service'
   ],
   controllers: [PostsController, PostsAdminController],
   providers: [PostsService, PostsAdminService, BlogAssistantService, GeminiClient],
-  exports: [PostsService],
+  exports: [PostsService, BlogAssistantService],
 })
 export class PostsModule {}

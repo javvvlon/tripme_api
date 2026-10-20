@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpCode, Param, Post, Put, Query, UseGuards } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common'
 import { AuthGuard } from '~/modules/auth/guards/auth.guard'
 import { RolesGuard } from '~/modules/auth/guards/roles.guard'
 import { CurrentUser, Roles } from '~/modules/auth/decorators'
@@ -8,7 +8,6 @@ import { RevalidationService } from '~/shared/revalidation/revalidation.service'
 import { pageRequest } from '~/shared/helpers/pagination'
 import { PostsAdminService } from './posts.admin.service'
 import type { IPostCreateInput, IPostInput } from './posts.admin.service'
-import { BlogAssistantService } from './assistant/blog.assistant.service'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -20,7 +19,6 @@ export class PostsAdminController {
   constructor(
     private readonly admin: PostsAdminService,
     private readonly revalidation: RevalidationService,
-    private readonly blog: BlogAssistantService,
   ) {}
 
   @Get()
@@ -35,12 +33,6 @@ export class PostsAdminController {
     const request = pageRequest(page, perPage)
 
     return request ? this.admin.page({ q, filter, sort, dir }, request) : this.admin.list()
-  }
-
-  @Post('assistant')
-  @HttpCode(200)
-  assistant(@Body() body: { text?: unknown, history?: unknown, post_id?: unknown }, @CurrentUser() claims: IAccessTokenClaims) {
-    return this.blog.assist(body ?? {}, claims.sub)
   }
 
   @Get(':id')

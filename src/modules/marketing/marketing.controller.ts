@@ -1,22 +1,17 @@
-import { Body, Controller, Get, Headers, HttpCode, Param, Patch, Post, Put, Query, UnauthorizedException, UploadedFile, UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common'
-import { FileFieldsInterceptor, FileInterceptor } from '@nestjs/platform-express'
+import { Body, Controller, Get, Headers, HttpCode, Param, Patch, Post, Put, Query, UnauthorizedException, UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common'
+import { FileFieldsInterceptor } from '@nestjs/platform-express'
 import { AuthGuard } from '~/modules/auth/guards/auth.guard'
 import { RolesGuard } from '~/modules/auth/guards/roles.guard'
 import { CurrentUser, Roles } from '~/modules/auth/decorators'
 import { UserRole } from '~/modules/auth/contracts/auth'
 import type { IAccessTokenClaims } from '~/modules/auth/contracts/auth'
 import { DEFAULT_PER_PAGE, pageRequest } from '~/shared/helpers/pagination'
-import { MAX_IMAGE_BYTES } from '~/shared/storage/storage.service'
-import type { IUploadedFile } from '~/shared/storage/storage.service'
 import { MarketingService } from './marketing.service'
 import { BotIntakeService } from './intake/bot.service'
 import type { ITelegramUpdate } from './intake/bot'
 import type { IPublishInput } from './marketing.service'
 import { MAX_VIDEO_BYTES } from './telegram.publisher'
 import type { IPublishFiles } from './telegram.publisher'
-
-const imageOf = (file: IUploadedFile | undefined) =>
-  file?.buffer?.length && /^image\/(png|jpe?g|webp)$/.test(file.mimetype) ? { mimeType: file.mimetype, data: file.buffer } : null
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -51,17 +46,6 @@ export class MarketingCmsController {
   @HttpCode(201)
   create(@Body() body: { title?: unknown, tours?: unknown }, @CurrentUser() claims: IAccessTokenClaims) {
     return this.marketing.create(body, claims.sub)
-  }
-
-  @Post('assistant')
-  @HttpCode(200)
-  @UseInterceptors(FileInterceptor('image', { limits: { fileSize: MAX_IMAGE_BYTES } }))
-  assistant(
-    @Body() body: { text?: unknown, history?: unknown },
-    @UploadedFile() file: IUploadedFile | undefined,
-    @CurrentUser() claims: IAccessTokenClaims,
-  ) {
-    return this.marketing.assist({ text: typeof body?.text === 'string' ? body.text : '', image: imageOf(file), history: body?.history }, claims.sub)
   }
 
   @Get(':id')
