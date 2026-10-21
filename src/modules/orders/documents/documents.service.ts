@@ -6,6 +6,7 @@ import { LeadEntity, LEAD_TRANSITIONS, LeadStatus } from '~/modules/leads/lead.e
 import { LeadEventEntity, LeadEventKind } from '~/modules/leads/lead-event.entity'
 import { OrderEntity } from '../order.entity'
 import { DocumentKind, OrderDocumentEntity } from '../order-document.entity'
+import { esimAffiliateOn, esimoAffiliate } from '~/modules/esim/esim.links'
 import { buildDocument } from './pdf.builder'
 import type { DocumentFlavour } from './pdf.builder'
 import type { IDocumentMoney } from './document-lines'
@@ -147,6 +148,7 @@ export class DocumentsService {
       money,
       note: order.note,
       supplierOrderId: order.supplierOrderId,
+      esim: esimAffiliateOn() && trip.product !== 'esim' ? esimoAffiliate() : undefined,
     })
 
     const kind = flavour === 'offer' ? DocumentKind.Offer : DocumentKind.Invoice

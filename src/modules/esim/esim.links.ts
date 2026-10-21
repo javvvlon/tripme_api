@@ -7,6 +7,12 @@ export const orderUrl = (locale: string, token: string): string => `${siteUrl()}
 
 export const esimSandbox = (): boolean => process.env.ESIM_SANDBOX === '1'
 
+export const esimAffiliateOn = (): boolean => {
+  const choice = process.env.ESIM_PROVIDER?.trim() || ''
+
+  return choice !== 'off' && choice !== 'ioka' && !esimSandbox()
+}
+
 export interface IEsimAffiliate {
   partner: string
   url: string

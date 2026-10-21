@@ -1,4 +1,5 @@
-import { existsSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import PDFDocument from 'pdfkit'
 import { formatAmount } from './document-lines'
 import type { IDocumentMoney } from './document-lines'
@@ -30,6 +31,12 @@ export interface IDocumentTotals {
   currency: string
 }
 
+export interface IDocumentEsim {
+  partner: string
+  code: string
+  discount_percent: number
+}
+
 export interface IDocumentData {
   number: string
   issuedOn: Date
@@ -39,6 +46,7 @@ export interface IDocumentData {
   money?: IDocumentMoney
   note: string
   supplierOrderId: string
+  esim?: IDocumentEsim
 }
 
 type IParty = IDocumentParty
@@ -143,6 +151,7 @@ export function buildDocument(flavour: DocumentFlavour, data: IDocumentData): Pr
   trip(doc, data)
   services(doc, data)
   totals(doc, flavour, data)
+  if (data.esim) esim(doc, data.esim)
   footer(doc, flavour)
 
   doc.end()
@@ -372,6 +381,31 @@ function totals(doc: PDFKit.PDFDocument, flavour: DocumentFlavour, data: IDocume
   heading(doc, 'Примечание', doc.font('body').fontSize(10).heightOfString(data.note, { width: CONTENT }))
   doc.fillColor(SLATE).font('body').fontSize(10).text(data.note, MARGIN, doc.y, { width: CONTENT })
   doc.y += 8
+}
+
+const ESIM_QR = join(__dirname, 'assets', 'esimo-qr.jpg')
+
+function esim(doc: PDFKit.PDFDocument, promo: IDocumentEsim): void {
+  const qr = existsSync(ESIM_QR) ? readFileSync(ESIM_QR) : null
+  const size = 68
+  const pad = 12
+  const textX = MARGIN + pad + (qr ? size + pad : 6)
+  const textWidth = WIDTH - MARGIN - pad - textX
+  const text = `Интернет за границей без роуминга — у нашего партнёра ${promo.partner}. Промокод даёт −${promo.discount_percent}% на первую покупку. Наведите камеру телефона на QR-код или откройте tripme.uz/esim.`
+  const height = Math.max(qr ? size + pad * 2 : 0, doc.font('body').fontSize(9.5).heightOfString(text, { width: textWidth }) + 44)
+
+  heading(doc, 'eSIM для поездки', height)
+
+  const top = doc.y
+
+  doc.rect(MARGIN, top, CONTENT, height).fill(SURFACE)
+
+  if (qr) doc.image(qr, MARGIN + pad, top + pad, { width: size, height: size })
+
+  doc.fillColor(NAVY).font('mono').fontSize(13).text(promo.code, textX, top + pad + 2, { lineBreak: false })
+  doc.fillColor(SLATE).font('body').fontSize(9.5).text(text, textX, top + pad + 22, { width: textWidth })
+
+  doc.y = top + height + 12
 }
 
 function footer(doc: PDFKit.PDFDocument, flavour: DocumentFlavour): void {
