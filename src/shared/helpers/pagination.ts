@@ -1,9 +1,9 @@
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
  */
-export const PER_PAGE_OPTIONS = [25, 50, 100] as const
+export const PER_PAGE_OPTIONS = [10, 25, 50, 100] as const
 
-export const DEFAULT_PER_PAGE = 25
+export const DEFAULT_PER_PAGE = 10
 
 export interface IPageRequest {
   page: number
