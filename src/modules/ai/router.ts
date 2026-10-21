@@ -20,6 +20,8 @@ export const CLARIFICATION_CHARS = 300
 
 const BLOG = /(стать|блог|blog|article|maqola|рубрик|черновик)/i
 
+const ARTICLE_ASK = /(напиш|написа|подготов|созда|сделай|write|draft|yoz).{0,40}(стать|блог|blog|article|maqola)|(стать|maqola|article).{0,40}(напиш|write|yoz)/i
+
 const MARKETING = /(подборк|баннер|реклам|телеграм|telegram|t\.me\/|канал|объявлени|сторис|видеоролик|ролик|selection|banner|advert|\bads?\b|instagram|инстаграм|kanal|reklama|tanlov|e[’']?lon)/i
 
 export function contextOf(raw: unknown): IAiContext {
@@ -33,6 +35,8 @@ export function contextOf(raw: unknown): IAiContext {
 }
 
 export function routeOf(text: string, image: boolean, context: IAiContext): AiDomain | null {
+  if (!image && ARTICLE_ASK.test(text)) return 'blog'
+
   if (image || looksLikeOffer(text, false)) return 'marketing'
 
   if (context.pending && text.length < CLARIFICATION_CHARS && !BLOG.test(text)) return 'marketing'

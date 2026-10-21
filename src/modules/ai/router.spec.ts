@@ -20,6 +20,14 @@ describe('TripMe AI routing', () => {
     expect(routeOf('Напиши статью про Самарканд', false, contextOf({ pending: 'пост оператора', domain: 'marketing' }))).toBe('blog')
   })
 
+  it('keeps an article request in the blog even with a link and prices in it', () => {
+    const ask = 'Напиши статью для блога: eSIM для Турции. Промокод TRIPME, ссылка https://esimo.sng.link/Dfwtk/8ix7/gg0w. 1 ГБ на 7 дней — 3,9 $, безлимит на 7 дней — 26,9 $'
+
+    expect(routeOf(ask, false, fresh)).toBe('blog')
+    expect(routeOf('Blog uchun maqola yozing: Turkiya uchun eSIM', false, fresh)).toBe('blog')
+    expect(routeOf('Rixos Premium 5* HB 7 ночей от 1250$ — сделай рекламу', false, fresh)).toBe('marketing')
+  })
+
   it('treats a short answer as the clarification marketing asked for', () => {
     expect(routeOf('Турция', false, contextOf({ pending: 'Белек 5* 7 ночей от 890$', domain: 'marketing' }))).toBe('marketing')
   })

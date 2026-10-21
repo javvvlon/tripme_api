@@ -10,7 +10,8 @@ import type { IEsimPlan, IEsimProvider } from './provider/esim-provider'
 import { PAYMENT_GATEWAYS } from './payments/gateway'
 import type { IPaymentGateway } from './payments/gateway'
 import type { IPayablePurchase, IPaymentStatePatch, IPurchasePayments } from './payments/purchase-payments.port'
-import { orderUrl } from './esim.links'
+import { esimoAffiliate, orderUrl } from './esim.links'
+import type { IEsimAffiliate } from './esim.links'
 import {
   PURCHASE_STATUSES,
   PurchaseStatus,
@@ -27,6 +28,7 @@ export interface IEsimCountryPayload {
   code: string
   plans: number
   from_uzs: number
+  from_usd: number
 }
 
 export interface IEsimPlanPayload {
@@ -36,6 +38,13 @@ export interface IEsimPlanPayload {
   days: number
   networks: string[]
   price_uzs: number
+  price_usd: number
+}
+
+export interface IEsimModePayload {
+  mode: 'catalog' | 'checkout' | 'affiliate'
+  provider: string | null
+  affiliate?: IEsimAffiliate
 }
 
 export interface IEsimPurchasePayload {
@@ -97,9 +106,14 @@ export class EsimService implements IPurchasePayments {
     if (!this.source) return []
 
     const [countries, rate] = await Promise.all([this.provider.countries(), this.usdRate()])
-    const margin = marginPercent()
+    const margin = this.margin()
 
-    return countries.map(country => ({ code: country.code, plans: country.plans, from_uzs: country.fromUzs ?? retailUzs(country.fromUsd, rate, margin) }))
+    return countries.map(country => ({
+      code: country.code,
+      plans: country.plans,
+      from_uzs: country.fromUzs ?? retailUzs(country.fromUsd, rate, margin),
+      from_usd: this.affiliate() ? country.fromUsd : 0,
+    }))
   }
 
   async plans(country: string): Promise<IEsimPlanPayload[]> {
@@ -109,15 +123,25 @@ export class EsimService implements IPurchasePayments {
 
     if (!plans.length) throw new NotFoundException('Country not found')
 
-    const margin = marginPercent()
+    const margin = this.margin()
 
     return plans
       .map(plan => this.planPayload(plan, plan.retailUzs ?? retailUzs(plan.wholesaleUsd, rate, margin)))
-      .sort((a, b) => a.price_uzs - b.price_uzs)
+      .sort((a, b) => Number(a.data_gb === null) - Number(b.data_gb === null) || a.price_uzs - b.price_uzs)
   }
 
-  mode(): { mode: 'catalog' | 'checkout', provider: string | null } {
+  mode(): IEsimModePayload {
+    if (this.affiliate()) return { mode: 'affiliate', provider: this.source!.name, affiliate: esimoAffiliate() }
+
     return { mode: this.catalogOnly() ? 'catalog' : 'checkout', provider: this.source?.name ?? null }
+  }
+
+  private affiliate(): boolean {
+    return this.source?.name === 'esimo'
+  }
+
+  private margin(): number {
+    return this.affiliate() ? 0 : marginPercent()
   }
 
   private catalogOnly(): boolean {
@@ -357,6 +381,7 @@ export class EsimService implements IPurchasePayments {
       days: plan.days,
       networks: plan.networks,
       price_uzs: priceUzs,
+      price_usd: this.affiliate() ? plan.wholesaleUsd : 0,
     }
   }
 
