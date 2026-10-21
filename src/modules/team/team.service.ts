@@ -40,6 +40,7 @@ export interface IMyWork {
   draft_orders: number
   requested_orders: number
   unread_messages: number
+  my_tasks: number
 }
 
 const text = (value: unknown, limit: number): string => (typeof value === 'string' ? value.trim().slice(0, limit) : '')
@@ -136,7 +137,8 @@ export class TeamService {
          (select count(*) from orders o join leads l on l.id = o.lead_id
            where o.archived_at is null and l.archived_at is null and o.manager_id = $1 and o.status = 'draft') as draft_orders,
          (select count(*) from orders o join leads l on l.id = o.lead_id
-           where o.archived_at is null and l.archived_at is null and o.manager_id = $1 and o.status = 'requested') as requested_orders`,
+           where o.archived_at is null and l.archived_at is null and o.manager_id = $1 and o.status = 'requested') as requested_orders,
+         (select count(*) from tasks where archived_at is null and assignee_id = $1 and status <> 'done') as my_tasks`,
       [viewer.id, QUEUE_STATUSES],
     )
 
@@ -146,6 +148,7 @@ export class TeamService {
       draft_orders: Number(counts.draft_orders),
       requested_orders: Number(counts.requested_orders),
       unread_messages: await this.messages.staffUnread(viewer),
+      my_tasks: Number(counts.my_tasks),
     }
   }
 

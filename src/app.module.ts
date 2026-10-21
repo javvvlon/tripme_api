@@ -19,6 +19,7 @@ import { OperatorsModule } from '~/modules/operators/operators.module'
 import { AccountModule } from '~/modules/account/account.module'
 import { PointsModule } from '~/modules/points/points.module'
 import { AnalyticsModule } from '~/modules/analytics/analytics.module'
+import { TasksModule } from '~/modules/tasks/tasks.module'
 import { DatabaseModule } from '~/shared/database/database.module'
 import { StorageModule } from '~/shared/storage/storage.module'
 import { RevalidationModule } from '~/shared/revalidation/revalidation.module'
@@ -57,6 +58,7 @@ import { CacheModule } from '~/shared/cache/cache.module'
     AccountModule,
     PointsModule,
     AnalyticsModule,
+    TasksModule,
   ],
 })
 export class AppModule {}
