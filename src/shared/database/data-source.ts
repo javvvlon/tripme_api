@@ -85,6 +85,8 @@ import { OperatorDomains1755900053000 } from './migrations/1755900053000-Operato
 import { LeadAutoStatuses1755900054000 } from './migrations/1755900054000-LeadAutoStatuses'
 import { Tasks1755900055000 } from './migrations/1755900055000-Tasks'
 import { TaskEntity, TaskEventEntity } from '~/modules/tasks/task.entities'
+import { Notes1755900056000 } from './migrations/1755900056000-Notes'
+import { NoteAckEntity, NoteEntity } from '~/modules/notes/note.entities'
 import { SamoOperators1755900045000 } from './migrations/1755900045000-SamoOperators'
 import { KazunionOperator1755900046000 } from './migrations/1755900046000-KazunionOperator'
 
@@ -112,6 +114,7 @@ export const databaseOptions = (): DataSourceOptions => {
       PointsTierEntity, PointsSettingsEntity, PointsTransactionEntity,
       MediaFileEntity, MediaFolderEntity, MarketingSelectionEntity, MarketingSettingsEntity, MarketingTemplateEntity, MarketingBotLinkEntity,
       TaskEntity, TaskEventEntity,
+      NoteEntity, NoteAckEntity,
     ],
     migrations: [
       Auth1755900000000, Content1755900001000, ItemBadges1755900002000, Banner1755900003000,
@@ -142,7 +145,7 @@ export const databaseOptions = (): DataSourceOptions => {
       LeadOwnership1755900029000,
       OrderItems1755900030000,
       Payments1755900031000,
-      ConfirmationRule1755900032000, EsimPurchases1755900033000, LeadCustomerLink1755900034000, Archive1755900035000, ClientAccount1755900036000, Messages1755900037000, PaymentRates1755900038000, LeadTrips1755900039000, LeadParty1755900040000, MessageQuotes1755900041000, FlykhivaOperator1755900042000, StaffArchive1755900043000, ContentItemIcon1755900044000, SamoOperators1755900045000, KazunionOperator1755900046000, ReviewFields1755900047000, MarketingSelections1755900048000, MarketingStudio1755900049000, MarketingTemplates1755900050000, MarketingIntake1755900051000, MarketingOwnOffers1755900052000, OperatorDomains1755900053000, LeadAutoStatuses1755900054000, Tasks1755900055000,
+      ConfirmationRule1755900032000, EsimPurchases1755900033000, LeadCustomerLink1755900034000, Archive1755900035000, ClientAccount1755900036000, Messages1755900037000, PaymentRates1755900038000, LeadTrips1755900039000, LeadParty1755900040000, MessageQuotes1755900041000, FlykhivaOperator1755900042000, StaffArchive1755900043000, ContentItemIcon1755900044000, SamoOperators1755900045000, KazunionOperator1755900046000, ReviewFields1755900047000, MarketingSelections1755900048000, MarketingStudio1755900049000, MarketingTemplates1755900050000, MarketingIntake1755900051000, MarketingOwnOffers1755900052000, OperatorDomains1755900053000, LeadAutoStatuses1755900054000, Tasks1755900055000, Notes1755900056000,
     ],
     synchronize: false,
     migrationsRun: false,

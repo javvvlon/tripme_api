@@ -20,6 +20,7 @@ import { AccountModule } from '~/modules/account/account.module'
 import { PointsModule } from '~/modules/points/points.module'
 import { AnalyticsModule } from '~/modules/analytics/analytics.module'
 import { TasksModule } from '~/modules/tasks/tasks.module'
+import { NotesModule } from '~/modules/notes/notes.module'
 import { DatabaseModule } from '~/shared/database/database.module'
 import { StorageModule } from '~/shared/storage/storage.module'
 import { RevalidationModule } from '~/shared/revalidation/revalidation.module'
@@ -59,6 +60,7 @@ import { CacheModule } from '~/shared/cache/cache.module'
     PointsModule,
     AnalyticsModule,
     TasksModule,
+    NotesModule,
   ],
 })
 export class AppModule {}
