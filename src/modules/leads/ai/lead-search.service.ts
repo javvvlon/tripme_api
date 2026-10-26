@@ -10,7 +10,7 @@ import { LeadsService } from '../leads.service'
 import type { ILeadPayload } from '../leads.service'
 import type { IViewer } from '../lead.access'
 import { hasRequest, LEAD_SEARCH_RULES, leadSearchFactsOf, leadSearchPrompt, MAX_PLAN_HOTELS, partyOf, windowOf } from './lead-search'
-import type { IAskedHotel, ILeadRequest, ILeadSearchPlan, IPlanHotel } from './lead-search'
+import type { IAskedDestination, IAskedHotel, ILeadRequest, ILeadSearchPlan, IPlanDestination, IPlanHotel } from './lead-search'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -52,16 +52,17 @@ export class LeadSearchService {
 
     const facts = leadSearchFactsOf(raw, { countries, today })
     const from = labelMatch(facts.from, departures) ?? start
-    const to = from ? await this.destinationOf(facts.country, from, start, countries, lead.route_to) : null
     const window = windowOf(facts, today)
     const party = partyOf(facts, request)
-    const matched = from && to ? await this.hotelsOf(facts.hotels, from.slug, to.slug) : { hotels: [], missing: facts.hotels.map(hotel => hotel.asked || hotel.latin) }
+    const destinations = await Promise.all(facts.destinations.map((place, index) =>
+      this.placeOf(place, from, start, countries, index === 0 ? lead.route_to : '')))
+    const main = destinations[0]!
 
     return {
       from: from ? { slug: from.slug, label: from.label } : null,
-      to: to ? { slug: to.slug, label: to.label } : null,
-      country: facts.country,
-      resort: facts.resort,
+      to: main.to,
+      country: main.country,
+      resort: main.resort,
       date_from: window.dateFrom,
       date_to: window.dateTo,
       dates_assumed: window.assumed,
@@ -70,19 +71,34 @@ export class LeadSearchService {
       kid_ages: party.kidAges,
       ages_assumed: party.assumed,
       crowded: party.crowded,
-      hotels: matched.hotels,
-      missing_hotels: matched.missing,
+      hotels: main.hotels,
+      missing_hotels: main.missing_hotels,
       stars: facts.stars,
       meals: facts.meals,
       budget: facts.budget,
       note: facts.note,
+      destinations,
+    }
+  }
+
+  private async placeOf(place: IAskedDestination, from: ReferenceItem | null, start: ReferenceItem | null, countries: ReferenceItem[], stored: string): Promise<IPlanDestination> {
+    const to = from ? await this.destinationOf(place.country, from, start, countries, stored) : null
+    const matched = from && to ? await this.hotelsOf(place.hotels, from.slug, to.slug) : { hotels: [], missing: place.hotels.map(hotel => hotel.asked || hotel.latin) }
+
+    return {
+      to: to ? { slug: to.slug, label: to.label } : null,
+      country: place.country,
+      resort: place.resort,
+      hotels: matched.hotels,
+      missing_hotels: matched.missing,
+      note: place.note,
     }
   }
 
   private async destinationOf(country: string, from: ReferenceItem, start: ReferenceItem | null, countries: ReferenceItem[], stored: string): Promise<ReferenceItem | null> {
     const list = from.slug === start?.slug ? countries : (await this.routes.countriesFrom(from.slug)).items
 
-    return labelMatch(country, list) ?? list.find(item => item.slug === stored) ?? null
+    return labelMatch(country, list) ?? (stored ? list.find(item => item.slug === stored) : undefined) ?? null
   }
 
   private async hotelsOf(asked: IAskedHotel[], from: string, to: string): Promise<{ hotels: IPlanHotel[], missing: string[] }> {
