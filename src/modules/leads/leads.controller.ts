@@ -10,6 +10,7 @@ import { LeadsService } from './leads.service'
 import { customerIdOf, viewerOf } from './lead.access'
 import type { ILeadInput, ILeadPatch } from './leads.service'
 import { pageRequest } from '~/shared/helpers/pagination'
+import { LeadSearchService } from './ai/lead-search.service'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -30,7 +31,10 @@ export class LeadsController {
 @UseGuards(AuthGuard, RolesGuard)
 @Roles(UserRole.Agent, UserRole.Manager, UserRole.Admin)
 export class LeadsAdminController {
-  constructor(private readonly leads: LeadsService) {}
+  constructor(
+    private readonly leads: LeadsService,
+    private readonly assistant: LeadSearchService,
+  ) {}
 
   @Get('statuses')
   statuses() {
@@ -97,6 +101,12 @@ export class LeadsAdminController {
   @Patch(':id')
   patch(@Param('id') id: string, @Body() body: ILeadPatch, @CurrentUser() claims: IAccessTokenClaims) {
     return this.leads.patch(id, body, viewerOf(claims))
+  }
+
+  @Post(':id/ai-search')
+  @HttpCode(200)
+  aiSearch(@Param('id') id: string, @Body() body: { locale?: string } | undefined, @CurrentUser() claims: IAccessTokenClaims) {
+    return this.assistant.plan(id, viewerOf(claims), typeof body?.locale === 'string' ? body.locale : 'ru')
   }
 
   @Post(':id/archive')
