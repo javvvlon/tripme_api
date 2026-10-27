@@ -5,6 +5,7 @@ import { mealPlanOf } from '../meal-plans'
 import type { MealPlan } from '../meal-plans'
 import { hotelKey } from '../hotel-key'
 import { isHotDeparture, tashkentToday } from '../hot'
+import { resortLabel } from '../resorts'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -15,6 +16,7 @@ export interface IOffer {
 
   hotelName: string
   hotelStars: number | null
+  hotelKind?: 'boutique' | 'apart' | null
   hotelSupplierCode: string
   hotelSlug: string | null
   hotelUrl: string | null
@@ -77,7 +79,9 @@ export class Offer extends Model<IOffer> {
   }
 
   public override toObject(): IOffer & { mealPlan: MealPlan | null, hotelKey: string, hot: boolean } {
-    return { ...super.toObject(), mealPlan: this.resolveMealPlan(), hotelKey: hotelKey(this.get('hotelName')), hot: this.isHot() }
+    const district = this.get('district')
+
+    return { ...super.toObject(), district: district ? resortLabel(district) : district, mealPlan: this.resolveMealPlan(), hotelKey: hotelKey(this.get('hotelName')), hot: this.isHot() }
   }
 
   public dedupeKey(): string {

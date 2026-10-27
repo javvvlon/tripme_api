@@ -18,6 +18,7 @@ import { activeLocalFacets, localFilter } from './local-filters'
 import { cheapestOnSale } from './sale'
 import { hotelKey, hotelLabel, matchesHotel } from './hotel-key'
 import { resortTowns } from './areas'
+import { withKnownStars } from './stars'
 
 export interface IHotelSuggestion {
   key: string
@@ -204,8 +205,7 @@ export class SearchService {
       suppliers.map(supplier => this.runSupplier(supplier, criteria, page, signal)),
     )
 
-    const merged = results
-      .flatMap(r => r.offers)
+    const merged = withKnownStars(results.flatMap(r => r.offers))
       .sort((a, b) => a.comparePrice() - b.comparePrice())
 
     const { offers, appliedLocally } = this.applyLocalFilters(merged, criteria)
@@ -238,6 +238,7 @@ export class SearchService {
 
         let all: Offer[] = []
         let raw: Offer[] = []
+        const known = new Map<string, number>()
         let hasMore = false
         let appliedLocally: string[] = []
 
@@ -246,10 +247,11 @@ export class SearchService {
 
           if (abort.signal.aborted) return
 
-          const local = this.applyLocalFilters(run.offers, criteria)
+          const offers = withKnownStars(run.offers, known)
+          const local = this.applyLocalFilters(offers, criteria)
 
           appliedLocally = local.appliedLocally
-          raw = [...raw, ...run.offers]
+          raw = [...raw, ...offers]
           hasMore = hasMore || run.hasMore
           all = [...all, ...local.offers].sort((a, b) => a.comparePrice() - b.comparePrice())
           statuses.set(supplier.ref.id, { ...run.status, offers: local.offers.length })

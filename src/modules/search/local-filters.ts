@@ -1,5 +1,6 @@
 import { mealKeyOf } from './meal-plans'
 import { hotelKey } from './hotel-key'
+import { resortKey } from './resorts'
 import type { Offer } from './models/Offer'
 import type { SearchFilters } from './contracts/search'
 
@@ -12,7 +13,7 @@ export const LOCAL_FACETS: LocalFacet[] = ['stars', 'resorts', 'meals']
 
 const valueOf: Record<LocalFacet, (offer: Offer) => string | number> = {
   stars: offer => offer.get('hotelStars') ?? 0,
-  resorts: offer => offer.get('district') ?? '',
+  resorts: offer => resortKey(offer.get('district') ?? ''),
   meals: offer => mealKeyOf(offer.get('mealCode'), offer.get('mealName')),
 }
 
@@ -31,7 +32,13 @@ export function localFilter(
 
   if (!active.length && !hotels.size) return offers
 
+  const wanted: Record<LocalFacet, Array<string | number>> = {
+    stars: filters.stars ?? [],
+    meals: filters.meals ?? [],
+    resorts: (filters.resorts ?? []).map(resortKey),
+  }
+
   return offers.filter(offer =>
     (!hotels.size || hotels.has(hotelKey(offer.get('hotelName'))))
-    && active.every(facet => (filters[facet] as Array<string | number>).includes(valueOf[facet](offer))))
+    && active.every(facet => wanted[facet].includes(valueOf[facet](offer))))
 }

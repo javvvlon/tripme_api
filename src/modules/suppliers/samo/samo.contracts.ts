@@ -48,4 +48,6 @@ export interface SamoRow {
 
   townKey?: string
   starKey?: string
+  catalogStars?: number | null
+  hotelKind?: 'boutique' | 'apart' | null
 }

@@ -23,6 +23,12 @@ describe('meal plans', () => {
       ['UAI', 'Ultra All Inclusive', 'UAI'],
       ['ULTRA ALL INCLUSIVE', null, 'UAI'],
       ['По программе', 'Питание по программе тура', 'PROGRAM'],
+      ['BO', null, 'RO'],
+      ['FBT', 'Full board + treatment', 'FBT'],
+      ['HBT', null, 'FBT'],
+      ['FB+', 'Полный пансион + лечение', 'FBT'],
+      ['HAI', 'High class all inclusive', 'AI'],
+      ['PAI', 'Premium all inclusive', 'AI'],
     ]
 
     for (const [code, name, plan] of seen) expect(mealPlanOf(code, name), `${code} / ${name}`).toBe(plan)
@@ -35,7 +41,7 @@ describe('meal plans', () => {
   })
 
   it('lists plans from the lightest to the richest', () => {
-    expect(MEAL_PLANS.slice(0, 6)).toEqual(['RO', 'BB', 'HB', 'FB', 'AI', 'UAI'])
+    expect(MEAL_PLANS.slice(0, 7)).toEqual(['RO', 'BB', 'HB', 'FB', 'FBT', 'AI', 'UAI'])
   })
 })
 

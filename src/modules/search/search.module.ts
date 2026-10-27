@@ -5,6 +5,7 @@ import { ReferencesModule } from '~/modules/references/references.module'
 import { SearchController } from './search.controller'
 import { SearchService } from './search.service'
 import { SoonestCache } from './soonest.cache'
+import { ShowcaseService } from './showcase.service'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -12,7 +13,7 @@ import { SoonestCache } from './soonest.cache'
 @Module({
   imports: [SuppliersModule, OperatorsModule, ReferencesModule],
   controllers: [SearchController],
-  providers: [SearchService, SoonestCache],
+  providers: [SearchService, SoonestCache, ShowcaseService],
   exports: [SearchService],
 })
 export class SearchModule {}

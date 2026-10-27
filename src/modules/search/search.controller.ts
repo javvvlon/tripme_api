@@ -4,8 +4,11 @@ import type { MessageEvent } from '@nestjs/common'
 import type { Observable } from 'rxjs'
 import { SearchService } from './search.service'
 import { SoonestCache } from './soonest.cache'
+import { ShowcaseService } from './showcase.service'
+import type { IShowcaseQuery } from './showcase.service'
 import { toCriteria, toSoonestCriteria } from './search.query'
 import { buildFacets } from './facets'
+import { earliestDeparture } from './hot'
 import type { SearchQueryDto } from './search.query'
 
 /**
@@ -16,12 +19,12 @@ export class SearchController {
   constructor(
     private readonly search: SearchService,
     private readonly soonestCache: SoonestCache,
+    private readonly showcase: ShowcaseService,
   ) {}
 
   @Get('soonest')
   async soonest(@Query() query: SearchQueryDto): Promise<unknown> {
-    const today = new Date().toISOString().slice(0, 10)
-    const criteria = toSoonestCriteria(query, today)
+    const criteria = toSoonestCriteria(query, earliestDeparture())
 
     return this.soonestCache.through(criteria, () => this.search.soonest(criteria))
   }
@@ -29,6 +32,11 @@ export class SearchController {
   @Get('hotels')
   hotels(@Query('from') from = '', @Query('to') to = '', @Query('q') q = ''): Promise<unknown> {
     return this.search.hotels(String(from), String(to), String(q).slice(0, 80))
+  }
+
+  @Sse('showcase/stream')
+  showcaseStream(@Query() query: IShowcaseQuery): Observable<MessageEvent> {
+    return this.showcase.stream(query).pipe(map(event => ({ data: event })))
   }
 
   @Sse('offers/stream')

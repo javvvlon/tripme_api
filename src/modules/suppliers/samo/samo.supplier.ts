@@ -237,6 +237,8 @@ export abstract class SamoSupplier extends BaseSupplier<SamoQuery, SamoRow> {
 
       row.townKey = place?.town ?? ''
       row.starKey = place?.stars ?? ''
+      row.catalogStars = place?.starCount ?? null
+      row.hotelKind = place?.kind ?? null
     }
   }
 

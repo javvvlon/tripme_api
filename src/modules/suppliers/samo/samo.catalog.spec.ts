@@ -23,8 +23,8 @@ describe('samo hotel catalog', () => {
   it('reads each hotel name, city and category from the search page', () => {
     const catalog = parseHotelCatalog(page)
 
-    expect(catalog.get('751428')).toEqual({ town: '293967', stars: '10003', name: 'Gaia Hotel Phu Quoc', starCount: 3 })
-    expect(catalog.get('-2269372')).toEqual({ town: '', stars: '', name: 'Gaia Hotel PhuQuoc', starCount: null })
+    expect(catalog.get('751428')).toEqual({ town: '293967', stars: '10003', name: 'Gaia Hotel Phu Quoc', starCount: 3, kind: null })
+    expect(catalog.get('-2269372')).toEqual({ town: '', stars: '', name: 'Gaia Hotel PhuQuoc', starCount: null, kind: null })
   })
 
   it('returns nothing for a page without the catalog', () => {

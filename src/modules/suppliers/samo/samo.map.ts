@@ -77,7 +77,8 @@ export function mapSamoRow(
     supplier,
 
     hotelName: row.hotelName,
-    hotelStars: row.stars ? Number(row.stars) : null,
+    hotelStars: row.stars ? Number(row.stars) : row.catalogStars ?? null,
+    hotelKind: row.hotelKind ?? null,
     hotelSupplierCode: row.hotel,
     hotelSlug: row.hotelSlug || null,
     hotelUrl: row.hotelUrl || null,

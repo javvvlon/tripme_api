@@ -17,7 +17,7 @@ const offer = (stars: number, district: string, meal: string, price = 1000): Off
     price: { source: { amount: price, currency: 'USD' }, converted: null },
   }
 
-  return { get: (key: string) => data[key], sortPrice: () => price, toObject: () => data } as unknown as Offer
+  return { get: (key: string) => data[key], sortPrice: () => price, comparePrice: () => price, toObject: () => data } as unknown as Offer
 }
 
 const offers = [
@@ -51,7 +51,23 @@ describe('local filters', () => {
 
     expect(facets.stars.map(o => `${o.value}:${o.count}`)).toEqual(['4:1', '3:1'])
     expect(facets.meals.map(o => `${o.value}:${o.count}`)).toEqual(['RO:1', 'BB:1'])
-    expect(facets.districts.map(o => o.value)).toEqual(['Султанахмет'])
+    expect(facets.districts.map(o => `${o.value}:${o.label}`)).toEqual(['sultanahmet:Султанахмет'])
     expect(facets.total).toBe(1)
+  })
+
+  it('merges one resort spelt by different operators and filters by any of its spellings', () => {
+    const spelt = [
+      offer(4, 'Baku', 'BB'),
+      offer(4, 'Баку', 'BB'),
+      offer(5, 'Баку', 'AI'),
+      offer(3, 'KHANKENDI', 'RO'),
+      offer(4, 'NAAMA BAY', 'AI'),
+      offer(4, 'Наама Бэй', 'AI'),
+    ]
+    const facets = buildFacets(spelt, 100)
+
+    expect(facets.districts.map(o => `${o.label}:${o.count}`)).toEqual(['г. Баку:3', 'Наама Бэй:2', 'Ханкенди:1'])
+    expect(localFilter(spelt, { resorts: ['Baku'] }, none)).toHaveLength(3)
+    expect(localFilter(spelt, { resorts: ['naamabay'] }, none)).toHaveLength(2)
   })
 })

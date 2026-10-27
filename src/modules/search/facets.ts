@@ -2,6 +2,7 @@ import type { Offer } from './models/Offer'
 import { Availability } from './contracts/search'
 import { MEAL_PLANS, mealKeyOf, mealPlanOf } from './meal-plans'
 import type { MealPlan } from './meal-plans'
+import { bestLabel, resortKey } from './resorts'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -88,6 +89,27 @@ function tally(
   return [...counts.values()].sort((a, b) => b.count - a.count)
 }
 
+function districtsOf(offers: Offer[]): FacetOption[] {
+  const groups = new Map<string, { count: number, variants: Map<string, number> }>()
+
+  for (const offer of offers) {
+    const district = offer.get('district')?.trim()
+    const key = district ? resortKey(district) : ''
+
+    if (!key) continue
+
+    const group = groups.get(key) ?? { count: 0, variants: new Map<string, number>() }
+
+    group.count += 1
+    group.variants.set(district!, (group.variants.get(district!) ?? 0) + 1)
+    groups.set(key, group)
+  }
+
+  return [...groups]
+    .map(([key, group]) => ({ value: key, label: bestLabel(key, group.variants), count: group.count }))
+    .sort((a, b) => b.count - a.count)
+}
+
 export interface IFacetScopes {
   stars?: Offer[]
   meals?: Offer[]
@@ -137,10 +159,7 @@ export function buildFacets(offers: Offer[], pageSize: number, scopes: IFacetSco
       return key ? { value: key, label: mealPlanOf(code, name) ? key : name || key } : null
     }).sort((a, b) => planRank(a.value) - planRank(b.value)),
 
-    districts: tally(scopes.districts ?? offers, (o) => {
-      const district = o.get('district')
-      return district ? { value: district, label: district } : null
-    }),
+    districts: districtsOf(scopes.districts ?? offers),
 
     availability: tally(offers, o => ({
       value: o.get('availability'),

@@ -8,11 +8,34 @@ export interface ISamoTown {
   region: string
 }
 
+export type HotelKind = 'boutique' | 'apart'
+
 export interface ISamoHotelPlace {
   town: string
   stars: string
   name: string
   starCount: number | null
+  kind?: HotelKind | null
+}
+
+export function starsOf(category: string | null | undefined): number | null {
+  const value = (category ?? '').trim()
+  const digit = /^([1-5])\s*\*/.exec(value) ?? /^([1-5])$/.exec(value)
+
+  if (digit) return Number(digit[1])
+
+  const asterisks = /^(\*{1,5})\+?$/.exec(value)
+
+  return asterisks ? asterisks[1]!.length : null
+}
+
+export function kindOf(category: string | null | undefined): HotelKind | null {
+  const value = (category ?? '').toLowerCase()
+
+  if (/boutique|бутик/.test(value)) return 'boutique'
+  if (/apart|апарт/.test(value)) return 'apart'
+
+  return null
 }
 
 interface IRawHotel {
@@ -74,7 +97,8 @@ export function parseHotelCatalog(html: string): Map<string, ISamoHotelPlace> {
       town: hotel.townKey === undefined || hotel.townKey === null ? '' : String(hotel.townKey),
       stars: (hotel.starGroupList ?? '').split(',')[0]?.trim() ?? '',
       name: typeof hotel.name === 'string' ? hotel.name.trim() : '',
-      starCount: /^[1-5]/.test(hotel.star ?? '') ? Number((hotel.star ?? '')[0]) : null,
+      starCount: starsOf(hotel.star),
+      kind: kindOf(hotel.star),
     })
   }
 
