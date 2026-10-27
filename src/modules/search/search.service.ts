@@ -3,7 +3,7 @@ import { isUnsupported } from '~/modules/suppliers/base/contracts'
 import { SUPPLIERS } from '~/modules/suppliers/base/tokens'
 import { OperatorsService } from '~/modules/operators/operators.service'
 import { SupplierState } from './contracts/search'
-import type { ISupplier } from '~/modules/suppliers/base/contracts'
+import type { ISupplier, ISupplierTown } from '~/modules/suppliers/base/contracts'
 import { Observable } from 'rxjs'
 import { buildFacets } from './facets'
 import { Offer } from './models/Offer'
@@ -17,6 +17,7 @@ import type { SearchCriteria, SupplierStatus } from './contracts/search'
 import { activeLocalFacets, localFilter } from './local-filters'
 import { cheapestOnSale } from './sale'
 import { hotelKey, hotelLabel, matchesHotel } from './hotel-key'
+import { resortTowns } from './areas'
 
 export interface IHotelSuggestion {
   key: string
@@ -195,7 +196,8 @@ export class SearchService {
     }
   }
 
-  async fetchPage(criteria: SearchCriteria, page: number, signal?: AbortSignal): Promise<SearchPage> {
+  async fetchPage(asked: SearchCriteria, page: number, signal?: AbortSignal): Promise<SearchPage> {
+    const criteria = await this.withAreas(asked)
     const suppliers = await this.suppliersFor(criteria)
 
     const results = await Promise.all(
@@ -217,11 +219,12 @@ export class SearchService {
     }
   }
 
-  stream(criteria: SearchCriteria): Observable<SearchStreamEvent> {
+  stream(asked: SearchCriteria): Observable<SearchStreamEvent> {
     return new Observable<SearchStreamEvent>((subscriber) => {
       const abort = new AbortController()
 
       void (async () => {
+        const criteria = await this.withAreas(asked)
         const suppliers = await this.suppliersFor(criteria)
 
         const statuses = new Map<string, SupplierStatus>(suppliers.map(supplier => [
@@ -330,6 +333,29 @@ export class SearchService {
         || b.suppliers - a.suppliers
         || a.name.localeCompare(b.name))
       .slice(0, limit)
+  }
+
+  async towns(from: string, to: string): Promise<ISupplierTown[]> {
+    const lists = await Promise.allSettled(this.suppliers.map(supplier => supplier.towns?.(from, to) ?? Promise.resolve([])))
+    const found = new Map<string, ISupplierTown>()
+
+    for (const list of lists) {
+      if (list.status !== 'fulfilled') continue
+
+      for (const town of list.value) found.set(`${town.region}|${town.name}`, town)
+    }
+
+    return [...found.values()]
+  }
+
+  private async withAreas(criteria: SearchCriteria): Promise<SearchCriteria> {
+    const areas = criteria.filters.areas ?? []
+
+    if (!areas.length) return criteria
+
+    const towns = resortTowns(await this.towns(criteria.from, criteria.to).catch(() => []), areas)
+
+    return towns.length ? { ...criteria, filters: { ...criteria.filters, areas: towns } } : criteria
   }
 
   private native(): Set<string> {

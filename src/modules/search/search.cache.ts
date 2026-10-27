@@ -24,6 +24,7 @@ export function searchCacheKey(supplierId: string, criteria: SearchCriteria, pag
     hotels: [...criteria.filters.hotels].sort(),
     priceMin: criteria.filters.priceMin ?? null,
     priceMax: criteria.filters.priceMax ?? null,
+    ...(criteria.filters.areas?.length ? { areas: [...criteria.filters.areas].sort() } : {}),
   }
 
   const digest = createHash('sha1').update(JSON.stringify(sent)).digest('hex')

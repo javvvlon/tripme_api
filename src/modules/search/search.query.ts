@@ -19,6 +19,7 @@ export interface SearchQueryDto {
   meals?: string
   resorts?: string
   hotels?: string
+  areas?: string
   priceMin?: string
   priceMax?: string
   suppliers?: string
@@ -77,6 +78,7 @@ export function toCriteria(query: SearchQueryDto): SearchCriteria {
       meals: list(query.meals),
       resorts: list(query.resorts),
       hotels: list(query.hotels),
+      areas: list(query.areas),
       priceMin: query.priceMin ? Number(query.priceMin) : undefined,
       priceMax: query.priceMax ? Number(query.priceMax) : undefined,
       suppliers: list(query.suppliers),

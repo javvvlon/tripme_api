@@ -21,6 +21,7 @@ export interface SearchFilters {
   meals: string[]
   resorts: string[]
   hotels: string[]
+  areas?: string[]
   priceMin?: number
   priceMax?: number
   suppliers: string[]

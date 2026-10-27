@@ -1,6 +1,13 @@
+import { parse as parseHtml } from 'node-html-parser'
+
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
  */
+export interface ISamoTown {
+  name: string
+  region: string
+}
+
 export interface ISamoHotelPlace {
   town: string
   stars: string
@@ -72,4 +79,32 @@ export function parseHotelCatalog(html: string): Map<string, ISamoHotelPlace> {
   }
 
   return catalog
+}
+
+const TOWNS_MARKER = 'checklistbox TOWNS'
+
+const textOf = (value: string | undefined): string => (value ?? '').replace(/\s+/g, ' ').trim()
+
+export function parseTowns(html: string): Map<string, ISamoTown> {
+  const towns = new Map<string, ISamoTown>()
+  const marker = html.indexOf(TOWNS_MARKER)
+
+  if (marker === -1) return towns
+
+  const start = html.lastIndexOf('<div', marker)
+  const end = html.indexOf('checklistbox HOTELS', marker)
+  const box = parseHtml(html.slice(start, end === -1 ? undefined : html.lastIndexOf('<div', end))).querySelector('.checklistbox.TOWNS')
+
+  if (!box) return towns
+
+  for (const input of box.querySelectorAll('input[value]')) {
+    const code = input.getAttribute('value') ?? ''
+    const name = textOf(input.parentNode?.text)
+    const group = input.closest('.groupbox')
+    const region = textOf(group?.querySelector('.groupname')?.text) || name
+
+    if (code && name) towns.set(code, { name, region })
+  }
+
+  return towns
 }

@@ -24,6 +24,8 @@ export const MAX_PLAN_HOTELS = 8
 
 export const MAX_DESTINATIONS = 3
 
+export const MAX_AREAS = 12
+
 const MAX_TEXT = 2000
 
 const LEAD_MEALS = ['RO', 'BB', 'HB', 'FB', 'AI', 'UAI'] as const
@@ -52,6 +54,7 @@ export interface ILeadBudget {
 export interface IAskedDestination {
   country: string
   resort: string
+  areas: string[]
   hotels: IAskedHotel[]
   note: string
 }
@@ -95,6 +98,7 @@ export interface IPlanDestination {
   to: IPlanPlace | null
   country: string
   resort: string
+  areas: string[]
   hotels: IPlanHotel[]
   missing_hotels: string[]
   note: string
@@ -125,7 +129,7 @@ export interface ILeadSearchPlan {
 export const LEAD_SEARCH_RULES = [
   'You help a travel agent in Uzbekistan. You read what a client asked for (Russian, Uzbek or English, often short and informal) and turn it into a package-tour search. Return one JSON object.',
   'Use only what the client\'s words and the agent fields say, plus common knowledge of resorts, holidays and hotel chains. Leave anything unknown empty: "" for text, null for numbers, [] for lists. When the client\'s words and the agent fields disagree, the client\'s words win.',
-  'destinations: one entry per destination the client wants or weighs («Хайнань, также рассматриваю Малайзию» gives two), at most 3, in the client\'s order. Each entry is {"country", "resort", "hotels", "note"}. Everything else is shared by all destinations and stays at the top level.',
+  'destinations: one entry per destination the client wants or weighs («Хайнань, также рассматриваю Малайзию» gives two), at most 3, in the client\'s order. Each entry is {"country", "resort", "areas", "hotels", "note"}. Everything else is shared by all destinations and stays at the top level.',
   'country: exactly one name from the allowed countries list, or "". A resort, island or city implies its country (Шарм, Шарм-эль-Шейх, Хургада → Египет; Анталья, Кемер, Аланья, Белек → Турция; Дубай → ОАЭ; Пхукет, Паттайя → Таиланд; Нячанг, Фукуок → Вьетнам; Бали → Индонезия; Хайнань, Санья → Китай; Лангкави, Куала-Лумпур, Пенанг → Малайзия). Uzbek spellings: Misr = Египет, Turkiya = Турция, BAA = ОАЭ, Tailand = Таиланд, Vyetnam = Вьетнам, Gruziya = Грузия, Malayziya = Малайзия, Xitoy = Китай.',
   'resort: the resort, island, city or area the client named, in Russian (Шарм-эль-Шейх for Шарм, Хайнань for Hainan), else "". A combo of several places in one country is one destination with the places joined by « + » (Лангкави + Куала-Лумпур).',
   'from: the departure city in Russian when stated (Ташкент, Самарканд, Бухара, Фергана, Наманган, Ургенч), else "".',
@@ -133,12 +137,13 @@ export const LEAD_SEARCH_RULES = [
   'nights: the number of nights. «неделя» = 7, «10 дней» and «10 kun» = 9, «2 недели» = 14. null when not stated.',
   'adults: the number of adults (взр, взрослых, kattalar), null when not stated.',
   'kid_ages: one entry per child, in order: the age in years when stated, 1 for an infant (младенец, грудной), null when the age is not stated. «4 детей» gives [null, null, null, null]. [] when there are no children.',
+  'areas (inside a destination): when a resort is named, that resort and the towns, bays or districts tour operators list inside it, each in Russian and in Latin letters, at most 12 (Шарм-эль-Шейх → Шарм-эль-Шейх, Sharm El Sheikh, Наама Бэй, Naama Bay, Набк, Nabq, Хадаба, Hadaba; Хайнань → Хайнань, Hainan, Санья, Sanya, Хайкоу, Haikou). [] when no resort is named.',
   'hotels (inside a destination): each hotel or hotel chain the client names there, at most 4. asked: the name exactly as the client wrote it. latin: that name in Latin letters as tour operators list it (Риксос → Rixos, Султан → Sultan). candidates: up to 4 full names of hotels that really exist in that resort and fit what the client named, in Latin, most likely first (Султан in Шарм-эль-Шейх → Sultan Gardens Resort); [] when unsure. stars: 1 to 5 when the client gives them for that hotel, else null.',
   'stars: hotel categories the client asks for in general (5* → [5], 4–5 звёзд → [4, 5]), else [].',
   'meals: the meal plans asked for: RO, BB, HB, FB, AI, UAI (всё включено = AI, ультра всё включено = UAI, завтраки = BB, полупансион = HB, полный пансион = FB), else [].',
   'budget: {"amount": number, "currency": "USD" | "EUR" | "UZS", "basis": "person" | "total" | ""} when a budget is named ($ and у.е. = USD, сум = UZS), else null. basis is "person" or "total" only when the client says so (на человека, на всех, за двоих), else "".',
   'note (top level for the whole trip, inside a destination for that place): one short sentence for the agent, in the requested language, only about a wish none of the fields above can hold (sea view, first line, aqua park, quiet hotel, flight time, two rooms). Never restate the country, resort, dates, nights, party, children, meals, stars, budget or hotels. Most requests have no such wish, and then note is "". Examples: «семья с грудным ребёнком» → ""; «5 звёзд в рамках бюджета» → ""; «хотят первую линию» → "Хотят отель на первой линии"; «тихий отель без аниматоров» → "Нужен тихий отель без анимации"; «комби тур Лангкави + Куала-Лумпур» → "Комби-тур: подберите отели в обоих местах".',
-  'Shape: {"from":"","date_from":"","date_to":"","nights":null,"adults":null,"kid_ages":[],"stars":[],"meals":[],"budget":null,"note":"","destinations":[{"country":"","resort":"","hotels":[{"asked":"","latin":"","candidates":[],"stars":null}],"note":""}]}',
+  'Shape: {"from":"","date_from":"","date_to":"","nights":null,"adults":null,"kid_ages":[],"stars":[],"meals":[],"budget":null,"note":"","destinations":[{"country":"","resort":"","areas":[],"hotels":[{"asked":"","latin":"","candidates":[],"stars":null}],"note":""}]}',
 ].join('\n')
 
 const plain = (value: unknown, max: number): string =>
@@ -220,6 +225,7 @@ export function leadSearchFactsOf(raw: unknown, context: { countries: ReferenceI
     .map(place => ({
       country: labelMatch(plain(place.country, 80), context.countries)?.label ?? '',
       resort: plain(place.resort, 60),
+      areas: [...new Set(listOf(place.areas).map(area => plain(area, 40)).filter(Boolean))].slice(0, MAX_AREAS),
       hotels: hotelsOf(place.hotels),
       note: noteOf(place.note),
     }))
@@ -228,7 +234,7 @@ export function leadSearchFactsOf(raw: unknown, context: { countries: ReferenceI
     .slice(0, MAX_DESTINATIONS)
 
   return {
-    destinations: destinations.length ? destinations : [{ country: '', resort: '', hotels: [], note: '' }],
+    destinations: destinations.length ? destinations : [{ country: '', resort: '', areas: [], hotels: [], note: '' }],
     from: plain(input.from, 40),
     dateFrom,
     dateTo,

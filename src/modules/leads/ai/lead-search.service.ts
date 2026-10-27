@@ -6,6 +6,7 @@ import { RouteLookupService } from '~/modules/references/route-lookup.service'
 import { labelMatch } from '~/modules/marketing/intake/post'
 import type { ReferenceItem } from '~/modules/suppliers/dictionary/dictionary.contracts'
 import { GeminiClient } from '~/shared/ai/gemini.client'
+import { resortTowns } from '~/modules/search/areas'
 import { LeadsService } from '../leads.service'
 import type { ILeadPayload } from '../leads.service'
 import type { IViewer } from '../lead.access'
@@ -83,16 +84,29 @@ export class LeadSearchService {
 
   private async placeOf(place: IAskedDestination, from: ReferenceItem | null, start: ReferenceItem | null, countries: ReferenceItem[], stored: string): Promise<IPlanDestination> {
     const to = from ? await this.destinationOf(place.country, from, start, countries, stored) : null
-    const matched = from && to ? await this.hotelsOf(place.hotels, from.slug, to.slug) : { hotels: [], missing: place.hotels.map(hotel => hotel.asked || hotel.latin) }
+    const [matched, areas] = from && to
+      ? await Promise.all([this.hotelsOf(place.hotels, from.slug, to.slug), this.areasOf(place, from.slug, to.slug)])
+      : [{ hotels: [], missing: place.hotels.map(hotel => hotel.asked || hotel.latin) }, []]
 
     return {
       to: to ? { slug: to.slug, label: to.label } : null,
       country: place.country,
       resort: place.resort,
+      areas,
       hotels: matched.hotels,
       missing_hotels: matched.missing,
       note: place.note,
     }
+  }
+
+  private async areasOf(place: IAskedDestination, from: string, to: string): Promise<string[]> {
+    if (!place.resort) return []
+
+    const towns = await this.search.towns(from, to).catch(() => [])
+
+    if (resortTowns(towns, [place.resort]).length) return [place.resort]
+
+    return place.areas.filter(term => resortTowns(towns, [term]).length > 0)
   }
 
   private async destinationOf(country: string, from: ReferenceItem, start: ReferenceItem | null, countries: ReferenceItem[], stored: string): Promise<ReferenceItem | null> {

@@ -45,8 +45,8 @@ export class SamoSearchIntention extends Intention<SearchCriteria, Record<string
       ...Object.fromEntries(criteria.childrenAges.map((age, i) => [`AGE${i + 1}`, String(age)])),
       CURRENCY: currency,
 
-      TOWNS_ANY: '1',
-      TOWNS: '',
+      TOWNS_ANY: anyFlag(filters.areas ?? []),
+      TOWNS: list(filters.areas ?? []),
       townssearch: '0',
       STARS_ANY: '1',
       STARS: '',

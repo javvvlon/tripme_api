@@ -54,7 +54,14 @@ export interface ISupplier {
 
   hotels?: (departureSlug: string, countrySlug: string) => Promise<ISupplierHotel[]>
 
+  towns?: (departureSlug: string, countrySlug: string) => Promise<ISupplierTown[]>
+
   uzsRates?: () => Promise<Record<string, number>>
+}
+
+export interface ISupplierTown {
+  name: string
+  region: string
 }
 
 export interface ISupplierHotel {

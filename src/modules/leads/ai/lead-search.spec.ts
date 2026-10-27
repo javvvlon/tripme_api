@@ -26,7 +26,7 @@ const request = (changes: Partial<ILeadRequest> = {}): ILeadRequest => ({
 })
 
 const facts = (changes: Partial<ILeadSearchFacts> = {}): ILeadSearchFacts => ({
-  destinations: [{ country: 'Египет', resort: 'Шарм-эль-Шейх', hotels: [], note: '' }],
+  destinations: [{ country: 'Египет', resort: 'Шарм-эль-Шейх', areas: [], hotels: [], note: '' }],
   from: '', dateFrom: '2026-12-27', dateTo: '2026-12-31', nights: null,
   adults: 3, kidAges: [null, null, null, null], stars: [], meals: [], budget: null, note: '',
   ...changes,
@@ -101,12 +101,18 @@ describe('lead search facts', () => {
   it('reads the old flat shape as one destination', () => {
     const read = leadSearchFactsOf({ country: 'Турция', resort: 'Кемер', note: 'Тихий отель' }, { countries, today })
 
-    expect(read.destinations).toEqual([{ country: 'Турция', resort: 'Кемер', hotels: [], note: 'Тихий отель' }])
+    expect(read.destinations).toEqual([{ country: 'Турция', resort: 'Кемер', areas: [], hotels: [], note: 'Тихий отель' }])
     expect(read.note).toBe('')
   })
 
   it('keeps one empty destination when nothing was understood', () => {
-    expect(leadSearchFactsOf({ destinations: [] }, { countries, today }).destinations).toEqual([{ country: '', resort: '', hotels: [], note: '' }])
+    expect(leadSearchFactsOf({ destinations: [] }, { countries, today }).destinations).toEqual([{ country: '', resort: '', areas: [], hotels: [], note: '' }])
+  })
+
+  it('keeps the towns Gemini lists inside a resort, without repeats', () => {
+    const read = leadSearchFactsOf({ destinations: [{ country: 'Египет', resort: 'Шарм-эль-Шейх', areas: ['Наама Бэй', 'Naama Bay', 'Наама Бэй', '', 42] }] }, { countries, today })
+
+    expect(read.destinations[0]!.areas).toEqual(['Наама Бэй', 'Naama Bay'])
   })
 
   it('drops a note that only repeats the budget', () => {
