@@ -21,7 +21,7 @@ export class ReferencesController {
 
   @Get('rates')
   async rates_() {
-    return this.rates.current()
+    return this.rates.display()
   }
 
   @Get('departures')

@@ -365,7 +365,7 @@ export class EsimService implements IPurchasePayments {
   }
 
   private async usdRate(): Promise<number> {
-    const current = await this.rates.current()
+    const current = await this.rates.display()
     const rate = current.rates.USD
 
     if (!rate) throw new ConflictException('The exchange rate is unavailable, try again shortly')

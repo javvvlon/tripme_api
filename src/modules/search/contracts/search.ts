@@ -63,7 +63,7 @@ export interface SearchEvent {
   offers?: unknown[]
 }
 
-export type UzsBasis = 'operator' | 'cbu'
+export type UzsBasis = 'operator' | 'cbu' | 'market'
 
 export interface UzsPrice {
   amount: number

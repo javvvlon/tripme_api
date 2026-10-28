@@ -79,14 +79,14 @@ export class SearchService {
   private async withCbuUzs(offers: Offer[]): Promise<Offer[]> {
     if (offers.every(offer => offer.get('price').uzs)) return offers
 
-    const cbu = await this.rates.current().catch(() => null)
+    const cbu = await this.rates.display().catch(() => null)
 
     return offers.map((offer) => {
       const price = offer.get('price')
 
       if (price.uzs || price.source.currency === 'UZS') return offer
 
-      const uzs = uzsByCbu(price.source.amount, cbu?.rates[price.source.currency])
+      const uzs = uzsByCbu(price.source.amount, cbu?.rates[price.source.currency], cbu?.source === 'market' ? 'market' : 'cbu')
 
       return uzs ? new Offer({ ...offer.payload(), price: { ...price, uzs } }) : offer
     })
