@@ -3,7 +3,17 @@ import type { CurrencyCode, Money } from '~/shared/contracts/data'
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
  */
+export type SearchMode = 'tours' | 'hotels' | 'excursions'
+
+export type ProductMode = Exclude<SearchMode, 'tours'>
+
+export const PRODUCT_MODES: ProductMode[] = ['hotels', 'excursions']
+
+export const isProductMode = (value: unknown): value is ProductMode =>
+  PRODUCT_MODES.includes(value as ProductMode)
+
 export interface SearchCriteria {
+  mode?: SearchMode
   from: string
   to: string
   dateFrom: string

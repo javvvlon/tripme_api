@@ -1,7 +1,7 @@
 import { Offer } from '~/modules/search/models/Offer'
-import { Availability } from '~/modules/search/contracts/search'
+import { Availability, isProductMode } from '~/modules/search/contracts/search'
 import { CURRENCY_BY_CODE } from '~/modules/suppliers/dictionary/dictionary.seed'
-import type { IOffer } from '~/modules/search/models/Offer'
+import type { IOffer, OfferProduct } from '~/modules/search/models/Offer'
 import type { SearchCriteria, SupplierRef } from '~/modules/search/contracts/search'
 import type { SamoRow } from './samo.contracts'
 
@@ -57,6 +57,14 @@ export function toFormDate(value: string): string {
     : value
 }
 
+function productOf(row: SamoRow, criteria: SearchCriteria): Pick<IOffer, 'product' | 'flightIncluded'> {
+  if (!isProductMode(criteria.mode)) return {}
+
+  const product: OfferProduct = criteria.mode === 'hotels' ? 'hotel' : 'excursion'
+
+  return { product, flightIncluded: product === 'excursion' && !row.landOnly }
+}
+
 export function mapSamoRow(
   row: SamoRow,
   criteria: SearchCriteria,
@@ -109,6 +117,8 @@ export function mapSamoRow(
     oldPrice: Number(row.priceOld) > amount ? Number(row.priceOld) : null,
     instantConfirm: row.instantConfirm,
     bestPrice: row.bestPrice,
+
+    ...productOf(row, criteria),
   }
 
   return new Offer(properties)

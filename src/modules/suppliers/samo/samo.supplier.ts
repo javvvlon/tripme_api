@@ -11,7 +11,11 @@ import type { ISamoHotelPlace, ISamoTown } from './samo.catalog'
 import { CURRENCY_CODES } from '~/modules/suppliers/dictionary/dictionary.seed'
 import { SupplierDictionary } from '~/modules/suppliers/dictionary/supplier-dictionary'
 import type { ISupplierTransport, SupplierCapabilities } from '~/modules/suppliers/base/contracts'
-import type { SearchCriteria } from '~/modules/search/contracts/search'
+import { isProductMode } from '~/modules/search/contracts/search'
+import type { ProductMode, SearchCriteria } from '~/modules/search/contracts/search'
+import { isLandOnly, isModulePage, isTransferOnly, moduleUrl, parseModuleForm, pickCurrency, pickDeparture } from './samo.modules'
+import type { ISamoModuleForm } from './samo.modules'
+import type { ReferenceItem } from '~/modules/suppliers/dictionary/dictionary.contracts'
 import { Offer } from '~/modules/search/models/Offer'
 import type { SamoQuery, SamoRow } from './samo.contracts'
 import { hotelKey } from '~/modules/search/hotel-key'
@@ -40,6 +44,9 @@ interface ISamoCatalog {
 
 const emptyCatalog = (): ISamoCatalog => ({ hotels: new Map(), towns: new Map() })
 
+const isLandOnlyDeparture = (departures: ReferenceItem[], code: string): boolean =>
+  isLandOnly(departures.find(item => item.code === code)?.label ?? '')
+
 export const SAMO_CAPABILITIES: SupplierCapabilities = {
     nativeFilters: ['hotels', 'areas', 'priceMin', 'priceMax'],
     pageSize: 100,
@@ -59,6 +66,8 @@ export abstract class SamoSupplier extends BaseSupplier<SamoQuery, SamoRow> {
   private cachedDictionary: SupplierDictionary | null = null
 
   private readonly catalogs = new Map<string, { at: number, ttl: number, catalog: Promise<ISamoCatalog> }>()
+
+  private readonly modules = new Map<ProductMode, { at: number, ttl: number, form: Promise<ISamoModuleForm | null> }>()
 
   @Optional() @Inject(CacheService) protected readonly cache?: CacheService
 
@@ -120,10 +129,36 @@ export abstract class SamoSupplier extends BaseSupplier<SamoQuery, SamoRow> {
     return items
   }
 
-  protected async buildQuery(criteria: SearchCriteria, page: number): Promise<SamoQuery | Unsupported> {
-    const townFrom = await this.dictionary.departureCode(criteria.from)
-    if (!townFrom) return new Unsupported(`does not fly from "${criteria.from}"`)
+  private moduleForm(mode: ProductMode): Promise<ISamoModuleForm | null> {
+    const cached = this.modules.get(mode)
 
+    if (cached && Date.now() - cached.at < cached.ttl) return cached.form
+
+    const entry = { at: Date.now(), ttl: FORM_PAGE_TTL_MS, form: Promise.resolve<ISamoModuleForm | null>(null) }
+
+    entry.form = this.page(moduleUrl(this.baseUrl, mode), FORM_PAGE_TTL_MS, html => isModulePage(html, mode))
+      .then(html => (isModulePage(html, mode) ? parseModuleForm(html) : null))
+      .catch((error: unknown) => {
+        this.logger.warn(`${mode} form unavailable: ${String(error)}`)
+
+        return null
+      })
+      .then((form) => {
+        if (!form?.countries.length) entry.ttl = CATALOG_RETRY_MS
+
+        return form
+      })
+
+    this.modules.set(mode, entry)
+
+    return entry.form
+  }
+
+  async productCountries(mode: ProductMode): Promise<ReferenceItem[]> {
+    return (await this.moduleForm(mode))?.countries ?? []
+  }
+
+  private partyProblem(criteria: SearchCriteria): Unsupported | null {
     const limits = this.dictionary.routeConstraints()
     const maxAdults = limits.maxAdults > 1 ? limits.maxAdults : this.capabilities.maxAdults
     const maxChildren = limits.maxChildren > 0 ? limits.maxChildren : this.capabilities.maxChildren
@@ -131,14 +166,16 @@ export abstract class SamoSupplier extends BaseSupplier<SamoQuery, SamoRow> {
     if (criteria.adults > maxAdults) return new Unsupported(`at most ${maxAdults} adults`)
     if (criteria.childrenAges.length > maxChildren) return new Unsupported(`at most ${maxChildren} children`)
 
-    await this.destinationsFrom(criteria.from)
+    return null
+  }
 
-    const state = await this.dictionary.countryCode(criteria.to)
-    if (!state) return new Unsupported(`does not sell "${criteria.to}" from "${criteria.from}"`)
-
+  private async withCatalogFilters(
+    criteria: SearchCriteria,
+    catalog: () => Promise<ISamoCatalog>,
+  ): Promise<SearchCriteria | Unsupported> {
     if (criteria.filters.hotels.length) {
       const wanted = new Set(criteria.filters.hotels)
-      const { hotels } = await this.catalogOf(townFrom, state, this.constants.STATEFROM ?? '')
+      const { hotels } = await catalog()
       const codes = [...hotels].filter(([, hotel]) => hotel.name && wanted.has(hotelKey(hotel.name))).map(([code]) => code)
 
       if (!codes.length) return new Unsupported('does not sell the chosen hotels')
@@ -147,7 +184,7 @@ export abstract class SamoSupplier extends BaseSupplier<SamoQuery, SamoRow> {
     }
 
     if (criteria.filters.areas?.length) {
-      const { towns } = await this.catalogOf(townFrom, state, this.constants.STATEFROM ?? '')
+      const { towns } = await catalog()
       const codes = townsIn([...towns].map(([code, town]) => ({ ...town, code })), criteria.filters.areas).map(town => town.code)
 
       if (!codes.length) return new Unsupported('does not sell the chosen resort')
@@ -155,7 +192,61 @@ export abstract class SamoSupplier extends BaseSupplier<SamoQuery, SamoRow> {
       criteria = { ...criteria, filters: { ...criteria.filters, areas: codes } }
     }
 
-    const params = new SamoSearchIntention({ townFrom, state }, page, this.constants).toRequest(criteria)
+    return criteria
+  }
+
+  private async buildProductQuery(mode: ProductMode, asked: SearchCriteria, page: number): Promise<SamoQuery | Unsupported> {
+    const form = await this.moduleForm(mode)
+    if (!form) return new Unsupported(`does not sell ${mode}`)
+
+    const party = this.partyProblem(asked)
+    if (party) return party
+
+    const state = form.countries.find(item => item.slug === asked.to)?.code
+    if (!state) return new Unsupported(`does not sell ${mode} in "${asked.to}"`)
+
+    const departure = mode === 'excursions' ? pickDeparture(form.departures, asked.from) : null
+    if (mode === 'excursions' && !departure) return new Unsupported('has no excursion departures')
+
+    const townFrom = departure?.code ?? ''
+    const base = moduleUrl(this.baseUrl, mode)
+    const criteria = await this.withCatalogFilters(asked, () => this.catalogOf(townFrom, state, '', base))
+
+    if (isUnsupported(criteria)) return criteria
+
+    const currency = pickCurrency(form.currencies, this.constants.CURRENCY ?? CURRENCY_CODES[criteria.currency])
+    const constants: Record<string, string> = currency ? { CURRENCY: currency } : {}
+    const params = new SamoSearchIntention({ townFrom, state }, page, constants).toRequest(criteria)
+
+    if (isUnsupported(params)) return params
+
+    if (mode === 'hotels') {
+      delete params.TOWNFROMINC
+      delete params.STATEFROM
+    }
+
+    return { params, baseUrl: base }
+  }
+
+  protected async buildQuery(criteria: SearchCriteria, page: number): Promise<SamoQuery | Unsupported> {
+    if (isProductMode(criteria.mode)) return this.buildProductQuery(criteria.mode, criteria, page)
+
+    const townFrom = await this.dictionary.departureCode(criteria.from)
+    if (!townFrom) return new Unsupported(`does not fly from "${criteria.from}"`)
+
+    const party = this.partyProblem(criteria)
+    if (party) return party
+
+    await this.destinationsFrom(criteria.from)
+
+    const state = await this.dictionary.countryCode(criteria.to)
+    if (!state) return new Unsupported(`does not sell "${criteria.to}" from "${criteria.from}"`)
+
+    const filtered = await this.withCatalogFilters(criteria, () => this.catalogOf(townFrom, state, this.constants.STATEFROM ?? ''))
+
+    if (isUnsupported(filtered)) return filtered
+
+    const params = new SamoSearchIntention({ townFrom, state }, page, this.constants).toRequest(filtered)
 
     if (isUnsupported(params)) return params
 
@@ -226,11 +317,18 @@ export abstract class SamoSupplier extends BaseSupplier<SamoQuery, SamoRow> {
     }
   }
 
-  protected override async prepare(rows: SamoRow[]): Promise<void> {
+  protected override async prepare(rows: SamoRow[], criteria: SearchCriteria): Promise<void> {
     const first = rows[0]
-    if (!first?.townfrom || !first.state) return
+    if (!first?.state) return
 
-    const { hotels } = await this.catalogOf(first.townfrom, first.state, first.statefrom)
+    const mode = isProductMode(criteria.mode) ? criteria.mode : null
+
+    if (!mode && !first.townfrom) return
+
+    const townFrom = mode === 'hotels' ? '' : first.townfrom
+    const base = mode ? moduleUrl(this.baseUrl, mode) : this.baseUrl
+    const { hotels } = await this.catalogOf(townFrom, first.state, mode ? '' : first.statefrom, base)
+    const departures = mode === 'excursions' ? (await this.moduleForm(mode))?.departures ?? [] : []
 
     for (const row of rows) {
       const place = hotels.get(row.hotel)
@@ -239,21 +337,23 @@ export abstract class SamoSupplier extends BaseSupplier<SamoQuery, SamoRow> {
       row.starKey = place?.stars ?? ''
       row.catalogStars = place?.starCount ?? null
       row.hotelKind = place?.kind ?? null
+
+      if (mode) row.landOnly = mode === 'hotels' || isLandOnlyDeparture(departures, row.townfrom)
     }
   }
 
-  private catalogOf(townFrom: string, state: string, stateFrom: string): Promise<ISamoCatalog> {
-    const key = `${townFrom}:${state}:${stateFrom}`
+  private catalogOf(townFrom: string, state: string, stateFrom: string, base = this.baseUrl): Promise<ISamoCatalog> {
+    const key = `${base}:${townFrom}:${state}:${stateFrom}`
     const cached = this.catalogs.get(key)
 
     if (cached && Date.now() - cached.at < cached.ttl) return cached.catalog
 
-    const params = new URLSearchParams({ TOWNFROMINC: townFrom, STATEINC: state })
+    const params = new URLSearchParams(townFrom ? { TOWNFROMINC: townFrom, STATEINC: state } : { STATEINC: state })
     if (stateFrom) params.set('STATEFROM', stateFrom)
 
     const entry = { at: Date.now(), ttl: CATALOG_TTL_MS, catalog: Promise.resolve(emptyCatalog()) }
 
-    entry.catalog = this.page(`${this.baseUrl}?${params.toString()}`, CATALOG_TTL_MS, looksLikeCatalog)
+    entry.catalog = this.page(`${base}?${params.toString()}`, CATALOG_TTL_MS, looksLikeCatalog)
       .then(html => ({ hotels: parseHotelCatalog(html), towns: parseTowns(html) }))
       .then((catalog) => {
         if (!catalog.hotels.size) entry.ttl = CATALOG_RETRY_MS
@@ -282,7 +382,10 @@ export abstract class SamoSupplier extends BaseSupplier<SamoQuery, SamoRow> {
   }
 
   protected map(row: SamoRow, criteria: SearchCriteria): Offer | null {
-    const offer = mapSamoRow(row, criteria, this.ref, this.baseUrl)
+    if (criteria.mode === 'hotels' && isTransferOnly(row.hotelName)) return null
+
+    const base = isProductMode(criteria.mode) ? moduleUrl(this.baseUrl, criteria.mode) : this.baseUrl
+    const offer = mapSamoRow(row, criteria, this.ref, base)
 
     return offer ? this.withUzs(this.withConvertedPrice(offer, criteria)) : null
   }

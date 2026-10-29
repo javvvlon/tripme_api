@@ -1,11 +1,13 @@
 import { BadRequestException } from '@nestjs/common'
 import type { CurrencyCode } from '~/shared/contracts/data'
+import { isProductMode } from './contracts/search'
 import type { SearchCriteria } from './contracts/search'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
  */
 export interface SearchQueryDto {
+  mode?: string
   from?: string
   to?: string
   date?: string
@@ -53,8 +55,12 @@ const int = (value: string | undefined, fallback: number): number => {
   return Number.isFinite(n) ? n : fallback
 }
 
+export const EXCURSION_NIGHTS = { from: 1, to: 14 } as const
+
 export function toCriteria(query: SearchQueryDto): SearchCriteria {
-  if (!query.from) throw new BadRequestException('from is required')
+  const mode = isProductMode(query.mode) ? query.mode : null
+
+  if (!query.from && !mode) throw new BadRequestException('from is required')
   if (!query.to) throw new BadRequestException('to is required')
   if (!query.date || !ISO_DATE.test(query.date)) {
     throw new BadRequestException('date is required, as YYYY-MM-DD')
@@ -62,14 +68,17 @@ export function toCriteria(query: SearchQueryDto): SearchCriteria {
 
   const dateTo = clampRange(query.date, query.dateTo)
   const nightsFrom = int(query.nights, FLEXIBLE_NIGHTS.from)
+  const nightsTo = int(query.nightsTo, query.nights ? nightsFrom : FLEXIBLE_NIGHTS.to)
+  const excursions = mode === 'excursions'
 
   return {
-    from: query.from,
+    ...(mode ? { mode } : {}),
+    from: mode === 'hotels' ? '' : query.from ?? '',
     to: query.to,
     dateFrom: query.date,
     dateTo,
-    nightsFrom,
-    nightsTo: int(query.nightsTo, query.nights ? nightsFrom : FLEXIBLE_NIGHTS.to),
+    nightsFrom: excursions ? EXCURSION_NIGHTS.from : nightsFrom,
+    nightsTo: excursions ? EXCURSION_NIGHTS.to : nightsTo,
     adults: int(query.adults, 2),
     childrenAges: list(query.children).map(Number).filter(Number.isFinite),
     currency: ((query.currency ?? 'USD').toUpperCase() as CurrencyCode),

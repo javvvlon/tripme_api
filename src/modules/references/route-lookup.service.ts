@@ -2,6 +2,8 @@ import { Inject, Injectable } from '@nestjs/common'
 import { SUPPLIERS } from '~/modules/suppliers/base/tokens'
 import type { ISupplier } from '~/modules/suppliers/base/contracts'
 import type { ReferenceItem, RouteAnswer } from '~/modules/suppliers/dictionary/dictionary.contracts'
+import type { ProductMode } from '~/modules/search/contracts/search'
+import { OperatorsService } from '~/modules/operators/operators.service'
 import { byHomeFirst, isAsianDeparture } from './departure-countries'
 
 /**
@@ -9,7 +11,10 @@ import { byHomeFirst, isAsianDeparture } from './departure-countries'
  */
 @Injectable()
 export class RouteLookupService {
-  constructor(@Inject(SUPPLIERS) private readonly suppliers: ISupplier[]) {}
+  constructor(
+    @Inject(SUPPLIERS) private readonly suppliers: ISupplier[],
+    private readonly operators: OperatorsService,
+  ) {}
 
   async departures(): Promise<{ items: ReferenceItem[] }> {
     const lists = await Promise.all(
@@ -32,6 +37,18 @@ export class RouteLookupService {
     )
 
     return { items: merge(lists.flat()), from }
+  }
+
+  async productCountries(mode: ProductMode): Promise<RouteAnswer> {
+    const enabled = new Set(await this.operators.enabledSlugs().catch(() => [] as string[]))
+
+    const lists = await Promise.all(
+      this.suppliers
+        .filter(supplier => enabled.has(supplier.ref.id))
+        .map(supplier => supplier.productCountries?.(mode).catch(() => [] as ReferenceItem[]) ?? Promise.resolve([])),
+    )
+
+    return { items: merge(lists.flat()), from: null }
   }
 }
 

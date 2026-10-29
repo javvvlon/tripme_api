@@ -1,6 +1,7 @@
 import type { Offer } from '~/modules/search/models/Offer'
 import type { RouteFacts } from '~/modules/suppliers/dictionary/routes.service'
-import type { SearchCriteria, SupplierRef } from '~/modules/search/contracts/search'
+import type { ProductMode, SearchCriteria, SupplierRef } from '~/modules/search/contracts/search'
+import type { ReferenceItem } from '~/modules/suppliers/dictionary/dictionary.contracts'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -57,6 +58,8 @@ export interface ISupplier {
   towns?: (departureSlug: string, countrySlug: string) => Promise<ISupplierTown[]>
 
   uzsRates?: () => Promise<Record<string, number>>
+
+  productCountries?: (mode: ProductMode) => Promise<ReferenceItem[]>
 }
 
 export interface ISupplierTown {

@@ -45,7 +45,12 @@ export interface IOffer {
   oldPrice?: number | null
   instantConfirm?: boolean
   bestPrice?: boolean
+
+  product?: OfferProduct
+  flightIncluded?: boolean
 }
+
+export type OfferProduct = 'hotel' | 'excursion'
 
 export class Offer extends Model<IOffer> {
   public isBookable(): boolean {

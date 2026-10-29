@@ -4,11 +4,14 @@ import { CalendarService } from './calendar.service'
 import { RouteLookupService } from './route-lookup.service'
 import { RatesService } from './rates.service'
 import type { ISupplier } from '~/modules/suppliers/base/contracts'
+import { isProductMode } from '~/modules/search/contracts/search'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
  */
 const FALLBACK = { nights: [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14], maxAdults: 4, maxChildren: 3 }
+
+const STAY_NIGHTS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
 
 @Controller('references')
 export class ReferencesController {
@@ -41,12 +44,22 @@ export class ReferencesController {
   }
 
   @Get('countries')
-  async countries(@Query('from') from?: string) {
-    return this.routes.countriesFrom(from)
+  async countries(@Query('from') from?: string, @Query('mode') mode?: string) {
+    return isProductMode(mode) ? this.routes.productCountries(mode) : this.routes.countriesFrom(from)
   }
 
   @Get('constraints')
-  async constraints(@Query('from') from?: string, @Query('to') to?: string) {
+  async constraints(@Query('from') from?: string, @Query('to') to?: string, @Query('mode') mode?: string) {
+    if (isProductMode(mode)) {
+      return {
+        nights: STAY_NIGHTS,
+        maxAdults: FALLBACK.maxAdults,
+        maxChildren: FALLBACK.maxChildren,
+        currencies: ['USD', 'EUR', 'UZS'],
+        calendar: null,
+      }
+    }
+
     const facts = await this.calendar.factsFor(from, to)
 
     return {

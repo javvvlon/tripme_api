@@ -8,7 +8,7 @@ import type { RouteConstraints } from '~/modules/suppliers/base/contracts'
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
  */
-interface RefOption { value: string, label: string }
+export interface RefOption { value: string, label: string }
 
 const TTL_MS = 60 * 60 * 1000
 
@@ -89,24 +89,8 @@ export class SupplierDictionary {
     return this.hydrating
   }
 
-  private slugFor(map: Record<string, string[]>, label: string): string {
-    const needle = label.trim().toLowerCase()
-
-    for (const [slug, aliases] of Object.entries(map)) {
-      if (aliases.some(alias => alias.trim().toLowerCase() === needle)) return slug
-    }
-
-    return slugify(label)
-  }
-
   private items(field: string, labels: Record<string, string[]>): ReferenceItem[] {
-    return (this.options.get(field) ?? [])
-      .map(option => ({
-        slug: this.slugFor(labels, option.label),
-        label: option.label.trim(),
-        code: option.value,
-      }))
-      .filter(item => item.slug && item.label)
+    return referenceItems(this.options.get(field) ?? [], labels)
   }
 
   async departures(): Promise<ReferenceItem[]> {
@@ -215,7 +199,27 @@ export function parseCrossRates(html: string): { rates: Map<string, Map<string, 
   return { rates, codes }
 }
 
-function parseSelect(html: string, name: string): RefOption[] {
+function slugFor(map: Record<string, string[]>, label: string): string {
+  const needle = label.trim().toLowerCase()
+
+  for (const [slug, aliases] of Object.entries(map)) {
+    if (aliases.some(alias => alias.trim().toLowerCase() === needle)) return slug
+  }
+
+  return slugify(label)
+}
+
+export function referenceItems(options: RefOption[], labels: Record<string, string[]>): ReferenceItem[] {
+  return options
+    .map(option => ({
+      slug: slugFor(labels, option.label),
+      label: option.label.trim(),
+      code: option.value,
+    }))
+    .filter(item => item.slug && item.label)
+}
+
+export function parseSelect(html: string, name: string): RefOption[] {
   const select = new RegExp(`<select[^>]*name="${name}"[^>]*>([\\s\\S]*?)</select>`).exec(html)
   if (!select) return []
 

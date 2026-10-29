@@ -37,7 +37,7 @@ export abstract class BaseSupplier<TQuery, TRow> implements ISupplier {
 
   protected abstract map(row: TRow, criteria: SearchCriteria): Offer | null
 
-  protected async prepare(_rows: TRow[]): Promise<void> {}
+  protected async prepare(_rows: TRow[], _criteria: SearchCriteria): Promise<void> {}
 
   abstract departures(): Promise<Array<{ slug: string, label: string, code: string }>>
 
@@ -75,7 +75,7 @@ export abstract class BaseSupplier<TQuery, TRow> implements ISupplier {
 
     const rows = this.parse(payload)
 
-    await this.prepare(rows)
+    await this.prepare(rows, criteria)
 
     const offers: Offer[] = []
     for (const row of rows) {

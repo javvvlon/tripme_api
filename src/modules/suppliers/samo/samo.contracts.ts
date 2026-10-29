@@ -50,4 +50,5 @@ export interface SamoRow {
   starKey?: string
   catalogStars?: number | null
   hotelKind?: 'boutique' | 'apart' | null
+  landOnly?: boolean
 }

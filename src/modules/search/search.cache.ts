@@ -12,6 +12,7 @@ export const failureKey = (resultKey: string): string => resultKey.replace(/^sea
 
 export function searchCacheKey(supplierId: string, criteria: SearchCriteria, page: number): string {
   const sent = {
+    ...(criteria.mode && criteria.mode !== 'tours' ? { mode: criteria.mode } : {}),
     from: criteria.from,
     to: criteria.to,
     dateFrom: criteria.dateFrom,
