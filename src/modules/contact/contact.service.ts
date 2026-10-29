@@ -9,9 +9,24 @@ export interface IContactInput {
   locale?: string
   consent?: boolean
   topic?: string
+  category?: string
 }
 
 export const CONTACT_TOPICS: Record<string, string> = { beta: 'beta' }
+
+export const FEEDBACK_CATEGORIES: Record<string, string> = {
+  BUG: 'Техническая ошибка',
+  INQUIRY: 'Вопрос по бронированию',
+  IDEA: 'Идея / пожелание',
+}
+
+export function commentOf(input: IContactInput): string | undefined {
+  const category = String(input.category ?? '')
+
+  if (input.topic !== 'beta' || !Object.hasOwn(FEEDBACK_CATEGORIES, category)) return input.message
+
+  return `[${FEEDBACK_CATEGORIES[category]}] ${input.message ?? ''}`.trim()
+}
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -25,7 +40,7 @@ export class ContactService {
       first_name: input.first_name,
       last_name: input.last_name,
       phone: input.phone,
-      comment: input.message,
+      comment: commentOf(input),
       locale: input.locale,
       channel: CONTACT_TOPICS[String(input.topic ?? '')] ?? 'contact',
       consent: input.consent,
