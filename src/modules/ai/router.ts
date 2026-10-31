@@ -2,11 +2,12 @@ import { transcriptOf } from '~/shared/ai/chat'
 import type { IChatTurn } from '~/shared/ai/chat'
 import { TRUTH_RULES } from '~/shared/ai/truth'
 import { looksLikeOffer } from '~/modules/marketing/intake/assistant'
+import { IMAGE_ASK } from './image.studio'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
  */
-export const AI_DOMAINS = ['marketing', 'blog', 'general'] as const
+export const AI_DOMAINS = ['marketing', 'blog', 'image', 'general'] as const
 
 export type AiDomain = typeof AI_DOMAINS[number]
 
@@ -37,6 +38,10 @@ export function contextOf(raw: unknown): IAiContext {
 export function routeOf(text: string, image: boolean, context: IAiContext): AiDomain | null {
   if (!image && ARTICLE_ASK.test(text)) return 'blog'
 
+  if (IMAGE_ASK.test(text)) return 'image'
+
+  if (context.domain === 'image' && !context.pending && text.length < CLARIFICATION_CHARS && !BLOG.test(text) && !MARKETING.test(text)) return 'image'
+
   if (image || looksLikeOffer(text, false)) return 'marketing'
 
   if (context.pending && text.length < CLARIFICATION_CHARS && !BLOG.test(text)) return 'marketing'
@@ -53,14 +58,14 @@ export function routeOf(text: string, image: boolean, context: IAiContext): AiDo
 export function handoffOf(raw: unknown): AiDomain {
   const input = raw && typeof raw === 'object' ? raw as Record<string, unknown> : {}
 
-  return input.route === 'blog' || input.route === 'marketing' ? input.route : 'general'
+  return input.route === 'blog' || input.route === 'marketing' || input.route === 'image' ? input.route : 'general'
 }
 
 export const tripmeSystem = (voice: string): string => [
   'You are TripMe AI, the assistant inside the staff CMS of tripme.uz, a tour agency in Uzbekistan. You talk with managers, agents and marketers.',
-  'What TripMe AI can do: build an ad selection from a tour operator\'s post (pasted text, a public t.me link or a screenshot) or from the agency\'s own offer, and then make banners, a Telegram post and a 15-second video in the studio; write a blog article in Russian, Uzbek and English with pictures, revise a draft or suggest topics; give advice on ads, posts, campaigns and site content.',
+  'What TripMe AI can do: build an ad selection from a tour operator\'s post (pasted text, a public t.me link or a screenshot) or from the agency\'s own offer, and then make banners, a Telegram post and a 15-second video in the studio; write a blog article in Russian, Uzbek and English with pictures, revise a draft or suggest topics; generate images for the site and marketing in the TripMe style at any size and save them to the media library; give advice on ads, posts, campaigns and site content.',
   'Answer in the language of the last staff message (Russian, Uzbek or English). Be brief and concrete: 2–6 sentences or a short list. Use the formal «Вы». Never use emoji: TripMe has a zero-emoji policy (KNB-MKT-004).',
-  'Hand the task over instead of answering when the staff member asks to write, revise or plan a blog article: return {"route": "blog"} and nothing else. When they share a tour offer or ask to build an ad selection, banners or a Telegram post from an offer, return {"route": "marketing"} and nothing else.',
+  'Hand the task over instead of answering when the staff member asks to write, revise or plan a blog article: return {"route": "blog"} and nothing else. When they share a tour offer or ask to build an ad selection, banners or a Telegram post from an offer, return {"route": "marketing"} and nothing else. When they ask to generate, draw or make a picture, background, illustration or texture, return {"route": "image"} and nothing else.',
   TRUTH_RULES,
   `TripMe voice:\n${voice}`,
   'Otherwise return JSON only: {"reply": "...", "suggestions": ["...", "..."]}. suggestions are up to 3 short next messages the staff member might send, in the same language.',

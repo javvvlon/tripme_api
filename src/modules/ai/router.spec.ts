@@ -58,4 +58,13 @@ describe('TripMe AI routing', () => {
     expect(system).toContain('{"route": "blog"}')
     expect(system).toContain('Truth Standard')
   })
+
+  it('sends image requests and their follow-ups to the image studio', () => {
+    expect(routeOf('Сгенерируй нейтральный фон с листьями 1920×765', false, fresh)).toBe('image')
+    expect(routeOf('Сделай похожую картинку', true, fresh)).toBe('image')
+    expect(routeOf('сделай светлее и ещё один вариант', false, contextOf({ domain: 'image' }))).toBe('image')
+    expect(routeOf('Напиши статью про Самарканд', false, contextOf({ domain: 'image' }))).toBe('blog')
+    expect(routeOf('Сделай подборку по Египту на ноябрь', false, contextOf({ domain: 'image' }))).toBe('marketing')
+    expect(handoffOf({ route: 'image' })).toBe('image')
+  })
 })

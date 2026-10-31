@@ -171,6 +171,9 @@ export const SINGLE_KINDS: SectionKind[] = ['search', 'contact']
 
 export interface ISectionSettings {
   image_url?: string | null
+  image_url_dark?: string | null
+  overlay?: number | null
+  overlay_dark?: number | null
   page_size?: number
   exclude_featured?: boolean
   style?: typeof BANNER_STYLES[number]
@@ -183,21 +186,41 @@ export interface ISectionSettings {
 const oneOf = <T extends string>(options: readonly T[], value: unknown): T =>
   options.includes(value as T) ? value as T : options[0]!
 
-const imageOf = (input: Record<string, unknown>): string | null =>
-  (typeof input.image_url === 'string' ? input.image_url.trim() : '') || null
+const imageOf = (input: Record<string, unknown>, key: 'image_url' | 'image_url_dark' = 'image_url'): string | null =>
+  (typeof input[key] === 'string' ? (input[key] as string).trim() : '') || null
+
+export const THEME_IMAGE_KINDS: SectionKind[] = ['search', 'hero', 'banner', 'media']
+
+const overlayOf = (value: unknown): number | null => {
+  const number = typeof value === 'number' ? value : typeof value === 'string' && value.trim() ? Number(value) : Number.NaN
+
+  return Number.isFinite(number) ? Math.min(100, Math.max(0, Math.round(number))) : null
+}
+
+const imagesOf = (kind: SectionKind, input: Record<string, unknown>): Pick<ISectionSettings, 'image_url' | 'image_url_dark'> =>
+  THEME_IMAGE_KINDS.includes(kind)
+    ? { image_url: imageOf(input), image_url_dark: imageOf(input, 'image_url_dark') }
+    : { image_url: imageOf(input) }
 
 export function sectionSettings(kind: SectionKind, raw: unknown): ISectionSettings {
   const input = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>
 
-  if (kind === 'search') return { image_url: imageOf(input), accent: oneOf(HERO_ACCENTS, input.accent) }
-
-  if (kind === 'hero' || kind === 'quote') return { image_url: imageOf(input) }
-
-  if (kind === 'banner') {
-    return { image_url: imageOf(input), style: oneOf(BANNER_STYLES, input.style), tone: oneOf(BLOCK_TONES, input.tone) }
+  if (kind === 'search') {
+    return {
+      ...imagesOf(kind, input),
+      accent: oneOf(HERO_ACCENTS, input.accent),
+      overlay: overlayOf(input.overlay),
+      overlay_dark: overlayOf(input.overlay_dark),
+    }
   }
 
-  if (kind === 'media') return { image_url: imageOf(input), image_side: oneOf(IMAGE_SIDES, input.image_side) }
+  if (kind === 'hero' || kind === 'quote') return imagesOf(kind, input)
+
+  if (kind === 'banner') {
+    return { ...imagesOf(kind, input), style: oneOf(BANNER_STYLES, input.style), tone: oneOf(BLOCK_TONES, input.tone) }
+  }
+
+  if (kind === 'media') return { ...imagesOf(kind, input), image_side: oneOf(IMAGE_SIDES, input.image_side) }
 
   if (kind === 'cta') return { tone: oneOf(BLOCK_TONES, input.tone === undefined ? 'brand' : input.tone) }
 

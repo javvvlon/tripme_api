@@ -71,7 +71,7 @@ describe('page builder blocks', () => {
   it('cleans block settings', () => {
     expect(sectionSettings('feed', { page_size: 7, exclude_featured: false })).toEqual({ page_size: 9, exclude_featured: false })
     expect(sectionSettings('feed', { page_size: 12 })).toEqual({ page_size: 12, exclude_featured: true })
-    expect(sectionSettings('hero', { image_url: '  https://x/1.jpg ', extra: 1 })).toEqual({ image_url: 'https://x/1.jpg' })
+    expect(sectionSettings('hero', { image_url: '  https://x/1.jpg ', extra: 1 })).toEqual({ image_url: 'https://x/1.jpg', image_url_dark: null })
     expect(sectionSettings('cards', { page_size: 12 })).toEqual({})
   })
 })
@@ -117,8 +117,8 @@ describe('rich blocks', () => {
 
   it('keeps only known looks', () => {
     expect(sectionSettings('banner', { image_url: ' https://x/1.jpg ', style: 'wide', tone: 'neon' }))
-      .toEqual({ image_url: 'https://x/1.jpg', style: 'wide', tone: 'light' })
-    expect(sectionSettings('media', { image_side: 'right' })).toEqual({ image_url: null, image_side: 'right' })
+      .toEqual({ image_url: 'https://x/1.jpg', image_url_dark: null, style: 'wide', tone: 'light' })
+    expect(sectionSettings('media', { image_side: 'right' })).toEqual({ image_url: null, image_url_dark: null, image_side: 'right' })
     expect(sectionSettings('cta', {})).toEqual({ tone: 'brand' })
     expect(sectionSettings('spotlight', { list_size: 9 })).toEqual({ list_size: 4 })
     expect(sectionSettings('text', { tone: 'dark' })).toEqual({})
@@ -135,9 +135,11 @@ describe('home blocks', () => {
   })
 
   it('keeps only the photo of a search hero', () => {
-    expect(sectionSettings('search', { image_url: ' https://x/h.jpg ', tone: 'dark' })).toEqual({ image_url: 'https://x/h.jpg', accent: 'pill' })
-    expect(sectionSettings('search', { accent: 'gold' })).toEqual({ image_url: null, accent: 'gold' })
-    expect(sectionSettings('search', { accent: 'neon' })).toEqual({ image_url: null, accent: 'pill' })
+    const hero = { image_url_dark: null, overlay: null, overlay_dark: null }
+
+    expect(sectionSettings('search', { image_url: ' https://x/h.jpg ', tone: 'dark' })).toEqual({ ...hero, image_url: 'https://x/h.jpg', accent: 'pill' })
+    expect(sectionSettings('search', { accent: 'gold' })).toEqual({ ...hero, image_url: null, accent: 'gold' })
+    expect(sectionSettings('search', { accent: 'neon' })).toEqual({ ...hero, image_url: null, accent: 'pill' })
     expect(sectionSettings('contact', { image_url: 'https://x/h.jpg' })).toEqual({})
   })
 })
@@ -191,5 +193,21 @@ describe('feature icons', () => {
     expect(isFeatureIcon('trophy')).toBe(true)
     expect(isFeatureIcon('emoji')).toBe(false)
     expect(isFeatureIcon(null)).toBe(false)
+  })
+})
+
+describe('theme images and hero overlay', () => {
+  it('keeps a dark-theme image on photo blocks only', () => {
+    expect(sectionSettings('banner', { image_url: 'https://x/light.jpg', image_url_dark: ' https://x/dark.jpg ' }))
+      .toMatchObject({ image_url: 'https://x/light.jpg', image_url_dark: 'https://x/dark.jpg' })
+    expect(sectionSettings('media', { image_url_dark: '' })).toMatchObject({ image_url: null, image_url_dark: null })
+    expect(sectionSettings('quote', { image_url: 'https://x/p.jpg', image_url_dark: 'https://x/d.jpg' })).toEqual({ image_url: 'https://x/p.jpg' })
+  })
+
+  it('clamps the hero overlay to 0–100 and drops nonsense', () => {
+    expect(sectionSettings('search', { overlay: 55.4, overlay_dark: '130' })).toMatchObject({ overlay: 55, overlay_dark: 100 })
+    expect(sectionSettings('search', { overlay: -5, overlay_dark: 'dark' })).toMatchObject({ overlay: 0, overlay_dark: null })
+    expect(sectionSettings('search', {})).toMatchObject({ overlay: null, overlay_dark: null, image_url_dark: null })
+    expect(sectionSettings('banner', { overlay: 50 })).not.toHaveProperty('overlay')
   })
 })

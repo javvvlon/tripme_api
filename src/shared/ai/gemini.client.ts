@@ -36,6 +36,11 @@ export interface IGeminiImage {
   data: Buffer
 }
 
+export interface IImageOptions {
+  imageSize?: '1K' | '2K' | '4K'
+  references?: IGeminiImage[]
+}
+
 export interface IJsonOptions {
   images?: IGeminiImage[]
   temperature?: number
@@ -103,11 +108,23 @@ export class GeminiClient {
     }
   }
 
-  async image(prompt: string, aspectRatio: string): Promise<IGeminiImage> {
-    const parts = await this.generate(this.imageModel, {
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      generationConfig: { responseModalities: ['IMAGE'], imageConfig: { aspectRatio } },
+  async image(prompt: string, aspectRatio: string, options: IImageOptions = {}): Promise<IGeminiImage> {
+    const references = (options.references ?? []).map(image => ({ inline_data: { mime_type: image.mimeType, data: image.data.toString('base64') } }))
+    const request = (imageConfig: Record<string, unknown>) => this.generate(this.imageModel, {
+      contents: [{ role: 'user', parts: [...references, { text: prompt }] }],
+      generationConfig: { responseModalities: ['IMAGE'], imageConfig },
     })
+
+    let parts: IGeminiPart[]
+
+    try {
+      parts = await request(options.imageSize ? { aspectRatio, imageSize: options.imageSize } : { aspectRatio })
+    }
+    catch (error) {
+      if (!options.imageSize || !(error instanceof BadGatewayException) || error instanceof GeminiBusy) throw error
+
+      parts = await request({ aspectRatio })
+    }
 
     const blob = parts.map(part => part.inlineData ?? part.inline_data).find(found => found?.data)
 

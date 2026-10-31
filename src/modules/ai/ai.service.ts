@@ -11,6 +11,8 @@ import { DEFAULT_VOICE } from '~/modules/marketing/ai/copywriter'
 import { BlogAssistantService } from '~/modules/posts/assistant/blog.assistant.service'
 import type { IBlogAssistantAnswer } from '~/modules/posts/assistant/blog.assistant.service'
 import { contextOf, handoffOf, routeOf, tripmePrompt, tripmeSystem } from './router'
+import { ImageStudioService } from './image.service'
+import type { IImageAnswer } from './image.service'
 import type { AiDomain } from './router'
 
 /**
@@ -26,6 +28,7 @@ export interface IAiInput {
 export type IAiAnswer =
   | { domain: 'marketing', text: string, marketing: IAssistantAnswer }
   | { domain: 'blog', blog: IBlogAssistantAnswer }
+  | { domain: 'image', image: IImageAnswer }
   | { domain: 'general', reply: string, suggestions: string[] }
 
 const MAX_TEXT = 4000
@@ -36,6 +39,7 @@ export class AiService {
     private readonly marketing: MarketingService,
     private readonly blog: BlogAssistantService,
     private readonly gemini: GeminiClient,
+    private readonly images: ImageStudioService,
     @InjectRepository(MarketingSettingsEntity) private readonly settings: Repository<MarketingSettingsEntity>,
   ) {}
 
@@ -57,6 +61,8 @@ export class AiService {
     }
 
     if (domain === 'blog') return { domain, blog: await this.blog.assist({ text, history, post_id: context.post_id }, actorId) }
+
+    if (domain === 'image') return { domain, image: await this.images.create({ text, history, reference: input.image }) }
 
     return { domain: 'general', reply: general?.reply ?? '', suggestions: general?.suggestions ?? [] }
   }

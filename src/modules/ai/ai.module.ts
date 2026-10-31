@@ -7,6 +7,7 @@ import { PostsModule } from '~/modules/posts/posts.module'
 import { GeminiClient } from '~/shared/ai/gemini.client'
 import { AiController } from './ai.controller'
 import { AiService } from './ai.service'
+import { ImageStudioService } from './image.service'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -14,6 +15,6 @@ import { AiService } from './ai.service'
 @Module({
   imports: [AuthModule, MarketingModule, PostsModule, TypeOrmModule.forFeature([MarketingSettingsEntity])],
   controllers: [AiController],
-  providers: [AiService, GeminiClient],
+  providers: [AiService, GeminiClient, ImageStudioService],
 })
 export class AiModule {}
