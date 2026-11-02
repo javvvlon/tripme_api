@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { Availability } from './contracts/search'
 import type { IOffer } from './models/Offer'
-import { byTheme, countriesOf, discountOf, entryOf, offerFor, showcaseWindow, themeOf } from './showcase'
+import { ROUTE_HOTELS, byTheme, countriesOf, discountOf, entryOf, hotelsOf, offerFor, showcaseWindow, themeOf } from './showcase'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -71,6 +71,19 @@ describe('showcase', () => {
     expect(entry.offers).toBe(3)
     expect(offerFor(entry, 'discount')?.id).toBe('deal')
     expect(offerFor(entry, 'beach')?.id).toBe('cheap')
+  })
+
+  it('keeps the cheapest offer of each hotel for the route page, cheapest hotels first', () => {
+    const offers = [
+      { ...offer('a2', 700), hotelName: 'Sea Breeze Hotel 4*' },
+      { ...offer('a1', 500), hotelName: 'SEA BREEZE' },
+      offer('b', 600),
+      offer('stop', 100, null, Availability.Stopped),
+    ]
+
+    expect(hotelsOf(offers).map(item => item.id)).toEqual(['stop', 'a1', 'b'])
+    expect(entryOf(offers).hotels.map(item => item.id)).toEqual(['a1', 'b'])
+    expect(hotelsOf(Array.from({ length: 12 }, (_, index) => offer(`h${index}`, 100 + index)))).toHaveLength(ROUTE_HOTELS)
   })
 
   it('counts a tour at least 12% under its star category median per night as a deal', () => {

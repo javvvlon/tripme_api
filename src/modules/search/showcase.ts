@@ -1,4 +1,5 @@
 import { Availability } from './contracts/search'
+import { hotelKey } from './hotel-key'
 import type { IOffer } from './models/Offer'
 
 /**
@@ -20,6 +21,8 @@ export const SHOWCASE_LEAD_DAYS = 7
 export const SHOWCASE_SPAN_DAYS = 5
 
 export const DEAL_PERCENT = 12
+
+export const ROUTE_HOTELS = 8
 
 const MIN_GROUP = 5
 
@@ -71,6 +74,7 @@ export interface IShowcaseEntry {
   saving: number
   savingKind: SavingKind | null
   offers: number
+  hotels: IOffer[]
 }
 
 const median = (values: number[]): number => {
@@ -107,6 +111,20 @@ export function savingOf(offer: Priced & Rated, medians: Map<number, number>): n
   return Math.max(discountOf(offer), economyOf(offer, medians))
 }
 
+export function hotelsOf(offers: IOffer[], limit = ROUTE_HOTELS): IOffer[] {
+  const seen = new Set<string>()
+
+  return [...offers].sort((a, b) => priceOf(a) - priceOf(b)).filter((offer) => {
+    const key = hotelKey(offer.hotelName) || offer.hotelName
+
+    if (seen.has(key)) return false
+
+    seen.add(key)
+
+    return true
+  }).slice(0, limit)
+}
+
 export function entryOf(offers: IOffer[]): IShowcaseEntry {
   const sale = offers.filter(offer => offer.availability !== Availability.Stopped)
   const byPrice = [...sale].sort((a, b) => priceOf(a) - priceOf(b))
@@ -117,7 +135,14 @@ export function entryOf(offers: IOffer[]): IShowcaseEntry {
     .sort((a, b) => b.saving - a.saving || priceOf(a.offer) - priceOf(b.offer))
   const best = deals[0]
 
-  return { cheapest: byPrice[0] ?? null, deal: best?.offer ?? null, saving: best?.saving ?? 0, savingKind: best?.kind ?? null, offers: sale.length }
+  return {
+    cheapest: byPrice[0] ?? null,
+    deal: best?.offer ?? null,
+    saving: best?.saving ?? 0,
+    savingKind: best?.kind ?? null,
+    offers: sale.length,
+    hotels: hotelsOf(byPrice),
+  }
 }
 
 export const offerFor = (entry: IShowcaseEntry, theme: ShowcaseTheme): IOffer | null =>

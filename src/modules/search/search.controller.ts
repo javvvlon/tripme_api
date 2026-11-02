@@ -1,4 +1,4 @@
-import { Controller, Get, Query, Sse } from '@nestjs/common'
+import { Controller, Get, Param, Query, Sse } from '@nestjs/common'
 import { map } from 'rxjs'
 import type { MessageEvent } from '@nestjs/common'
 import type { Observable } from 'rxjs'
@@ -32,6 +32,16 @@ export class SearchController {
   @Get('hotels')
   hotels(@Query('from') from = '', @Query('to') to = '', @Query('q') q = ''): Promise<unknown> {
     return this.search.hotels(String(from), String(to), String(q).slice(0, 80))
+  }
+
+  @Get('routes')
+  routes(): Promise<unknown> {
+    return this.showcase.routeList()
+  }
+
+  @Get('routes/:from/:to')
+  route(@Param('from') from: string, @Param('to') to: string): Promise<unknown> {
+    return this.showcase.routePage(from, to)
   }
 
   @Sse('showcase/stream')

@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common'
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common'
 import type { OnApplicationBootstrap, OnModuleDestroy } from '@nestjs/common'
 import { createHash } from 'node:crypto'
 import { Observable } from 'rxjs'
@@ -30,6 +30,30 @@ export interface IShowcaseCard {
   discount_kind: SavingKind | null
 }
 
+export interface IRoutePlace {
+  slug: string
+  label: string
+}
+
+export interface IRouteSummary {
+  from: IRoutePlace
+  to: IRoutePlace
+  offers: number | null
+  offer: ReturnType<Offer['toObject']> | null
+}
+
+export interface IRoutePage {
+  from: IRoutePlace
+  to: IRoutePlace
+  date: string
+  date_to: string
+  nights: { from: number, to: number }
+  adults: number
+  offers: number
+  cheapest: ReturnType<Offer['toObject']> | null
+  hotels: Array<ReturnType<Offer['toObject']>>
+}
+
 export type ShowcaseEvent =
   | { type: 'start', from: { slug: string, label: string }, theme: ShowcaseTheme, date: string, dateTo: string, countries: Array<{ slug: string, label: string }> }
   | { type: 'country', card: IShowcaseCard }
@@ -42,6 +66,11 @@ const WARM_EVERY_MS = 3 * 60 * 60 * 1000
 const WARM_DELAY_MS = 60 * 1000
 
 const LIVE_CONCURRENCY = 3
+
+export const warmedDepartures = (): string[] =>
+  (process.env.SHOWCASE_WARM_FROM || 'tashkent').split(',').map(slug => slug.trim()).filter(Boolean)
+
+const placeOf = (item: ReferenceItem): IRoutePlace => ({ slug: item.slug, label: item.label })
 
 async function inTurns<T>(items: T[], limit: number, work: (item: T) => Promise<void>): Promise<void> {
   const queue = [...items]
@@ -124,6 +153,56 @@ export class ShowcaseService implements OnApplicationBootstrap, OnModuleDestroy 
     })
   }
 
+  async routeList(): Promise<{ items: IRouteSummary[] }> {
+    const departures = (await this.routes.departures()).items
+    const items: IRouteSummary[] = []
+
+    for (const slug of warmedDepartures()) {
+      const departure = departures.find(item => item.slug === slug)
+
+      if (!departure) continue
+
+      const base = this.criteriaOf({ from: slug }, 'all')
+
+      for (const country of (await this.routes.countriesFrom(slug)).items) {
+        const entry = await this.cache.getJson<IShowcaseEntry>(this.keyOf(base, country.slug))
+
+        if (entry && !entry.offers) continue
+
+        items.push({
+          from: placeOf(departure),
+          to: placeOf(country),
+          offers: entry?.offers ?? null,
+          offer: entry?.cheapest ? new Offer(entry.cheapest).toObject() : null,
+        })
+      }
+    }
+
+    return { items }
+  }
+
+  async routePage(from: string, to: string): Promise<IRoutePage> {
+    const departure = (await this.routes.departures()).items.find(item => item.slug === from)
+    const country = departure ? (await this.routes.countriesFrom(from)).items.find(item => item.slug === to) : undefined
+
+    if (!departure || !country) throw new NotFoundException('Unknown route')
+
+    const base = this.criteriaOf({ from }, 'all')
+    const entry = await this.entry(base, country)
+
+    return {
+      from: placeOf(departure),
+      to: placeOf(country),
+      date: base.dateFrom,
+      date_to: base.dateTo,
+      nights: { from: base.nightsFrom, to: base.nightsTo },
+      adults: base.adults,
+      offers: entry?.offers ?? 0,
+      cheapest: entry?.cheapest ? new Offer(entry.cheapest).toObject() : null,
+      hotels: (entry?.hotels ?? []).map(offer => new Offer(offer).toObject()),
+    }
+  }
+
   private criteriaOf(query: IShowcaseQuery, theme: ShowcaseTheme): SearchCriteria {
     if (!query.from) throw new BadRequestException('from is required')
 
@@ -154,7 +233,7 @@ export class ShowcaseService implements OnApplicationBootstrap, OnModuleDestroy 
       stars: [...base.filters.stars].sort(),
     }
 
-    return `showcase:v3:${createHash('sha1').update(JSON.stringify(sent)).digest('hex')}:${country}`
+    return `showcase:v4:${createHash('sha1').update(JSON.stringify(sent)).digest('hex')}:${country}`
   }
 
   private async entry(base: SearchCriteria, country: ReferenceItem, signal?: AbortSignal, fresh = false): Promise<IShowcaseEntry | null> {
@@ -196,9 +275,7 @@ export class ShowcaseService implements OnApplicationBootstrap, OnModuleDestroy 
     this.warming = true
 
     try {
-      const departures = (process.env.SHOWCASE_WARM_FROM || 'tashkent').split(',').map(slug => slug.trim()).filter(Boolean)
-
-      for (const from of departures) {
+      for (const from of warmedDepartures()) {
         const countries = (await this.routes.countriesFrom(from)).items
 
         for (const theme of ['all', 'kids'] as const) {
