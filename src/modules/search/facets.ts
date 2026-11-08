@@ -3,6 +3,7 @@ import { Availability } from './contracts/search'
 import { MEAL_PLANS, mealKeyOf, mealPlanOf } from './meal-plans'
 import type { MealPlan } from './meal-plans'
 import { bestLabel, resortKey } from './resorts'
+import { uzsAmountOf } from './uzs'
 
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
@@ -117,7 +118,7 @@ export interface IFacetScopes {
 }
 
 export function buildFacets(offers: Offer[], pageSize: number, scopes: IFacetScopes = {}): SearchFacets {
-  const prices = offers.map(o => o.sortPrice()).filter(Number.isFinite)
+  const prices = offers.map(uzsAmountOf).filter((price): price is number => price !== null && Number.isFinite(price))
   const min = prices.length ? Math.min(...prices) : null
   const max = prices.length ? Math.max(...prices) : null
 
@@ -178,11 +179,7 @@ export function buildFacets(offers: Offer[], pageSize: number, scopes: IFacetSco
     priceMax: max !== null ? Math.ceil(max) : null,
     priceBuckets: buckets,
     days: cheapestByDay(offers),
-    currency: (() => {
-      const price = offers[0]?.get('price')
-
-      return price ? (price.converted?.currency ?? price.source.currency) : null
-    })(),
+    currency: prices.length ? 'UZS' : null,
 
     partial: offers.length >= pageSize,
     total: offers.length,

@@ -6,7 +6,7 @@ import type { Offer } from './models/Offer'
 /**
  * @author Javlon Khalimjonov <khalimjanov2000@gmail.com>
  */
-const offer = (stars: number, district: string, meal: string, price = 1000): Offer => {
+const offer = (stars: number, district: string, meal: string, price = 1000, uzs?: number): Offer => {
   const data: Record<string, unknown> = {
     hotelStars: stars,
     district,
@@ -14,7 +14,7 @@ const offer = (stars: number, district: string, meal: string, price = 1000): Off
     mealName: meal,
     supplier: { id: 's1', name: 'Kompas' },
     availability: 'available',
-    price: { source: { amount: price, currency: 'USD' }, converted: null },
+    price: { source: { amount: price, currency: 'USD' }, converted: null, ...(uzs ? { uzs: { amount: uzs, currency: 'UZS' } } : {}) },
   }
 
   return { get: (key: string) => data[key], sortPrice: () => price, comparePrice: () => price, toObject: () => data } as unknown as Offer
@@ -69,5 +69,30 @@ describe('local filters', () => {
     expect(facets.districts.map(o => `${o.label}:${o.count}`)).toEqual(['г. Баку:3', 'Наама Бэй:2', 'Ханкенди:1'])
     expect(localFilter(spelt, { resorts: ['Baku'] }, none)).toHaveLength(3)
     expect(localFilter(spelt, { resorts: ['naamabay'] }, none)).toHaveLength(2)
+  })
+
+  it('filters by the sum price on the card, both edges included, and scales the price facet in sums', () => {
+    const priced = [
+      offer(3, 'Фатих', 'BB', 820, 9_922_000),
+      offer(4, 'Фатих', 'BB', 905, 10_969_000),
+      offer(4, 'Таксим', 'AI', 990, 12_000_000),
+      offer(5, 'Таксим', 'AI', 1141, 13_806_000),
+      offer(5, 'Таксим', 'AI', 1200),
+    ]
+    const kept = localFilter(priced, { priceMin: 10_969_000, priceMax: 12_000_000 }, new Set(['priceMin', 'priceMax']))
+
+    expect(kept.map(o => o.get('price').uzs?.amount)).toEqual([10_969_000, 12_000_000])
+
+    const facets = buildFacets(priced, 100)
+
+    expect(facets.currency).toBe('UZS')
+    expect([facets.priceMin, facets.priceMax]).toEqual([9_922_000, 13_806_000])
+    expect(facets.priceBuckets.reduce((sum, bucket) => sum + bucket.count, 0)).toBe(4)
+  })
+
+  it('leaves the price facet out when no offer has a sum price', () => {
+    const facets = buildFacets([offer(4, 'Фатих', 'BB', 905)], 100)
+
+    expect([facets.priceMin, facets.priceMax, facets.currency]).toEqual([null, null, null])
   })
 })

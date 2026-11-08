@@ -2,6 +2,7 @@ import { Intention } from '~/shared/helpers/intention'
 import { Unsupported } from '~/modules/suppliers/base/contracts'
 import { CURRENCY_CODES } from '~/modules/suppliers/dictionary/dictionary.seed'
 import type { SearchCriteria } from '~/modules/search/contracts/search'
+import { nativePriceBounds } from '~/modules/search/uzs'
 
 export interface ResolvedRoute {
   townFrom: string
@@ -16,6 +17,7 @@ export class SamoSearchIntention extends Intention<SearchCriteria, Record<string
     private readonly route: ResolvedRoute,
     private readonly page: number,
     private readonly constants: Record<string, string> = {},
+    private readonly uzsRate: number | null = null,
   ) {
     super()
   }
@@ -27,6 +29,7 @@ export class SamoSearchIntention extends Intention<SearchCriteria, Record<string
     if (!currency) return new Unsupported(`currency ${criteria.currency} not offered`)
 
     const { filters } = criteria
+    const price = nativePriceBounds(filters.priceMin, filters.priceMax, this.uzsRate)
     const list = (values: Array<string | number>) => values.join(',')
 
     const anyFlag = (values: unknown[]) => (values.length ? '0' : '1')
@@ -58,8 +61,8 @@ export class SamoSearchIntention extends Intention<SearchCriteria, Record<string
       ROOMS_ANY: '1',
       ROOMS: '',
 
-      ...(filters.priceMin !== undefined ? { COSTMIN: String(filters.priceMin) } : {}),
-      ...(filters.priceMax !== undefined ? { COSTMAX: String(filters.priceMax) } : {}),
+      ...(price.min !== undefined ? { COSTMIN: String(price.min) } : {}),
+      ...(price.max !== undefined ? { COSTMAX: String(price.max) } : {}),
 
       PRICEPAGE: String(this.page),
       ...this.constants,

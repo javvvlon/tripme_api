@@ -137,17 +137,21 @@ export class SupplierDictionary {
     }
   }
 
-  uzsRate(sourceCurrency: string, fallbackCode?: string): number | null {
-    const codeOf = (label: string) =>
-      this.currencyCodes.get(label)
+  private codeOf(label: string): string | undefined {
+    return this.currencyCodes.get(label)
       ?? (this.options.get('CURRENCY') ?? []).find(option => option.label.trim().toUpperCase() === label)?.value
+  }
 
-    const uzs = codeOf('UZS')
-    const source = codeOf(sourceCurrency.toUpperCase()) ?? fallbackCode
+  uzsRate(sourceCurrency: string, fallbackCode?: string): number | null {
+    const source = this.codeOf(sourceCurrency.toUpperCase()) ?? fallbackCode
 
-    if (!uzs || !source) return null
+    return source ? this.uzsRateOf(source) : null
+  }
 
-    return this.rate(source, uzs)
+  uzsRateOf(code: string): number | null {
+    const uzs = this.codeOf('UZS')
+
+    return uzs ? this.rate(code, uzs) : null
   }
 
   async uzsRates(currencies: Record<string, string>): Promise<Record<string, number>> {

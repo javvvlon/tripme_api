@@ -30,5 +30,5 @@ export function searchCacheKey(supplierId: string, criteria: SearchCriteria, pag
 
   const digest = createHash('sha1').update(JSON.stringify(sent)).digest('hex')
 
-  return `search:v1:${supplierId}:${digest}:${page}`
+  return `search:v2:${supplierId}:${digest}:${page}`
 }

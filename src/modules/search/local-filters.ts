@@ -1,6 +1,7 @@
 import { mealKeyOf } from './meal-plans'
 import { hotelKey } from './hotel-key'
 import { resortKey } from './resorts'
+import { inUzsRange, uzsAmountOf } from './uzs'
 import type { Offer } from './models/Offer'
 import type { SearchFilters } from './contracts/search'
 
@@ -29,8 +30,10 @@ export function localFilter(
 ): Offer[] {
   const active = activeLocalFacets(filters, native).filter(facet => facet !== skip)
   const hotels = new Set(filters.hotels ?? [])
+  const { priceMin, priceMax } = filters
+  const priced = priceMin !== undefined || priceMax !== undefined
 
-  if (!active.length && !hotels.size) return offers
+  if (!active.length && !hotels.size && !priced) return offers
 
   const wanted: Record<LocalFacet, Array<string | number>> = {
     stars: filters.stars ?? [],
@@ -40,5 +43,6 @@ export function localFilter(
 
   return offers.filter(offer =>
     (!hotels.size || hotels.has(hotelKey(offer.get('hotelName'))))
+    && (!priced || inUzsRange(uzsAmountOf(offer), priceMin, priceMax))
     && active.every(facet => wanted[facet].includes(valueOf[facet](offer))))
 }

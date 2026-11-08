@@ -216,7 +216,8 @@ export abstract class SamoSupplier extends BaseSupplier<SamoQuery, SamoRow> {
 
     const currency = pickCurrency(form.currencies, this.constants.CURRENCY ?? CURRENCY_CODES[criteria.currency])
     const constants: Record<string, string> = currency ? { CURRENCY: currency } : {}
-    const params = new SamoSearchIntention({ townFrom, state }, page, constants).toRequest(criteria)
+    const rate = await this.priceRate(criteria, currency ?? CURRENCY_CODES[criteria.currency])
+    const params = new SamoSearchIntention({ townFrom, state }, page, constants, rate).toRequest(criteria)
 
     if (isUnsupported(params)) return params
 
@@ -226,6 +227,16 @@ export abstract class SamoSupplier extends BaseSupplier<SamoQuery, SamoRow> {
     }
 
     return { params, baseUrl: base }
+  }
+
+  private async priceRate(criteria: SearchCriteria, code: string | undefined): Promise<number | null> {
+    const { priceMin, priceMax } = criteria.filters
+
+    if ((priceMin === undefined && priceMax === undefined) || !code) return null
+
+    await this.dictionary.hydrate()
+
+    return this.dictionary.uzsRateOf(code)
   }
 
   protected async buildQuery(criteria: SearchCriteria, page: number): Promise<SamoQuery | Unsupported> {
@@ -246,7 +257,8 @@ export abstract class SamoSupplier extends BaseSupplier<SamoQuery, SamoRow> {
 
     if (isUnsupported(filtered)) return filtered
 
-    const params = new SamoSearchIntention({ townFrom, state }, page, this.constants).toRequest(filtered)
+    const rate = await this.priceRate(filtered, this.constants.CURRENCY ?? CURRENCY_CODES[filtered.currency])
+    const params = new SamoSearchIntention({ townFrom, state }, page, this.constants, rate).toRequest(filtered)
 
     if (isUnsupported(params)) return params
 
